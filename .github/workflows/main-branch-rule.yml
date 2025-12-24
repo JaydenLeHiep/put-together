@@ -1,4 +1,4 @@
-name: Rule for branch main (only from merging from develop branch and run check for each projects)
+name: Rule for branch main
 
 on:
   pull_request:
