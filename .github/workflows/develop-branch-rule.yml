@@ -1,5 +1,3 @@
-name: Rule for branch develop (only from merging from feature/* branch and run check for each projects)
-
 on:
   pull_request:
     branches:
