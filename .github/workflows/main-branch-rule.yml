@@ -1,12 +1,12 @@
-name: Rule for branch main
+name: PR → main checks
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   enforce-and-check:
+    name: enforce-and-check
     runs-on: ubuntu-latest
 
     steps:
@@ -15,33 +15,21 @@ jobs:
           BASE="${{ github.event.pull_request.base.ref }}"
           HEAD="${{ github.event.pull_request.head.ref }}"
 
-          echo "Merge request: $HEAD → $BASE"
-
-          # develop → main (allowed)
           if [[ "$BASE" == "main" && "$HEAD" == "develop" ]]; then
-            echo "develop → main allowed"
             exit 0
           fi
 
-          echo "Invalid merge direction"
-          echo "Allowed flows:"
-          echo "develop → main"
+          echo "Only develop → main allowed"
           exit 1
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-          cache-dependency-path: frontend-put-together/package-lock.json
 
-      - name: Install frontend dependencies
+      - run: npm ci
         working-directory: frontend-put-together
-        run: npm ci
 
-      - name: Run ESLint
+      - run: npm run lint
         working-directory: frontend-put-together
-        run: npm run lint
