@@ -1,3 +1,5 @@
+name: Rule for branch develop
+
 on:
   pull_request:
     branches:
