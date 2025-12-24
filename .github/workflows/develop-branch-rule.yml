@@ -1,4 +1,4 @@
-name: Rule for branch develop (only from merging from feature/* branch and run check for each projects)
+name: Rule for branch develop
 
 on:
   pull_request:
