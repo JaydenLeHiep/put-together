@@ -16,11 +16,11 @@ jobs:
           BASE="${{ github.event.pull_request.base.ref }}"
           HEAD="${{ github.event.pull_request.head.ref }}"
 
-          if [[ "$BASE" == "develop" && "$HEAD" == feature/* ]]; then
+          if [[ "$BASE" == "develop" && ( "$HEAD" == feature/* || "$HEAD" == fix/* )]]; then
             exit 0
           fi
 
-          echo "Only feature/* → develop allowed"
+          echo "Only feature/* or fix/* → develop allowed"
           exit 1
 
       - uses: actions/checkout@v4
