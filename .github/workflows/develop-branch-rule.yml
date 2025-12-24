@@ -1,0 +1,45 @@
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  enforce-and-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enforce merge direction
+        run: |
+          BASE="${{ github.event.pull_request.base.ref }}"
+          HEAD="${{ github.event.pull_request.head.ref }}"
+
+          echo "Merge request: $HEAD → $BASE"
+
+          # feature/* → develop (allowed)
+          if [[ "$BASE" == "develop" && "$HEAD" == feature/* ]]; then
+            echo "feature/* → develop allowed"
+            exit 0
+          fi
+
+          echo "Invalid merge direction"
+          echo "Allowed flows:"
+          echo "feature/* → develop"
+          exit 1
+          
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend-put-together/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend-put-together
+        run: npm ci
+
+      - name: Run ESLint
+        working-directory: frontend-put-together
+        run: npm run lint
