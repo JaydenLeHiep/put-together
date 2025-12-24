@@ -1,0 +1,36 @@
+name: PR → main checks
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  enforce-and-check:
+    name: enforce-and-check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Enforce merge direction
+        if: github.event_name == 'pull_request'
+        run: |
+          BASE="${{ github.event.pull_request.base.ref }}"
+          HEAD="${{ github.event.pull_request.head.ref }}"
+
+          if [[ "$BASE" == "main" && "$HEAD" == "develop" ]]; then
+            exit 0
+          fi
+
+          echo "Only develop → main allowed"
+          exit 1
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm ci
+        working-directory: frontend-put-together
+
+      - run: npm run lint
+        working-directory: frontend-put-together
