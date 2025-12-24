@@ -1,9 +1,9 @@
-name: Rule for branch develop (only from merging from feature/* branch and run check for each projects)
+name: Rule for branch main (only from merging from develop branch and run check for each projects)
 
 on:
   pull_request:
     branches:
-      - develop
+      - main
 
 jobs:
   enforce-and-check:
@@ -17,17 +17,17 @@ jobs:
 
           echo "Merge request: $HEAD → $BASE"
 
-          # feature/* → develop (allowed)
-          if [[ "$BASE" == "develop" && "$HEAD" == feature/* ]]; then
-            echo "feature/* → develop allowed"
+          # develop → main (allowed)
+          if [[ "$BASE" == "main" && "$HEAD" == "develop" ]]; then
+            echo "develop → main allowed"
             exit 0
           fi
 
           echo "Invalid merge direction"
           echo "Allowed flows:"
-          echo "feature/* → develop"
+          echo "develop → main"
           exit 1
-          
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
