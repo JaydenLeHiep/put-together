@@ -4,13 +4,19 @@ on:
   pull_request:
     branches:
       - main
+  push:
+    branches:
+      - main
+
 
 jobs:
-  enforce-and-check:
+  enforce-and-check-main:
+    name: main-enforce-and-check
     runs-on: ubuntu-latest
 
     steps:
       - name: Enforce merge direction
+        if: github.event_name == 'pull_request'
         run: |
           BASE="${{ github.event.pull_request.base.ref }}"
           HEAD="${{ github.event.pull_request.head.ref }}"
