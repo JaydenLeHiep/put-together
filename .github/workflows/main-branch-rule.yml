@@ -17,30 +17,52 @@ jobs:
           HEAD="${{ github.event.pull_request.head.ref }}"
 
           if [[ "$BASE" == "main" && "$HEAD" == "develop" ]]; then
-            exit 0
+            echo "Only PRs from develop into main are allowed"
+            exit 1
           fi
 
-          echo "Only develop → main allowed"
-          exit 1
+          BUILD_FRONTEND=false
+          BUILD_BACKEND=false
 
-      - uses: actions/checkout@v4
+          if [[ "$HEAD" == frontend/* ]]; then
+            BUILD_FRONTEND=true
+          elif [[ "$HEAD" == backend/* ]]; then
+            BUILD_BACKEND=true
+          elif [[ "$HEAD" == feature/* || "$HEAD" == fix/* ]]; then
+            BUILD_FRONTEND=true
+            BUILD_BACKEND=true
+          else
+            echo "Invalid branch name"
+            exit 1
+          fi
+
+          echo "build_frontend=$BUILD_FRONTEND" >> "$GITHUB_OUTPUT"
+          echo "build_backend=$BUILD_BACKEND" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Node.js (Frontend)
+        if: steps.detect.outputs.build_frontend == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
       - name: Frontend install dependencies
+        if: steps.detect.outputs.build_frontend == 'true'
         run: npm ci
         working-directory: frontend-put-together
 
       - name: Frontend lint
+        if: steps.detect.outputs.build_frontend == 'true'
         run: npm run lint
         working-directory: frontend-put-together
 
       - name: Frontend build
+        if: steps.detect.outputs.build_frontend == 'true'
         run: npm run build
         working-directory: frontend-put-together
 
       - name: Backend Docker build
+        if: steps.detect.outputs.build_backend == 'true'
         run: docker build backend-put-together
