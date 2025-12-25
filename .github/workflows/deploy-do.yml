@@ -1,4 +1,4 @@
-name: Manual Deploy to Railway (main only)
+name: Manual Deploy to DigitalOcean (main only)
 
 on:
   workflow_dispatch:
@@ -13,51 +13,25 @@ on:
           - both
 
 jobs:
-  deploy-backend:
-    name: Deploy Backend
+  deploy:
+    name: Deploy to DigitalOcean
     runs-on: ubuntu-latest
-    if: |
-      github.ref == 'refs/heads/main' &&
-      (
-        github.event.inputs.deploy_target == 'backend' ||
-        github.event.inputs.deploy_target == 'both'
-      )
+    if: github.ref == 'refs/heads/main'
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      - name: Deploy backend service
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Deploy info
         run: |
-          railway up \
-            --service ${{ secrets.RAILWAY_BACKEND_SERVICE_ID }} \
-            --detach
+          echo "Deploy target: ${{ github.event.inputs.deploy_target }}"
+          echo "Branch: ${{ github.ref }}"
 
-
-  deploy-frontend:
-    name: Deploy Frontend
-    runs-on: ubuntu-latest
-    if: |
-      github.ref == 'refs/heads/main' &&
-      (
-        github.event.inputs.deploy_target == 'frontend' ||
-        github.event.inputs.deploy_target == 'both'
-      )
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-
-      - name: Deploy frontend service
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Trigger DigitalOcean App deploy
         run: |
-          railway up \
-            --service ${{ secrets.RAILWAY_FRONTEND_SERVICE_ID }} \
-            --detach
+          doctl apps update ${{ secrets.DO_APP_ID }} \
+            --spec .do/app.yaml
