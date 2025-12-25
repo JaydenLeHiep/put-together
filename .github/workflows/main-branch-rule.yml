@@ -16,7 +16,7 @@ jobs:
           BASE="${{ github.event.pull_request.base.ref }}"
           HEAD="${{ github.event.pull_request.head.ref }}"
 
-          if [[ "$BASE" == "main" && "$HEAD" == "develop" ]]; then
+          if [[ "$BASE" != "main" && "$HEAD" != "develop" ]]; then
             echo "Only PRs from develop into main are allowed"
             exit 1
           fi
