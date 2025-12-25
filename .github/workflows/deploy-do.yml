@@ -1,0 +1,63 @@
+name: Manual Deploy to Railway (main only)
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "What do you want to deploy?"
+        required: true
+        type: choice
+        options:
+          - backend
+          - frontend
+          - both
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (
+        github.event.inputs.deploy_target == 'backend' ||
+        github.event.inputs.deploy_target == 'both'
+      )
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy backend service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up \
+            --service ${{ secrets.RAILWAY_BACKEND_SERVICE_ID }} \
+            --detach
+
+
+  deploy-frontend:
+    name: Deploy Frontend
+    runs-on: ubuntu-latest
+    if: |
+      github.ref == 'refs/heads/main' &&
+      (
+        github.event.inputs.deploy_target == 'frontend' ||
+        github.event.inputs.deploy_target == 'both'
+      )
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy frontend service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway up \
+            --service ${{ secrets.RAILWAY_FRONTEND_SERVICE_ID }} \
+            --detach
