@@ -6,7 +6,7 @@ on:
 
 jobs:
   enforce-and-check-develop:
-    name: enforce-and-check
+    name: enforce-and-check-develop
     runs-on: ubuntu-latest
 
     steps:
