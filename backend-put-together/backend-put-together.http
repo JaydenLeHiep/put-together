@@ -1,6 +1,0 @@
-@backend_put_together_HostAddress = http://localhost:5242
-
-GET {{backend_put_together_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
