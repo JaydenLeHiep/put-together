@@ -5,7 +5,7 @@ on:
     branches: [develop]
 
 jobs:
-  enforce-and-check:
+  enforce-and-check-develop:
     name: enforce-and-check
     runs-on: ubuntu-latest
 
