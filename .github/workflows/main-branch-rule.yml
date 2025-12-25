@@ -5,8 +5,8 @@ on:
     branches: [main]
 
 jobs:
-  enforce-and-check:
-    name: Enforce develop → main & build
+  enforce-and-check-main:
+    name: enforce-and-check-main
     runs-on: ubuntu-latest
 
     steps:
