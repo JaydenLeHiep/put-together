@@ -34,4 +34,4 @@ jobs:
       - name: Trigger DigitalOcean App deploy
         run: |
           doctl apps update ${{ secrets.DO_APP_ID }} \
-            --spec .do/app.yaml
+            --spec src/app.yaml
