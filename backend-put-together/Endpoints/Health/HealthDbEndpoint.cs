@@ -12,6 +12,15 @@ public class HealthDbEndpoint : ICarterModule
             try
             {
                 var canConnect = await db.Database.CanConnectAsync();
+                if (!canConnect)
+                {
+                    logger.LogError("Database connection failed");
+                    return Results.Problem(
+                        title: "Database connection failed",
+                        detail: "Database connection failed",
+                        statusCode: 500);
+                }
+
                 logger.LogInformation("Connect to database!");
                 return Results.Ok(new
                 {
@@ -20,10 +29,10 @@ public class HealthDbEndpoint : ICarterModule
             }
             catch (Exception e)
             {
-                logger.LogError(e, "An error occured");
+                logger.LogInformation(e, "An error occured");
                 return Results.Problem(
                     title: "Database connection failed",
-                    detail: e.Message,
+                    detail: "Database connection failed",
                     statusCode: 500);
             }
         });
