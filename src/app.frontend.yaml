@@ -2,11 +2,10 @@ name: seashell-app
 
 services:
   - name: put-together-frontend
-    github:
-      repo: JaydenLeHiep/put-together
-      branch: main
-      deploy_on_push: false
-    dockerfile_path: frontend-put-together/Dockerfile
+    image:
+      registry_type: DOCKER_HUB
+      repository: ${{ secrets.DOCKERHUB_USERNAME }}/put-together-frontend
+      tag: latest
     http_port: 3000
     routes:
       - path: /
