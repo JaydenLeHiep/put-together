@@ -69,27 +69,27 @@ jobs:
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/put-together-frontend:latest
 
     publish-backend-image:
-    name: Publish backend image to Docker Hub
-    runs-on: ubuntu-latest
-    needs: enforce-and-check-main
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build backend Docker image
-        run: |
-          docker build \
-            -f backend-put-together/Dockerfile \
-            -t ${{ secrets.DOCKERHUB_USERNAME }}/put-together-backend:latest \
-            .
-
-      - name: Push frontend Docker image
-        run: |
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/put-together-backend:latest
+      name: Publish backend image to Docker Hub
+      runs-on: ubuntu-latest
+      needs: enforce-and-check-main
+  
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v4
+  
+        - name: Log in to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+  
+        - name: Build backend Docker image
+          run: |
+            docker build \
+              -f backend-put-together/Dockerfile \
+              -t ${{ secrets.DOCKERHUB_USERNAME }}/put-together-backend:latest \
+              .
+  
+        - name: Push frontend Docker image
+          run: |
+            docker push ${{ secrets.DOCKERHUB_USERNAME }}/put-together-backend:latest
