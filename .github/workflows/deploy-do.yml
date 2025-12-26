@@ -31,7 +31,13 @@ jobs:
           echo "Deploy target: ${{ github.event.inputs.deploy_target }}"
           echo "Branch: ${{ github.ref }}"
 
-      - name: Trigger DigitalOcean App deploy
+      - name: Deploy to DigitalOcean
         run: |
-          doctl apps update ${{ secrets.DO_APP_ID }} \
-            --spec src/app.yaml
+          if [ "${{ github.event.inputs.deploy_target }}" = "backend" ]; then
+            doctl apps update ${{ secrets.DO_APP_ID }} --spec src/app.backend.yaml
+          elif [ "${{ github.event.inputs.deploy_target }}" = "frontend" ]; then
+            doctl apps update ${{ secrets.DO_APP_ID }} --spec src/app.frontend.yaml
+          else
+            doctl apps update ${{ secrets.DO_APP_ID }} --spec src/app.full.yaml
+          fi
+      
