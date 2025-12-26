@@ -10,13 +10,3 @@ services:
     http_port: 8080
     routes:
       - path: /api
-
-  - name: put-together-frontend
-    github:
-      repo: JaydenLeHiep/put-together
-      branch: main
-      deploy_on_push: false
-    dockerfile_path: backend-put-together/Dockerfile
-    http_port: 3000
-    routes:
-      - path: /
