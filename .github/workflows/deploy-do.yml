@@ -26,18 +26,18 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
 
-      - name: Deploy info
+      - name: Deploy backend
+        if: github.event.inputs.deploy_target == 'backend'
         run: |
-          echo "Deploy target: ${{ github.event.inputs.deploy_target }}"
-          echo "Branch: ${{ github.ref }}"
+          doctl apps create-deployment ${{ secrets.DO_BACKEND_APP_ID }}
 
-      - name: Deploy to DigitalOcean
+      - name: Deploy frontend
+        if: github.event.inputs.deploy_target == 'frontend'
         run: |
-          if [ "${{ github.event.inputs.deploy_target }}" = "backend" ]; then
-            doctl apps update ${{ secrets.DO_APP_ID }} --spec src/app.backend.yaml
-          elif [ "${{ github.event.inputs.deploy_target }}" = "frontend" ]; then
-            doctl apps update ${{ secrets.DO_APP_ID }} --spec src/app.frontend.yaml
-          else
-            doctl apps update ${{ secrets.DO_APP_ID }} --spec src/app.full.yaml
-          fi
-      
+          doctl apps create-deployment ${{ secrets.DO_FRONTEND_APP_ID }}
+
+      - name: Deploy both
+        if: github.event.inputs.deploy_target == 'both'
+        run: |
+          doctl apps create-deployment ${{ secrets.DO_BACKEND_APP_ID }}
+          doctl apps create-deployment ${{ secrets.DO_FRONTEND_APP_ID }}
