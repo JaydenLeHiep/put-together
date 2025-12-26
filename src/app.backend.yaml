@@ -4,8 +4,7 @@ services:
   - name: put-together-backend
     image:
       registry_type: DOCKER_HUB
-      registry: hieplecoding
-      repository: put-together-backend
+      repository: hieplecoding/put-together-backend
       tag: latest
     http_port: 8080
     routes:
