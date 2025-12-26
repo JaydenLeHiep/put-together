@@ -1,7 +1,7 @@
 name: seashell-app
 
 services:
-  - name: put-together-frontend
+  - name: hieplecoding-put-together-fronte
     image:
       registry_type: DOCKER_HUB
       registry: hieplecoding
