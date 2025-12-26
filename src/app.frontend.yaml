@@ -4,7 +4,7 @@ services:
   - name: put-together-frontend
     image:
       registry_type: DOCKER_HUB
-      repository: hieple/put-together-frontend
+      repository: hieplecoding/put-together-frontend
       tag: latest
     http_port: 3000
     routes:
