@@ -1,0 +1,12 @@
+name: seashell-app
+
+services:
+  - name: put-together-frontend
+    github:
+      repo: JaydenLeHiep/put-together
+      branch: main
+      deploy_on_push: false
+    dockerfile_path: frontend-put-together/Dockerfile
+    http_port: 3000
+    routes:
+      - path: /

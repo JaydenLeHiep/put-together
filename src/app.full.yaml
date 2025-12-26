@@ -1,0 +1,5 @@
+name: seashell-app
+
+services:
+  - (backend)
+  - (frontend)
