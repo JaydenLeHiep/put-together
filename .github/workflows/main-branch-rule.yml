@@ -90,6 +90,6 @@ jobs:
             -t ${{ secrets.DOCKERHUB_USERNAME }}/put-together-backend:latest \
             .
 
-      - name: Push frontend Docker image
+      - name: Push backend Docker image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/put-together-backend:latest
