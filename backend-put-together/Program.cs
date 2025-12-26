@@ -27,7 +27,7 @@ app.MapGet("/", (ILogger<Program> logger) =>
 {
     logger.LogInformation("Ok");
     
-    return "OK backend";
+    return "OK backend test!!";
 });
 
 app.MapGet("/test", (ILogger<Program> logger) =>
