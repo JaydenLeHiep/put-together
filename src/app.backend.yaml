@@ -3,10 +3,10 @@ name: seashell-app
 services:
   - name: put-together-backend
     github:
-      repo: JaydenLeHiep/put-together
-      branch: main
-      deploy_on_push: false
-    dockerfile_path: backend-put-together/Dockerfile
+      registry_type: DOCKER_HUB
+      registry: hieplecoding
+      repository: put-together-backend
+      tag: latest
     http_port: 8080
     routes:
       - path: /api
