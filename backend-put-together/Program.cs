@@ -1,17 +1,23 @@
+using backend_put_together.Extensions;
+using Carter;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
-builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
-
+#region Setup log
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
-
-builder.Services.AddOpenApi();
-
 builder.Host.UseSerilog();
+#endregion
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+
+builder.Services
+    .AddDatabase(builder.Configuration)
+    .AddApplication()
+    .AddOpenApi();
 
 var app = builder.Build();
 
@@ -21,20 +27,13 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-//app.UseHttpsRedirection();
+app.MapCarter();
 
 app.MapGet("/", (ILogger<Program> logger) =>
 {
     logger.LogInformation("Ok");
     
-    return "OK backend test!!";
-});
-
-app.MapGet("/test", (ILogger<Program> logger) =>
-{
-    logger.LogInformation("Ok-test");
-    
-    return "OK test";
+    return "OK";
 });
 
 app.Run();

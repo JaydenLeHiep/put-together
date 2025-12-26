@@ -31,7 +31,7 @@ services:
       ConnectionStrings__DefaultConnection: Host=db;Database=put_together_db;Username=hieple;Password=123
     volumes:
       - ./backend-put-together:/app
-      - ~/.nuget/packages:/root/.nuget/packages:ro
+      - ~/.nuget/packages:/root/.nuget/packages
       - ./backend-put-together/logs:/app/logs
     networks:
       - pt_network
