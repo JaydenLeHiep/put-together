@@ -6,7 +6,7 @@ services:
       repo: JaydenLeHiep/put-together
       branch: main
       deploy_on_push: false
-      source_dir: backend-put-together
+    dockerfile_path: backend-put-together/Dockerfile
     http_port: 8080
     routes:
       - path: /api
@@ -16,7 +16,7 @@ services:
       repo: JaydenLeHiep/put-together
       branch: main
       deploy_on_push: false
-      source_dir: frontend-put-together
+    dockerfile_path: backend-put-together/Dockerfile
     http_port: 3000
     routes:
       - path: /
