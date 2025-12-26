@@ -1,0 +1,60 @@
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: put_together_db
+      POSTGRES_USER: hieple
+      POSTGRES_PASSWORD: 123
+    ports:
+      - "5434:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - pt_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hieple -d put_together_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend-put-together
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=db;Database=put_together_db;Username=hieple;Password=123
+    volumes:
+      - ./backend-put-together:/app
+      - ~/.nuget/packages:/root/.nuget/packages
+      - ./backend-put-together/logs:/app/logs
+    networks:
+      - pt_network
+
+  frontend:
+    build:
+      context: ./frontend-put-together
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend-put-together:/app
+      - /app/node_modules
+    networks:
+      - pt_network
+
+networks:
+  pt_network:
+    driver: bridge
+
+volumes:
+  db_data:
