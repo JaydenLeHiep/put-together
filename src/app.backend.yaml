@@ -2,7 +2,7 @@ name: seashell-app
 
 services:
   - name: put-together-backend
-    github:
+    image:
       registry_type: DOCKER_HUB
       registry: hieplecoding
       repository: put-together-backend
