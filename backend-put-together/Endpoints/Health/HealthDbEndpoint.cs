@@ -1,7 +1,6 @@
 using System.Data.Common;
 using backend_put_together.Data;
 using Carter;
-using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace backend_put_together.Endpoints.Health;
