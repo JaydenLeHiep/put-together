@@ -32,7 +32,7 @@ public class HealthDbEndpoint : ICarterModule
                 logger.LogInformation(e, "An error occured");
                 return Results.Problem(
                     title: "Database connection failed",
-                    detail: "Database connection failed",
+                    detail: $"{e} :Database connection failed",
                     statusCode: 500);
             }
         });
