@@ -2,7 +2,7 @@ name: PR → main checks
 
 on:
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
   enforce-and-check-main:

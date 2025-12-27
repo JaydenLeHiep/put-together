@@ -1,6 +1,7 @@
 services:
   db:
     image: postgres:17
+    container_name: pt_db
     environment:
       POSTGRES_DB: put_together_db
       POSTGRES_USER: hieple
@@ -21,6 +22,7 @@ services:
     build:
       context: ./backend-put-together
       dockerfile: Dockerfile.dev
+    container_name: pt_backend
     ports:
       - "8080:8080"
     depends_on:
@@ -28,11 +30,6 @@ services:
         condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: Host=db;Database=put_together_db;Username=hieple;Password=123
-    volumes:
-      - ./backend-put-together:/app
-      - ~/.nuget/packages:/root/.nuget/packages
-      - ./backend-put-together/logs:/app/logs
     networks:
       - pt_network
 
@@ -40,15 +37,13 @@ services:
     build:
       context: ./frontend-put-together
       dockerfile: Dockerfile.dev
+    container_name: pt_frontend
     ports:
       - "5173:5173"
     depends_on:
       - backend
     environment:
       NODE_ENV: development
-    volumes:
-      - ./frontend-put-together:/app
-      - /app/node_modules
     networks:
       - pt_network
 

@@ -1,17 +1,16 @@
-FROM node:20-alpine
+FROM node:20-alpine AS build
 
-WORKDIR /app/frontend-put-together
-
-COPY frontend-put-together/ .
+WORKDIR /app
+COPY package*.json ./
 RUN npm ci
 
-COPY frontend-put-together/ .
-
-RUN npm run lint
-
+COPY . .
 RUN npm run build
 
-RUN npm i -g serve
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=build /app/dist ./dist
 
-EXPOSE 3000
-CMD ["serve", "-s", "dist"]
+EXPOSE 5173
+CMD ["serve", "-s", "dist", "-l", "5173"]

@@ -1,12 +1,11 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:10.0-preview
+﻿FROM mcr.microsoft.com/dotnet/sdk:10.0
 
 WORKDIR /app
 
-COPY *.csproj ./
-RUN dotnet restore
-
 COPY . .
+
+RUN dotnet restore
 
 EXPOSE 8080
 
-CMD ["dotnet", "run", "--urls=http://0.0.0.0:8080"]
+CMD ["dotnet", "run", "--urls", "http://0.0.0.0:8080"]
