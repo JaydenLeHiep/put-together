@@ -1,5 +1,7 @@
+using System.Data.Common;
 using backend_put_together.Data;
 using Carter;
+using Npgsql;
 
 namespace backend_put_together.Endpoints.Health;
 
@@ -12,14 +14,14 @@ public class HealthDbEndpoint : ICarterModule
             try
             {
                 var canConnect = await db.Database.CanConnectAsync();
-                if (!canConnect)
-                {
-                    logger.LogError("Database connection failed");
-                    return Results.Problem(
-                        title: "Database connection failed",
-                        detail: "Database connection failed",
-                        statusCode: 500);
-                }
+                // if (!canConnect)
+                // {
+                //     logger.LogError("Database connection failed");
+                //     return Results.Problem(
+                //         title: "Database connection failed",
+                //         detail: "Database connection failed",
+                //         statusCode: 500);
+                // }
 
                 logger.LogInformation("Connect to database!");
                 return Results.Ok(new
@@ -27,12 +29,40 @@ public class HealthDbEndpoint : ICarterModule
                     ok = canConnect
                 });
             }
-            catch (Exception e)
+            catch (NpgsqlException ex)
             {
-                logger.LogInformation(e, "An error occured");
+                logger.LogError(ex,  "Could not connect to database");
+
                 return Results.Problem(
-                    title: "Database connection failed",
-                    detail: $"{e} :Database connection failed",
+                    title: "PostgreSQL connection error",
+                    detail: ex.Message,
+                    statusCode: 500);
+            }
+            catch (TimeoutException ex)
+            {
+                logger.LogError(ex, "Database connection timeout");
+
+                return Results.Problem(
+                    title: "Database timeout",
+                    detail: ex.Message,
+                    statusCode: 500);
+            }
+            catch (DbException ex)
+            {
+                logger.LogError(ex, "Database provider error");
+
+                return Results.Problem(
+                    title: "Database error",
+                    detail: ex.Message,
+                    statusCode: 500);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Unexpected database error");
+
+                return Results.Problem(
+                    title: "Unexpected error",
+                    detail: ex.Message,
                     statusCode: 500);
             }
         });
