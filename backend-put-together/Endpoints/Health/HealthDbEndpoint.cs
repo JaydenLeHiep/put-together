@@ -1,6 +1,7 @@
 using System.Data.Common;
 using backend_put_together.Data;
 using Carter;
+using Microsoft.EntityFrameworkCore;
 using Npgsql;
 
 namespace backend_put_together.Endpoints.Health;
@@ -14,7 +15,7 @@ public class HealthDbEndpoint : ICarterModule
             try
             {
                 
-                var canConnect = await db.Database.CanConnectAsync();
+                var canConnect = await db.Database.ExecuteSqlRawAsync("SELECT 1");
 
                 return Results.Ok(new
                 {
