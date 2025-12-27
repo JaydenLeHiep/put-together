@@ -1,6 +1,7 @@
 using backend_put_together.Data;
 using backend_put_together.Modules.DigitalOceanConnectionHelper;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace backend_put_together.Extensions;
 
@@ -20,8 +21,20 @@ public static class DatabaseExtensions
         
         if(string.IsNullOrWhiteSpace(conn))
             throw new InvalidOperationException("Could not get connection string");
+        
+        var npgsqlBuilder = new NpgsqlConnectionStringBuilder(conn)
+        {
+            // Optional but recommended for DO
+            SslMode = SslMode.Require,
+            TrustServerCertificate = true
+        };
 
-        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(conn));
+        var finalConn = npgsqlBuilder.ConnectionString;
+
+        services.AddDbContext<AppDbContext>(options =>
+            options.UseNpgsql(finalConn));
+
+        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(finalConn));
         
         Console.WriteLine(services);
 
