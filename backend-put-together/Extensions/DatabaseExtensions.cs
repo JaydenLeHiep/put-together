@@ -8,10 +8,7 @@ public static class DatabaseExtensions
 {
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config)
     {
-        var rawConnectionString =
-            Environment.GetEnvironmentVariable("DATABASE_URL")
-            ?? config.GetConnectionString("DefaultConnection");
-        var conn = DigitalOceanConnectionHelper.BuildNpgsqlConnectionString(rawConnectionString);
+        var conn = config.GetConnectionString("DefaultConnection");
         
         if(string.IsNullOrWhiteSpace(conn))
             throw new InvalidOperationException("Could not get connection string");
