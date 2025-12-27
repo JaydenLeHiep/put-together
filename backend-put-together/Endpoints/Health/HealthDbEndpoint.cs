@@ -9,25 +9,15 @@ public class HealthDbEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/health/db", async (AppDbContext db, ILogger<HealthDbEndpoint> logger) =>
+        app.MapGet("/health/db", async (IConfiguration config, ILogger<HealthDbEndpoint> logger) =>
         {
             try
             {
-                var canConnect = await db.Database.CanConnectAsync();
-                // if (!canConnect)
-                // {
-                //     logger.LogError("Database connection failed");
-                //     return Results.Problem(
-                //         title: "Database connection failed",
-                //         detail: "Database connection failed",
-                //         statusCode: 500);
-                // }
+                await using var conn = new NpgsqlConnection(
+                    config.GetConnectionString("DefaultConnection"));
 
-                logger.LogInformation("Connect to database!");
-                return Results.Ok(new
-                {
-                    ok = canConnect
-                });
+                await conn.OpenAsync();
+                return Results.Ok("Connected");
             }
             catch (NpgsqlException ex)
             {
