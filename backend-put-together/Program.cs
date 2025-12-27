@@ -31,9 +31,9 @@ app.MapCarter();
 
 app.MapGet("/", (ILogger<Program> logger) =>
 {
-    logger.LogInformation("Ok ok ok");
+    logger.LogInformation("Ok");
     
-    return "OK ok ok";
+    return "OK";
 });
 
 app.Run();

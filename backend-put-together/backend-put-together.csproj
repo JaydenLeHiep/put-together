@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Folder Include="logs\" />
+    <Folder Include="Modules\" />
   </ItemGroup>
 
   <ItemGroup>

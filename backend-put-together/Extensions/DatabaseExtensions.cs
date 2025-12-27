@@ -9,13 +9,10 @@ public static class DatabaseExtensions
     {
         var conn = Environment.GetEnvironmentVariable("DATABASE_URL");
         
-        
         if (string.IsNullOrWhiteSpace(conn))
         {
             conn = config.GetConnectionString("DefaultConnection");
         }
-        
-        Console.WriteLine(conn);
         
         if(string.IsNullOrWhiteSpace(conn))
             throw new InvalidOperationException("Could not get connection string");
