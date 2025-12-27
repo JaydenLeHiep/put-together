@@ -9,15 +9,17 @@ public class HealthDbEndpoint : ICarterModule
 {
     public void AddRoutes(IEndpointRouteBuilder app)
     {
-        app.MapGet("/health/db", async (IConfiguration config, ILogger<HealthDbEndpoint> logger) =>
+        app.MapGet("/health/db", async (AppDbContext db, ILogger<HealthDbEndpoint> logger) =>
         {
             try
             {
-                await using var conn = new NpgsqlConnection(
-                    config.GetConnectionString("DefaultConnection"));
+                
+                var canConnect = await db.Database.CanConnectAsync();
 
-                await conn.OpenAsync();
-                return Results.Ok("Connected");
+                return Results.Ok(new
+                {
+                    ok = canConnect
+                });
             }
             catch (NpgsqlException ex)
             {
