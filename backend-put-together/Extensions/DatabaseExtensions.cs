@@ -18,8 +18,6 @@ public static class DatabaseExtensions
             throw new InvalidOperationException("Could not get connection string");
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(conn));
-        
-        Console.WriteLine(services);
 
         return services;
     }
