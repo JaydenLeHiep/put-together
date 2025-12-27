@@ -15,7 +15,7 @@ public class HealthDbEndpoint : ICarterModule
             try
             {
                 
-                var canConnect = await db.Database.ExecuteSqlRawAsync("SELECT 1");
+                var canConnect = await db.Database.CanConnectAsync();
 
                 return Results.Ok(new
                 {
