@@ -7,6 +7,8 @@
     <RootNamespace>backend_put_together</RootNamespace>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <UserSecretsId>70f6ee0b-66b6-466a-ae0a-fb4b4a7e7c3c</UserSecretsId>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
