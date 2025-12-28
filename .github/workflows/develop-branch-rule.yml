@@ -66,3 +66,12 @@ jobs:
       - name: Backend Docker build
         if: steps.detect.outputs.build_backend == 'true'
         run: docker build backend-put-together
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Backend build
+        run: dotnet build
+        working-directory: backend-put-together
