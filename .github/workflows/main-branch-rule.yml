@@ -41,6 +41,15 @@ jobs:
       - name: Frontend build
         run: npm run build
         working-directory: frontend-put-together
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          
+      - name: Backend build
+        run: dotnet build
+        working-directory: backend-put-together
 
   publish-frontend-image:
     name: Publish frontend image to Docker Hub
