@@ -13,7 +13,7 @@ services:
     networks:
       - pt_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hieple -d put_together_db"]
+      test: [ "CMD-SHELL", "pg_isready -U hieple -d put_together_db" ]
       interval: 5s
       timeout: 5s
       retries: 5

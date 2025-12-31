@@ -12,8 +12,8 @@ using backend_put_together.Data;
 namespace backend_put_together.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251227164639_InitLessons")]
-    partial class InitLessons
+    [Migration("20251227205820_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -29,33 +29,41 @@ namespace backend_put_together.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<string>("Content")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasColumnType("text")
+                        .HasColumnName("content");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(250)
-                        .HasColumnType("character varying(250)");
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("title");
 
                     b.Property<string>("VideoGuid")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("character varying(100)");
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("video_guid");
 
                     b.Property<string>("VideoLibraryId")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("character varying(50)");
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("video_library_id");
 
-                    b.HasKey("Id");
+                    b.HasKey("Id")
+                        .HasName("pk_lessons");
 
-                    b.HasIndex("VideoGuid");
+                    b.HasIndex("VideoGuid")
+                        .HasDatabaseName("ix_lessons_video_guid");
 
                     b.ToTable("lessons", (string)null);
                 });

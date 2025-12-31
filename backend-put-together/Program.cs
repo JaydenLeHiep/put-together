@@ -43,6 +43,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // =========================
+// CORS
+// =========================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontendCors", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:5173") // Vite frontend
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
+// =========================
 // App services
 // =========================
 builder.Services
@@ -64,6 +78,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("FrontendCors");
 app.MapCarter();
 
 app.MapGet("/", (ILogger<Program> logger) =>

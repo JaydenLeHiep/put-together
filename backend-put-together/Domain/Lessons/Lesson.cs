@@ -8,11 +8,35 @@ public class Lesson
 
     // Rich text HTML
     public string Content { get; set; } = string.Empty;
-    
+
     public string VideoLibraryId { get; set; } = string.Empty;
 
     // Bunny video guid/id
     public string VideoGuid { get; set; } = string.Empty;
-
+    
+    // Audit
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
+    
+    // Soft delete
+    public bool IsDeleted { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    
+    // Domain behaviors
+    public void Touch()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
+    }
+
+    public void Restore()
+    {
+        IsDeleted = false;
+        DeletedAt = null;
+    }
 }
