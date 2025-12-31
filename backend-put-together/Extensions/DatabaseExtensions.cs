@@ -17,7 +17,11 @@ public static class DatabaseExtensions
         if(string.IsNullOrWhiteSpace(conn))
             throw new InvalidOperationException("Could not get connection string");
 
-        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(conn));
+        services.AddDbContext<AppDbContext>(options =>
+            options
+                .UseNpgsql(conn)
+                .UseSnakeCaseNamingConvention()
+        );
 
         return services;
     }

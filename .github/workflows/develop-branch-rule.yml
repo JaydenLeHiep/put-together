@@ -2,7 +2,7 @@ name: PR → develop checks
 
 on:
   pull_request:
-    branches: [develop]
+    branches: [ develop ]
 
 jobs:
   enforce-and-check-develop:
