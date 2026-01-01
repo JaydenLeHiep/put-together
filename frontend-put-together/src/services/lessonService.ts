@@ -2,16 +2,17 @@ import type { Lesson } from "../types/lesson";
 
 declare global {
   interface Window {
-    __API_BASE_URL__?: string;
+    __CONFIG__?: {
+      API_BASE_URL?: string;
+    };
   }
 }
 
-const API_BASE = window.__API_BASE_URL__;
+const API_BASE = window.__CONFIG__?.API_BASE_URL;
 
 if (!API_BASE) {
   throw new Error("API base URL is not configured");
 }
-
 const API = `${API_BASE}/api/lessons`;
 
 export async function getLessons(): Promise<Lesson[]> {
