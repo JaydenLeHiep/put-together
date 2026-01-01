@@ -1,6 +1,8 @@
 import type { Lesson } from "../types/lesson";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "" : "");
 
 const API = `${API_BASE}/api/lessons`;
 
