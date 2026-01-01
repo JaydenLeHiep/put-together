@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
+
 builder.Host.UseSerilog();
 
 // Large file upload support
@@ -27,7 +28,7 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = long.MaxValue;
 });
 
-// Server config (DO compatible)
+// Server config (DigitalOcean)
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
@@ -35,7 +36,7 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS (LOCAL + PRODUCTION SAFE)
+// CORS (open for current stage)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendCors", policy =>
@@ -47,23 +48,23 @@ builder.Services.AddCors(options =>
     });
 });
 
-// App services
+// Application services
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddApplication();
 
-// Bunny
+// Bunny configuration
 builder.Services.Configure<BunnyOptions>(
     builder.Configuration.GetSection("Bunny")
 );
 builder.Services.AddHttpClient();
 
-// Video abstraction
+// Video provider
 builder.Services.AddScoped<IVideoProvider, BunnyVideoProvider>();
 
 var app = builder.Build();
 
-// Proxy / HTTPS support 
+// Reverse proxy / HTTPS support
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
     ForwardedHeaders =
@@ -73,56 +74,25 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.UseHttpsRedirection();
 
-// Swagger (dev only)
+// Swagger (development only)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Pipeline
+// Middleware pipeline
 app.UseCors("FrontendCors");
-
-//debug
-app.Use(async (context, next) =>
-{
-    var logger = context.RequestServices
-        .GetRequiredService<ILogger<Program>>();
-
-    var requestId = Guid.NewGuid();
-
-    logger.LogInformation(
-        "[HTTP:START] {RequestId} {Method} {Path} from {IP}",
-        requestId,
-        context.Request.Method,
-        context.Request.Path,
-        context.Connection.RemoteIpAddress
-    );
-
-    try
-    {
-        await next();
-    }
-    finally
-    {
-        logger.LogInformation(
-            "[HTTP:END] {RequestId} {Method} {Path} => {StatusCode}",
-            requestId,
-            context.Request.Method,
-            context.Request.Path,
-            context.Response.StatusCode
-        );
-    }
-});
-//
-
 app.MapCarter();
 
 // Health check
-app.MapGet("/", (ILogger<Program> logger, IConfiguration config) =>
+app.MapGet("/", (ILogger<Program> logger) =>
 {
     var db = Environment.GetEnvironmentVariable("DATABASE_URL");
-    logger.LogInformation("API OK – DB: {Db}", db is null ? "NOT SET" : "SET");
+    logger.LogInformation(
+        "API OK – DATABASE_URL: {DbState}",
+        db is null ? "NOT SET" : "SET"
+    );
     return "OK";
 });
 
