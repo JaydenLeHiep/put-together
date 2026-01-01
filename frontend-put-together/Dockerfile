@@ -14,4 +14,5 @@ RUN npm run build
 RUN npm i -g serve
 
 EXPOSE 3000
-CMD ["serve", "-s", "dist"]
+
+CMD ["sh", "-c", "if [ -z \"$API_BASE_URL\" ]; then echo 'ERROR: API_BASE_URL is not set'; exit 1; fi && sed -i \"s|__API_BASE_URL__|$API_BASE_URL|g\" dist/index.html && exec serve -s dist"]
