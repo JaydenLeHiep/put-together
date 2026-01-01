@@ -15,23 +15,9 @@ public sealed class LessonEndpoints : ICarterModule
         // =========================================================
         // GET /api/lessons
         // =========================================================
-        group.MapGet("", async (
-            ILessonQueryService query,
-            ILogger<Program> logger) =>
+        group.MapGet("", async (ILessonQueryService query) =>
         {
-            logger.LogInformation(
-                "[Lessons] GET /api/lessons - START"
-            );
-
             var lessons = await query.GetAllAsync();
-
-            var count = lessons?.Count() ?? 0;
-
-            logger.LogInformation(
-                "[Lessons] GET /api/lessons - SUCCESS ({Count} items)",
-                count
-            );
-
             return Results.Ok(lessons);
         });
 
