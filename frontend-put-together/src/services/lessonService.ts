@@ -1,6 +1,8 @@
 import type { Lesson } from "../types/lesson";
 
-const API = "/api/lessons";
+const API_BASE = import.meta.env.VITE_API_BASE_URL ?? "";
+
+const API = `${API_BASE}/api/lessons`;
 
 export async function getLessons(): Promise<Lesson[]> {
   const res = await fetch(API);
