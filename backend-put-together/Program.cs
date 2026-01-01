@@ -82,6 +82,40 @@ if (app.Environment.IsDevelopment())
 
 // Pipeline
 app.UseCors("FrontendCors");
+
+//debug
+app.Use(async (context, next) =>
+{
+    var logger = context.RequestServices
+        .GetRequiredService<ILogger<Program>>();
+
+    var requestId = Guid.NewGuid();
+
+    logger.LogInformation(
+        "[HTTP:START] {RequestId} {Method} {Path} from {IP}",
+        requestId,
+        context.Request.Method,
+        context.Request.Path,
+        context.Connection.RemoteIpAddress
+    );
+
+    try
+    {
+        await next();
+    }
+    finally
+    {
+        logger.LogInformation(
+            "[HTTP:END] {RequestId} {Method} {Path} => {StatusCode}",
+            requestId,
+            context.Request.Method,
+            context.Request.Path,
+            context.Response.StatusCode
+        );
+    }
+});
+//
+
 app.MapCarter();
 
 // Health check
