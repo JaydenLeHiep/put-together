@@ -1,17 +1,16 @@
 import type { Lesson } from "../types/lesson";
 
-const API_BASE =
-  import.meta.env.DEV
-    ? "/api"
-    : "https://seashell-app-hjntu.ondigitalocean.app/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-const API = `${API_BASE}/lessons`;
+if (!API_BASE) {
+  throw new Error("VITE_API_BASE_URL is not defined");
+}
+
+const API = `${API_BASE}/api/lessons`;
 
 export async function getLessons(): Promise<Lesson[]> {
   const res = await fetch(API);
-  if (!res.ok) {
-    throw new Error(`Failed to load lessons (HTTP ${res.status})`);
-  }
+  if (!res.ok) throw new Error("Failed to load lessons");
   return res.json();
 }
 
