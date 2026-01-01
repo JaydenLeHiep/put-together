@@ -1,12 +1,11 @@
 import type { Lesson } from "../types/lesson";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL;
+const API_BASE =
+  import.meta.env.DEV
+    ? "/api"
+    : "https://seashell-app-hjntu.ondigitalocean.app/api";
 
-if (!API_BASE) {
-  throw new Error("VITE_API_BASE_URL is not defined");
-}
-
-const API = `${API_BASE}/api/lessons`;
+const API = `${API_BASE}/lessons`;
 
 export async function getLessons(): Promise<Lesson[]> {
   const res = await fetch(API);
@@ -18,19 +17,13 @@ export async function getLessons(): Promise<Lesson[]> {
 
 export async function getLessonById(id: string): Promise<Lesson> {
   const res = await fetch(`${API}/${id}`);
-  if (!res.ok) {
-    throw new Error("Lesson not found");
-  }
+  if (!res.ok) throw new Error("Lesson not found");
   return res.json();
 }
 
 export async function deleteLesson(id: string): Promise<void> {
-  const res = await fetch(`${API}/${id}`, {
-    method: "DELETE",
-  });
-  if (!res.ok) {
-    throw new Error("Delete failed");
-  }
+  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
+  if (!res.ok) throw new Error("Delete failed");
 }
 
 export async function createLesson(form: FormData): Promise<void> {
@@ -38,7 +31,5 @@ export async function createLesson(form: FormData): Promise<void> {
     method: "POST",
     body: form,
   });
-  if (!res.ok) {
-    throw new Error("Upload fehlgeschlagen");
-  }
+  if (!res.ok) throw new Error("Upload fehlgeschlagen");
 }
