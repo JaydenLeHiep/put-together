@@ -4,20 +4,17 @@ using backend_put_together.Modules.Bunny;
 using Carter;
 using Serilog;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// =========================
 // Logging
-// =========================
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
     .CreateLogger();
 builder.Host.UseSerilog();
 
-// =========================
 // Large file upload support
-// =========================
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = long.MaxValue;
@@ -30,41 +27,35 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = long.MaxValue;
 });
 
-// =========================
-// Server config
-// =========================
+// Server config (DO compatible)
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 
-// =========================
 // Swagger
-// =========================
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// =========================
-// CORS
-// =========================
+// CORS (LOCAL + PRODUCTION SAFE)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendCors", policy =>
     {
         policy
-            .WithOrigins("http://localhost:5173") // Vite frontend
+            .AllowAnyOrigin()
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
 });
 
-// =========================
 // App services
-// =========================
 builder.Services
     .AddDatabase(builder.Configuration)
     .AddApplication();
 
 // Bunny
-builder.Services.Configure<BunnyOptions>(builder.Configuration.GetSection("Bunny"));
+builder.Services.Configure<BunnyOptions>(
+    builder.Configuration.GetSection("Bunny")
+);
 builder.Services.AddHttpClient();
 
 // Video abstraction
@@ -72,18 +63,32 @@ builder.Services.AddScoped<IVideoProvider, BunnyVideoProvider>();
 
 var app = builder.Build();
 
+// Proxy / HTTPS support 
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto
+});
+
+app.UseHttpsRedirection();
+
+// Swagger (dev only)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Pipeline
 app.UseCors("FrontendCors");
 app.MapCarter();
 
-app.MapGet("/", (ILogger<Program> logger) =>
+// Health check
+app.MapGet("/", (ILogger<Program> logger, IConfiguration config) =>
 {
-    logger.LogInformation("Ok");
+    var db = Environment.GetEnvironmentVariable("DATABASE_URL");
+    logger.LogInformation("API OK – DB: {Db}", db is null ? "NOT SET" : "SET");
     return "OK";
 });
 

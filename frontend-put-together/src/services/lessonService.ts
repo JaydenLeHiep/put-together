@@ -1,8 +1,10 @@
 import type { Lesson } from "../types/lesson";
 
-const API_BASE =
-  import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV ? "" : "");
+const API_BASE = import.meta.env.VITE_API_BASE_URL;
+
+if (!API_BASE) {
+  throw new Error("VITE_API_BASE_URL is not defined");
+}
 
 const API = `${API_BASE}/api/lessons`;
 
@@ -28,8 +30,5 @@ export async function createLesson(form: FormData): Promise<void> {
     method: "POST",
     body: form,
   });
-
-  if (!res.ok) {
-    throw new Error("Upload fehlgeschlagen");
-  }
+  if (!res.ok) throw new Error("Upload fehlgeschlagen");
 }
