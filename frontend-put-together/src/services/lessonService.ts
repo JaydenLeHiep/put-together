@@ -2,6 +2,12 @@ import type { Lesson } from "../types/lesson";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
+console.info("[LessonService] Loaded");
+console.info(
+  "[LessonService] VITE_API_BASE_URL =",
+  import.meta.env.VITE_API_BASE_URL
+);
+
 if (!API_BASE) {
   throw new Error("VITE_API_BASE_URL is not defined");
 }
@@ -9,11 +15,23 @@ if (!API_BASE) {
 const API = `${API_BASE}/api/lessons`;
 
 export async function getLessons(): Promise<Lesson[]> {
-  const res = await fetch(API);
-  if (!res.ok) throw new Error("Failed to load lessons");
-  return res.json();
-}
+  console.info("[LessonService] getLessons() called");
+  console.info("[LessonService] Fetch URL:", API);
 
+  const res = await fetch(API);
+
+  console.info("[LessonService] Response status:", res.status);
+  console.info("[LessonService] Response headers:", [...res.headers.entries()]);
+
+  const text = await res.text();
+  console.info("[LessonService] Raw response body:", text);
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error("Response is not valid JSON");
+  }
+}
 export async function getLessonById(id: string): Promise<Lesson> {
   const res = await fetch(`${API}/${id}`);
   if (!res.ok) throw new Error("Lesson not found");
