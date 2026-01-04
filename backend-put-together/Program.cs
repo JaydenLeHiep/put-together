@@ -1,6 +1,6 @@
 using backend_put_together.Extensions;
-using backend_put_together.Modules.Video;
-using backend_put_together.Modules.Bunny;
+using backend_put_together.Infrastructure.Video;
+using backend_put_together.Infrastructure.Video.Bunny;
 using Carter;
 using Serilog;
 using Microsoft.AspNetCore.Http.Features;
@@ -36,13 +36,17 @@ builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// CORS (open for current stage)
+// CORS 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("FrontendCors", policy =>
     {
         policy
-            .AllowAnyOrigin()
+            .WithOrigins(
+                "http://localhost:5173",
+                "http://127.0.0.1:5173",
+                "https://octopus-app-r2mpa.ondigitalocean.app"
+            )
             .AllowAnyHeader()
             .AllowAnyMethod();
     });

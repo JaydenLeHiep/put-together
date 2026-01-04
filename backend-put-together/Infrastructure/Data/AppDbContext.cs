@@ -1,7 +1,7 @@
 using backend_put_together.Domain.Lessons;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend_put_together.Data;
+namespace backend_put_together.Infrastructure.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

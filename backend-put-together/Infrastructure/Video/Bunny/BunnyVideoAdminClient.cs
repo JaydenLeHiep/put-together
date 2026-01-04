@@ -1,8 +1,8 @@
 using System.Net.Http.Json;
 using Microsoft.Extensions.Options;
-using backend_put_together.Modules.Bunny;
+using backend_put_together.Infrastructure.Video.Bunny;
 
-namespace backend_put_together.Infrastructure.Video;
+namespace backend_put_together.Infrastructure.Video.Bunny;
 
 public sealed class BunnyVideoAdminClient
 {

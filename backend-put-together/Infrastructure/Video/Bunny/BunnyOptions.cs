@@ -1,4 +1,4 @@
-namespace backend_put_together.Modules.Bunny;
+namespace backend_put_together.Infrastructure.Video.Bunny;
 
 public sealed class BunnyOptions
 {
