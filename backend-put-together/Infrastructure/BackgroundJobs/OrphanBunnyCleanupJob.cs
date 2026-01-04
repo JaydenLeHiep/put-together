@@ -1,6 +1,6 @@
-using backend_put_together.Data;
+using backend_put_together.Infrastructure.Data;
 using backend_put_together.Infrastructure.Video;
-using backend_put_together.Modules.Video;
+using backend_put_together.Infrastructure.Video.Bunny;
 using backend_put_together.Infrastructure.Scheduling;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;

@@ -1,9 +1,9 @@
 using System.Data.Common;
-using backend_put_together.Data;
+using backend_put_together.Infrastructure.Data;
 using Carter;
 using Npgsql;
 
-namespace backend_put_together.Endpoints.Health;
+namespace backend_put_together.Api.Endpoints.Health;
 
 public class HealthDbEndpoint : ICarterModule
 {

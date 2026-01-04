@@ -1,4 +1,4 @@
-using backend_put_together.Data;
+using backend_put_together.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend_put_together.Extensions;

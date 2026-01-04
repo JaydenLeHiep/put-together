@@ -1,7 +1,7 @@
 using backend_put_together.Application.Lessons.DTOs;
-using backend_put_together.Data;
+using backend_put_together.Infrastructure.Data;
 using backend_put_together.Domain.Lessons;
-using backend_put_together.Modules.Video;
+using backend_put_together.Infrastructure.Video;
 using Microsoft.EntityFrameworkCore;
 
 namespace backend_put_together.Application.Lessons.Services;

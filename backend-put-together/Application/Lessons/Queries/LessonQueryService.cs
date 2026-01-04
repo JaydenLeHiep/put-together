@@ -1,4 +1,4 @@
-using backend_put_together.Data;
+using backend_put_together.Infrastructure.Data;
 using backend_put_together.Application.Lessons.DTOs;
 using Microsoft.EntityFrameworkCore;
 
