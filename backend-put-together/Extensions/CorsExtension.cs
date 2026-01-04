@@ -3,7 +3,7 @@ namespace backend_put_together.Extensions;
 
 public static class CorsExtension
 {
-    private const string PolicyName = "FrontendCors";
+    public const string PolicyName = "FrontendCors";
     public static IServiceCollection AddCors(this IServiceCollection services, IConfiguration config)
     {
         var listOfAllowedCorsOrigins = config.GetSection("Cors:AllowedOrigins").Get<List<string>>();

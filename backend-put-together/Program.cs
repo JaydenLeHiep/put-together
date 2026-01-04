@@ -61,7 +61,7 @@ if (app.Environment.IsDevelopment())
 }
 
 // Middleware pipeline
-app.UseCors();
+app.UseCors(CorsExtension.PolicyName);
 app.MapCarter();
 
 // Health check
