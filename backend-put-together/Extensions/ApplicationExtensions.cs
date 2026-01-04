@@ -2,6 +2,8 @@ using backend_put_together.Application.Lessons.Queries;
 using backend_put_together.Application.Lessons.Services;
 using backend_put_together.Infrastructure.BackgroundJobs;
 using backend_put_together.Infrastructure.Scheduling;
+using backend_put_together.Infrastructure.Video;
+using backend_put_together.Infrastructure.Video.Bunny;
 using Carter;
 
 namespace backend_put_together.Extensions;
@@ -15,6 +17,7 @@ public static class ApplicationExtensions
         // Application
         services.AddScoped<ILessonService, LessonService>();
         services.AddScoped<ILessonQueryService, LessonQueryService>();
+        services.AddScoped<IVideoProvider, BunnyVideoProvider>();
 
         // Background jobs (scoped!)
         services.AddScoped<HardDeleteLessonsJob>();

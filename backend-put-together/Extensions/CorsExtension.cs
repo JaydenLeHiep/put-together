@@ -1,3 +1,4 @@
+using Serilog;
 namespace backend_put_together.Extensions;
 
 public static class CorsExtension
@@ -5,11 +6,12 @@ public static class CorsExtension
     private const string PolicyName = "FrontendCors";
     public static IServiceCollection AddCors(this IServiceCollection services, IConfiguration config)
     {
-        var listOfAllowedCorsOrigins = config.GetSection("AllowedCorsOrigins").Get<List<string>>();
+        var listOfAllowedCorsOrigins = config.GetSection("Cors:AllowedOrigins").Get<List<string>>();
 
-        if (listOfAllowedCorsOrigins == null)
+        if (listOfAllowedCorsOrigins == null || listOfAllowedCorsOrigins.Count == 0)
         {
-            throw new InvalidOperationException("AllowedCorsOrigins are not configured");
+            listOfAllowedCorsOrigins = new List<string>();
+            Log.Warning("CORS: No allowed origins configured");
         }
 
         services.AddCors(options => options.AddPolicy(PolicyName, policy => 
