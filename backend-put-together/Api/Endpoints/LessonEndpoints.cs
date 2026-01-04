@@ -4,7 +4,7 @@ using backend_put_together.Application.Lessons.Queries;
 using Carter;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend_put_together.Endpoints.Lessons;
+namespace backend_put_together.Api.Endpoints.Lessons;
 
 public sealed class LessonEndpoints : ICarterModule
 {

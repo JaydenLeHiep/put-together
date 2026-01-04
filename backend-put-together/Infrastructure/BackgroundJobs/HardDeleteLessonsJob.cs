@@ -1,5 +1,5 @@
 using backend_put_together.Infrastructure.Scheduling;
-using backend_put_together.Data;
+using backend_put_together.Infrastructure.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;

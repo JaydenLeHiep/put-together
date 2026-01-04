@@ -1,9 +1,9 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using backend_put_together.Modules.Video;
+using backend_put_together.Infrastructure.Video;
 using Microsoft.Extensions.Options;
 
-namespace backend_put_together.Modules.Bunny;
+namespace backend_put_together.Infrastructure.Video.Bunny;
 
 public sealed class BunnyVideoProvider : IVideoProvider
 {
