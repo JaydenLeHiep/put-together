@@ -37,25 +37,26 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // CORS 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("FrontendCors", policy =>
-    {
-        policy
-            .WithOrigins(
-                "http://localhost:5173",
-                "http://127.0.0.1:5173",
-                "https://octopus-app-r2mpa.ondigitalocean.app"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("FrontendCors", policy =>
+//     {
+//         policy
+//             .WithOrigins(
+//                 "http://localhost:5173",
+//                 "http://127.0.0.1:5173",
+//                 "https://octopus-app-r2mpa.ondigitalocean.app"
+//             )
+//             .AllowAnyHeader()
+//             .AllowAnyMethod();
+//     });
+// });
 
 // Application services
 builder.Services
     .AddDatabase(builder.Configuration)
-    .AddApplication();
+    .AddApplication()
+    .AddCors(builder.Configuration);
 
 // Bunny configuration
 builder.Services.Configure<BunnyOptions>(
