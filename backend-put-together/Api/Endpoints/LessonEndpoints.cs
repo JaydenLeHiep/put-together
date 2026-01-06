@@ -1,10 +1,10 @@
 using backend_put_together.Application.Lessons.DTOs;
-using backend_put_together.Application.Lessons.Services;
 using backend_put_together.Application.Lessons.Queries;
+using backend_put_together.Application.Lessons.Services;
 using Carter;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend_put_together.Api.Endpoints.Lessons;
+namespace backend_put_together.Api.Endpoints;
 
 public sealed class LessonEndpoints : ICarterModule
 {
