@@ -1,0 +1,12 @@
+namespace backend_put_together.Domain.Users;
+
+public class User
+{
+    public Guid Id { get; set; }
+
+    public required string UserName { get; set; }
+    public required string Email { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime? DeletedAt { get; set; }
+    public ICollection<UserLogin> UserLogins { get; set; } = new List<UserLogin>();
+}
