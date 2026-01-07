@@ -26,10 +26,11 @@ public class UserService : IUserService
         var email = request.Email;
         var password = request.Password;
 
-        var newUser = new Domain.Users.User
+        var newUser = new User
         {
             UserName = username,
             Email = email,
+            Role = Role.Student,
             CreatedAt = DateTime.UtcNow,
             DeletedAt = null
         };

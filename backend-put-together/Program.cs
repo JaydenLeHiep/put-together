@@ -35,7 +35,7 @@ builder.Services
     .AddApplication()
     .AddCors(builder.Configuration)
     .AddJwt(builder.Configuration, builder.Environment)
-    .AddAuthorization()
+    .AddAuthorizationPolicy()
     .AddAuthentication();
 
 // Bunny configuration
@@ -78,7 +78,8 @@ app.MapGet("/test-jwt", (ILogger<Program> logger) =>
 {
     logger.LogInformation("Test JWT!");
     return "Test JWT";
-}).RequireAuthorization();
+})
+    .RequireAuthorization("AdminOnly");
 
 app.UseAuthentication();
 app.UseAuthorization();

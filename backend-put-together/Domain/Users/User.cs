@@ -8,5 +8,13 @@ public class User
     public required string Email { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public Role Role { get; set; }
     public ICollection<UserLogin> UserLogins { get; set; } = new List<UserLogin>();
+}
+
+public enum Role
+{
+    Admin,
+    Teacher,
+    Student
 }

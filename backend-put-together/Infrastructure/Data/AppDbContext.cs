@@ -62,6 +62,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             u.Property(x => x.Email)
                 .IsRequired()
                 .HasMaxLength(255);
+            
+            u.Property(x => x.Role);
 
             u.Property(x => x.CreatedAt)
                 .IsRequired();
