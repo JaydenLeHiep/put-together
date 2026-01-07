@@ -1,4 +1,4 @@
-using backend_put_together.Application.User.DTOs;
+using backend_put_together.Application.Users.DTOs;
 
 namespace backend_put_together.Application.Users.Services;
 

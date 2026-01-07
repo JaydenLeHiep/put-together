@@ -33,7 +33,10 @@ builder.Services
     .AddSwaggerGen()
     .AddDatabase(builder.Configuration)
     .AddApplication()
-    .AddCors(builder.Configuration);
+    .AddCors(builder.Configuration)
+    .AddJwt(builder.Configuration, builder.Environment)
+    .AddAuthorization()
+    .AddAuthentication();
 
 // Bunny configuration
 builder.Services.Configure<BunnyOptions>(
@@ -70,5 +73,14 @@ app.MapGet("/", (ILogger<Program> logger) =>
     logger.LogInformation("OK!");
     return "OK";
 });
+
+app.MapGet("/test-jwt", (ILogger<Program> logger) =>
+{
+    logger.LogInformation("Test JWT!");
+    return "Test JWT";
+}).RequireAuthorization();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.Run();
