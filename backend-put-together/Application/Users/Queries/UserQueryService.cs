@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using backend_put_together.Application.Users.DTOs;
 using backend_put_together.Application.Users.Shared;
+using backend_put_together.Domain.Users;
 using backend_put_together.Infrastructure.Data;
 using backend_put_together.Infrastructure.PasswordHasher;
 using Microsoft.EntityFrameworkCore;
@@ -52,12 +53,12 @@ public class UserQueryService : IUserQueryService
             return LoginResult.Fail();
         }
         
-        var generatedToken = GenerateUserToken(user.Id, user.UserName);
+        var generatedToken = GenerateUserToken(user.Id, user.UserName, user.Role);
 
         return LoginResult.Ok(user.Id, generatedToken);
     }
 
-    private string GenerateUserToken(Guid userId,string username)
+    private string GenerateUserToken(Guid userId,string username, Role userRole)
     {
         var jwtSettings = _config.GetSection("Jwt");
 
@@ -76,7 +77,8 @@ public class UserQueryService : IUserQueryService
         var claims = new[]
         {
             new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.UniqueName, username)
+            new Claim(JwtRegisteredClaimNames.UniqueName, username),
+            new Claim(ClaimTypes.Role, userRole.ToString())
         };
 
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
