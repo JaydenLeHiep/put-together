@@ -9,6 +9,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Lesson> Lessons => Set<Lesson>();
     public DbSet<User> Users => Set<User>();
     public DbSet<UserLogin> UserLogins => Set<UserLogin>();
+    public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -107,6 +108,36 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             u
                 .HasIndex(x => new { x.UserId, x.Provider})
                 .IsUnique();
+        });
+        
+        modelBuilder.Entity<UserRefreshToken>(u =>
+        {
+            u.HasKey(x => x.Id);
+
+            u.Property(x => x.HashedToken)
+                .IsRequired()
+                .HasColumnType("text");
+            
+            u.Property(x => x.ExpiryTime)
+                .IsRequired();
+
+            u.Property(x => x.CreatedAt)
+                .IsRequired();
+            
+            u.Property(x => x.RevokedAt);
+
+            u.HasOne(x => x.User)
+                .WithMany(x => x.UserRefreshTokens)
+                .HasForeignKey(x => x.UserId);
+
+            u
+                .HasIndex(x => new{x.UserId, x.ExpiryTime});
+            
+            u
+                .HasIndex(x => x.HashedToken)
+                .IsUnique();
+            
+            u.HasIndex(x => x.ExpiryTime);
         });
     }
 }

@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using backend_put_together.Application.Users.DTOs;
 using backend_put_together.Application.Users.Queries;
 using backend_put_together.Application.Users.Services;
+using backend_put_together.Infrastructure.Tokens;
 using Carter;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -68,29 +69,119 @@ public class UserEndpoints : ICarterModule
         group.MapPost("/login", async (
                 [FromBody] LoginUserRequest req,
                 IUserQueryService service,
-                CancellationToken ct) =>
+                HttpContext httpContext,
+                IWebHostEnvironment env,
+                CancellationToken ct,
+                ILogger<UserEndpoints> logger) =>
             {
-                if (string.IsNullOrWhiteSpace(req.Identifier))
-                    return Results.BadRequest("username or email is required");
-
-                if (string.IsNullOrWhiteSpace(req.Password))
-                    return Results.BadRequest("password is required");
-                
-                var loginResult = await service.LoginAsync(req, ct);
-                if (!loginResult.Success)
+                try
                 {
-                    return Results.Json(
-                        new { message = "Invalid username or password" },
-                        statusCode: StatusCodes.Status401Unauthorized
-                    );
+                    if (string.IsNullOrWhiteSpace(req.Identifier))
+                        return Results.BadRequest("username or email is required");
+
+                    if (string.IsNullOrWhiteSpace(req.Password))
+                        return Results.BadRequest("password is required");
+                
+                    var loginResult = await service.LoginAsync(req, ct);
+                    if (!loginResult.Success)
+                    {
+                        return Results.Json(
+                            new { message = "Invalid username or password" },
+                            statusCode: StatusCodes.Status401Unauthorized
+                        );
+                    }
+                    
+                    if (loginResult.RefreshToken != null)
+                    {
+                        TokenHelper.SendRefreshTokenInCookie(loginResult.RefreshToken, env, httpContext);
+
+                        return Results.Ok(new
+                        {
+                            accessToken = loginResult.AccessToken,
+                            userInfo = loginResult.UserInfo
+                        });
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Unhandled exception during login user");
+                    return Results.BadRequest("Something went wrong!");
                 }
 
-                return Results.Ok(new
+                return Results.Unauthorized();
+            })
+            .DisableAntiforgery();
+        
+        group.MapPost("/refresh", async (
+                HttpContext httpContext,
+                IUserQueryService service,
+                IWebHostEnvironment env,
+                CancellationToken ct,
+                ILogger<UserEndpoints> logger) =>
+            {
+                try
                 {
-                    userId = loginResult.UserId,
-                    token = loginResult.AccessToken
-                    // token will go here later
-                });
+                    var refreshToken = httpContext.Request.Cookies["refreshToken"];
+
+                    if (string.IsNullOrWhiteSpace(refreshToken))
+                    {
+                        return Results.Unauthorized();
+                    }
+
+                    var refreshResult = await service.RefreshAsync(refreshToken, ct);
+
+                    if (!refreshResult.Success)
+                    {
+                        return Results.Json(
+                            new { message = "Invalid refresh token" },
+                            statusCode: StatusCodes.Status401Unauthorized
+                        );
+                    }
+
+                    if (refreshResult.RefreshToken != null)
+                    {
+                        TokenHelper.SendRefreshTokenInCookie(refreshResult.RefreshToken, env, httpContext);
+
+                        return Results.Ok(new
+                        {
+                            accessToken = refreshResult.AccessToken
+                        });
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Unhandled exception during refresh token");
+                    return Results.BadRequest("Something went wrong!");
+                }
+                return Results.Unauthorized();
+            })
+            .DisableAntiforgery();
+        
+        group.MapPost("/logout", async (
+                HttpContext httpContext,
+                IUserQueryService service,
+                IWebHostEnvironment env,
+                CancellationToken ct,
+                ILogger<UserEndpoints> logger) =>
+            {
+                try
+                {
+                    var refreshToken = httpContext.Request.Cookies["refreshToken"];
+
+                    if (!string.IsNullOrWhiteSpace(refreshToken))
+                    {
+                        await service.LogoutAsync(refreshToken, ct);
+                    }
+
+                    if (refreshToken != null) TokenHelper.DeleteRefreshTokenInCookie(env, httpContext);
+
+                    return Results.Ok();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Unhandled exception during logout");
+                    return Results.BadRequest("Something went wrong!");
+                }
             })
             .DisableAntiforgery();
     }

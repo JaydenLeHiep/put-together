@@ -19,7 +19,8 @@ public sealed class LessonEndpoints : ICarterModule
         {
             var lessons = await query.GetAllAsync();
             return Results.Ok(lessons);
-        });
+        })
+            .RequireAuthorization("AdminOnly");
 
         // =========================================================
         // GET /api/lessons/{id}
@@ -52,7 +53,8 @@ public sealed class LessonEndpoints : ICarterModule
             return Results.Ok(result);
         })
         .Accepts<CreateLessonRequest>("multipart/form-data")
-        .DisableAntiforgery();
+        .DisableAntiforgery()
+        .RequireAuthorization("AdminOnly");
 
         // =========================================================
         // PUT /api/lessons/{id}

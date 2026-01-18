@@ -3,21 +3,23 @@ namespace backend_put_together.Application.Users.Shared;
 public class LoginResult
 {
     public bool Success { get; }
-    public Guid? UserId { get; }
+    public UserInfo? UserInfo { get; }
     
     public string? AccessToken { get; }
+    public string? RefreshToken { get; }
 
 
-    private LoginResult(bool success, Guid? userId, string? token)
+    private LoginResult(bool success, UserInfo? user, string? accessToken, string? refreshToken)
     {
         Success = success;
-        UserId = userId;
-        AccessToken = token;
+        UserInfo = user;
+        AccessToken = accessToken;
+        RefreshToken = refreshToken;
     }
 
     public static LoginResult Fail()
-        => new(false, null, null);
+        => new(false, null, null, null);
 
-    public static LoginResult Ok(Guid userId, string? token)
-        => new(true, userId, token);
+    public static LoginResult Ok(UserInfo userInfo, string? accessToken, string? refreshToken)
+        => new(true, userInfo, accessToken, refreshToken);
 }

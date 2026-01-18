@@ -1,10 +1,11 @@
 import type { Lesson } from "../types/lesson";
 import { getApiBaseUrl } from "../config/runtimeConfig";
+import { apiFetch } from "../hooks/useApi";
 
 const API = `${getApiBaseUrl()}/api/lessons`;
 
 export async function getLessons(): Promise<Lesson[]> {
-  const res = await fetch(API);
+  const res = await apiFetch(API, { method: "GET" });
   if (!res.ok) {
     throw new Error(`Failed to load lessons (${res.status})`);
   }

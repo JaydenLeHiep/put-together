@@ -1,4 +1,5 @@
 using backend_put_together.Application.Users.DTOs;
+using backend_put_together.Application.Users.Shared;
 using backend_put_together.Infrastructure.Data;
 using backend_put_together.Infrastructure.PasswordHasher;
 using backend_put_together.Domain.Users;
