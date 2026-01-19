@@ -28,7 +28,6 @@ export type AuthContextType = {
     user: AuthUser | null;
     accessToken: string | null;
     isAuthenticated: boolean;
-    isLoading: boolean;
     isAuthReady: boolean;
     login: (payload: LoginPayload) => Promise<void>;
     logout: () => Promise<void>;

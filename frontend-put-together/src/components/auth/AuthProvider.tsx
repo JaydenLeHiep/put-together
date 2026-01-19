@@ -63,7 +63,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         accessToken,
         isAuthenticated: status === "authenticated",
-        isLoading: status === "loading",
         isAuthReady,
         login,
         logout,
