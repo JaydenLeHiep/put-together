@@ -7,7 +7,7 @@ public static class DatabaseExtensions
 {
     public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration config)
     {
-        var conn = Environment.GetEnvironmentVariable("DATABASE_URL");
+        var conn = Environment.GetEnvironmentVariable("DATABASE__URL");
         
         if (string.IsNullOrWhiteSpace(conn))
         {
