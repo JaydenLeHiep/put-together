@@ -33,7 +33,7 @@ public static class TokenHelper
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.None,
-                    Path = "/refresh",
+                    Path = "/",
                     MaxAge = TimeSpan.FromDays(AmountDaysSaveRefreshToken)
                 }
             );
@@ -48,7 +48,7 @@ public static class TokenHelper
                     HttpOnly = true,
                     Secure = false,
                     SameSite = SameSiteMode.Strict,
-                    Path = "/refresh",
+                    Path = "/",
                     MaxAge = TimeSpan.FromDays(AmountDaysSaveRefreshToken)
                 }
             );
