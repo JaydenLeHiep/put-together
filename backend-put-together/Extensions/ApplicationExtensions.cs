@@ -1,10 +1,13 @@
 using backend_put_together.Application.Lessons.Queries;
 using backend_put_together.Application.Lessons.Services;
+using backend_put_together.Application.Storage.Queries;
+using backend_put_together.Application.Storage.Services;
 using backend_put_together.Application.Users.Queries;
 using backend_put_together.Application.Users.Services;
 using backend_put_together.Domain.Users;
 using backend_put_together.Infrastructure.BackgroundJobs;
 using backend_put_together.Infrastructure.PasswordHasher;
+using backend_put_together.Infrastructure.S3StoredFileService;
 using backend_put_together.Infrastructure.Scheduling;
 using backend_put_together.Infrastructure.Video;
 using backend_put_together.Infrastructure.Video.Bunny;
@@ -29,14 +32,15 @@ public static class ApplicationExtensions
         services.AddScoped<PasswordHasher<User>>();
         services.AddScoped<IAppPasswordHasher, AppPasswordHasher>();
         
-        // Background jobs (scoped!)
+        services.AddScoped<IS3StoredFileService, S3StoredFileService>();
+        services.AddScoped<IStoredFileService, StoredFileService>();
+        services.AddScoped<IStoredFileQueryService, StoredFileQueryService>();
+        
         services.AddScoped<HardDeleteLessonsJob>();
         services.AddScoped<OrphanBunnyCleanupJob>();
-
-        // Scheduler (singleton)
+        
         services.AddHostedService<CronHostedService>();
-
-        // Cron options
+        
         services.Configure<CronOptions>(opts =>
         {
             opts.OrphanCleanupInterval = TimeSpan.FromHours(6);

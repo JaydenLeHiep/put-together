@@ -35,6 +35,7 @@ builder.Services
     .AddApplication()
     .AddCors(builder.Configuration)
     .AddJwt(builder.Configuration, builder.Environment)
+    .AddAws(builder.Configuration)
     .AddAuthorizationPolicy()
     .AddAuthentication();
 

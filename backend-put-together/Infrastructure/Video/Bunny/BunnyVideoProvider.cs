@@ -1,6 +1,5 @@
 using System.Net.Http.Headers;
 using System.Text.Json;
-using backend_put_together.Infrastructure.Video;
 using Microsoft.Extensions.Options;
 
 namespace backend_put_together.Infrastructure.Video.Bunny;
