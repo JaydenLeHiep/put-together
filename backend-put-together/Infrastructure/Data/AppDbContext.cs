@@ -1,4 +1,5 @@
 using backend_put_together.Domain.Lessons;
+using backend_put_together.Domain.Storage;
 using backend_put_together.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<UserLogin> UserLogins => Set<UserLogin>();
     public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
+    public DbSet<S3StoredFile> S3StoredFiles => Set<S3StoredFile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -138,6 +140,36 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .IsUnique();
             
             u.HasIndex(x => x.ExpiryTime);
+        });
+        
+        modelBuilder.Entity<S3StoredFile>(s =>
+        {
+            s.ToTable("s3_stored_files");
+            s.HasKey(x => x.Id);
+            s.HasOne(x => x.Lesson)
+                .WithMany(x => x.StoredFiles)
+                .HasForeignKey(x => x.LessonId);
+            
+            s.Property(x => x.FileName)
+                .IsRequired()
+                .HasMaxLength(255);
+            
+            s.Property(x => x.S3Key)
+                .IsRequired()
+                .HasMaxLength(1024);
+            
+            s.Property(x => x.CreatedAt)
+                .IsRequired();
+
+            s.Property(x => x.UpdatedAt)
+                .IsRequired(false);
+            
+            s.Property(x => x.DeletedAt)
+                .IsRequired(false);
+            
+            s
+                .HasIndex(x => x.LessonId)
+                .HasFilter("\"deleted_at\" IS NULL");
         });
     }
 }
