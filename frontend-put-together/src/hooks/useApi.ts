@@ -12,7 +12,7 @@ export function useApi() {
     ): Promise<Response> {
         // send access token from memory
         const headers = new Headers(init.headers);
-        headers.set("Content-Type", "application/json");
+
         if (accessToken) {
             headers.set("Authorization", `Bearer ${accessToken}`);
         }
@@ -47,7 +47,6 @@ export function useApi() {
 
         // retry original request ONCE
         const retryHeaders = new Headers(init.headers);
-        retryHeaders.set("Content-Type", "application/json");
         retryHeaders.set("Authorization", `Bearer ${newAccessToken}`);
 
         return fetch(input, {
