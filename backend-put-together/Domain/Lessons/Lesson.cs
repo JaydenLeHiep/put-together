@@ -1,5 +1,7 @@
 using backend_put_together.Domain.Courses;
 
+using backend_put_together.Domain.Storage;
+
 namespace backend_put_together.Domain.Lessons;
 
 public class Lesson
@@ -30,6 +32,8 @@ public class Lesson
     // Soft delete
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
+
+    public ICollection<S3StoredFile> StoredFiles { get; set; } = new List<S3StoredFile>();
     
     // Domain behaviors
     public void Touch() => UpdatedAt = DateTime.UtcNow;

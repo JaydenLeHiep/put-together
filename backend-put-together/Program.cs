@@ -35,7 +35,10 @@ builder.Services
     .AddApplication()
     .AddCors(builder.Configuration)
     .AddJwt(builder.Configuration, builder.Environment)
-    .AddAuthorizationPolicy();
+    .AddAuthorizationPolicy()
+    .AddAws(builder.Configuration)
+    .AddAuthorizationPolicy()
+    .AddAuthentication();
 
 // Bunny configuration
 builder.Services.Configure<BunnyOptions>(
