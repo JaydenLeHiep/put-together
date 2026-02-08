@@ -12,10 +12,17 @@ export type LoginPayload = {
 };
 
 export type LoginInfo = {
-    accessToken: string;
-    refreshToken: string;
-    userInfo: AuthUser
-}
+  accessToken: string;
+  refreshToken: string;
+  userInfo: BackendUserInfo;
+};
+
+export type BackendUserInfo = {
+  id: string;
+  userName: string;
+  email: string;
+  roleName: string;
+};
 
 export type AuthUser = {
     id: string;
@@ -35,8 +42,9 @@ export type AuthContextType = {
 };
 
 export type RefreshInfo = {
-    accessToken: string,
-    expirationInSeconds: number
-}
+  accessToken: string;
+  expirationInSeconds: number;
+  userInfo: BackendUserInfo;
+};
 
 export type AuthStatus = "loading" | "authenticated" | "unauthenticated";

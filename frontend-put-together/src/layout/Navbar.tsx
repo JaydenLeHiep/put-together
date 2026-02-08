@@ -2,8 +2,15 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 
+const adminNavItems = [
+  { label: "Lektion erstellen", to: "/admin/post-lesson" },
+  { label: "Lektionen verwalten", to: "/admin/courses" },
+  { label: "Produkte", to: "/admin/product-courses" },
+  { label: "Benutzer", to: "/admin/accounts" },
+];
+
 export default function Navbar() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -14,10 +21,9 @@ export default function Navbar() {
   };
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2 rounded-lg font-medium transition-all ${
-      isActive
-        ? "bg-lila-600 text-white shadow-lg"
-        : "text-gray-700 hover:bg-lila-50 hover:text-lila-700"
+    `px-4 py-2 rounded-lg font-medium transition-all ${isActive
+      ? "bg-lila-600 text-white shadow-lg"
+      : "text-gray-700 hover:bg-lila-50 hover:text-lila-700"
     }`;
 
   return (
@@ -25,7 +31,18 @@ export default function Navbar() {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-20">
           {/* Logo & Brand */}
-          <NavLink to="/" className="flex items-center space-x-3 group">
+          <button
+            onClick={() => {
+              if (!isAuthenticated) {
+                navigate("/");
+              } else if (user?.role === "Admin") {
+                navigate("/admin/dashboard");
+              } else {
+                navigate("/course");
+              }
+            }}
+            className="flex items-center space-x-3 group"
+          >
             <div className="w-12 h-12 bg-gradient-to-br from-lila-600 to-lila-700 rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
               <svg
                 className="w-7 h-7 text-white"
@@ -49,7 +66,7 @@ export default function Navbar() {
                 Sprachzentrum
               </span>
             </div>
-          </NavLink>
+          </button>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-2">
@@ -68,16 +85,22 @@ export default function Navbar() {
 
               {isAuthenticated && (
                 <>
-                  <NavLink to="/course" className={linkClass}>
-                    Kurse
-                  </NavLink>
-
-                  <NavLink to="/admin" className={linkClass}>
-                    Admin
-                  </NavLink>
+                  {user?.role === "Admin" && (
+                    <>
+                      {adminNavItems.map(item => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={linkClass}
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                    </>
+                  )}
 
                   <button
-                    onClick={logout}
+                    onClick={handleLogout}
                     className="px-4 py-2 rounded-lg font-medium text-gray-700 hover:bg-red-50 hover:text-red-600 transition-all"
                   >
                     Logout
@@ -88,138 +111,122 @@ export default function Navbar() {
                   {/* Profile */}
                   <button className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
                     <div className="w-8 h-8 bg-gradient-to-br from-lila-400 to-lila-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                      A
+                      {user?.userName?.charAt(0).toUpperCase()}
                     </div>
-                    <span className="text-gray-700 font-medium">Admin</span>
+                    <span className="text-gray-700 font-medium">
+                      {user?.userName}
+                    </span>
                   </button>
                 </>
               )}
             </div>
 
-            {isAuthenticated && <button onClick={handleLogout}>Logout</button>}
-
-            <div className="w-px h-8 bg-gray-200 mx-2"></div>
-
-            {/* User Profile Button */}
-            <button className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-              <div className="w-8 h-8 bg-gradient-to-br from-lila-400 to-lila-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                A
-              </div>
-              <span className="text-gray-700 font-medium">Admin</span>
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            >
               <svg
-                className="w-4 h-4 text-gray-400"
+                className="w-6 h-6 text-gray-700"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
+                {mobileMenuOpen ? (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                ) : (
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 6h16M4 12h16M4 18h16"
+                  />
+                )}
               </svg>
             </button>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <svg
-              className="w-6 h-6 text-gray-700"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              {mobileMenuOpen ? (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              ) : (
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden py-4 border-t space-y-2">
+              {!isAuthenticated && (
+                <>
+                  <NavLink
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
+                  >
+                    Login
+                  </NavLink>
+
+                  <NavLink
+                    to="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
+                  >
+                    Register
+                  </NavLink>
+                </>
               )}
-            </svg>
-          </button>
-        </div>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t space-y-2">
-            {!isAuthenticated && (
-              <>
-                <NavLink
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
-                >
-                  Login
-                </NavLink>
+              {isAuthenticated && (
+                <>
+                  <NavLink
+                    to="/course"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
+                  >
+                    Kurse
+                  </NavLink>
 
-                <NavLink
-                  to="/register"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
-                >
-                  Register
-                </NavLink>
-              </>
-            )}
+                  {user?.role === "Admin" && (
+                    <>
+                      {adminNavItems.map(item => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                    </>
+                  )}
 
-            {isAuthenticated && (
-              <>
-                <NavLink
-                  to="/course"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
-                >
-                  Kurse
-                </NavLink>
+                  <button
+                    onClick={() => {
+                      logout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-3 rounded-lg text-red-600 hover:bg-red-50"
+                  >
+                    Logout
+                  </button>
 
-                <NavLink
-                  to="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
-                >
-                  Admin
-                </NavLink>
-
-                <button
-                  onClick={() => {
-                    logout();
-                    setMobileMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-3 rounded-lg text-red-600 hover:bg-red-50"
-                >
-                  Logout
-                </button>
-
-                <div className="pt-4 mt-4 border-t">
-                  <div className="flex items-center space-x-3 px-4 py-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-lila-400 to-lila-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      A
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">Admin</p>
-                      <p className="text-sm text-gray-500">
-                        admin@lila-deutsch.de
-                      </p>
+                  <div className="pt-4 mt-4 border-t">
+                    <div className="flex items-center space-x-3 px-4 py-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-lila-400 to-lila-600 rounded-full flex items-center justify-center text-white font-semibold">
+                        {user?.userName?.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">
+                          {user?.userName}
+                        </p>
+                        <p className="text-sm text-gray-500">{user?.email}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </>
-            )}
-          </div>
-        )}
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );

@@ -55,29 +55,27 @@ public static class TokenHelper
         }
     }
 
-    public static void DeleteRefreshTokenInCookie(IWebHostEnvironment env, HttpContext httpContext)
+    public static void DeleteRefreshTokenInCookie(
+        IWebHostEnvironment env,
+        HttpContext httpContext)
     {
-        if (env.EnvironmentName == ProductionEnvironment)
+        var options = new CookieOptions
         {
-            httpContext.Response.Cookies.Delete(
-                RefreshTokenKey,
-                new CookieOptions
-                {
-                    Secure = true,
-                    SameSite = SameSiteMode.None
-                }
-            );
+            HttpOnly = true,
+            Path = "/", 
+        };
+
+        if (env.IsProduction())
+        {
+            options.Secure = true;
+            options.SameSite = SameSiteMode.None; 
         }
         else
         {
-            httpContext.Response.Cookies.Delete(
-                RefreshTokenKey,
-                new CookieOptions
-                {
-                    Secure = false,
-                    SameSite = SameSiteMode.None
-                }
-            );
+            options.Secure = false;              
+            options.SameSite = SameSiteMode.Lax; 
         }
+
+        httpContext.Response.Cookies.Delete(RefreshTokenKey, options);
     }
 }

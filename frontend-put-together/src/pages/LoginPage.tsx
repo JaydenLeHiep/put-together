@@ -1,19 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AuthForm from "../components/auth/AuthForm";
 import type { LoginPayload } from "../components/auth/typeAuth";
 import { useAuth } from "../hooks/useAuth";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const location = useLocation();
-  const navigate = useNavigate();
+  useEffect(() => {
+    if (!user) return;
 
-  const from = location.state?.from?.pathname || "/";
+    if (user.role === "Admin") {
+      navigate("/admin/dashboard", { replace: true });
+    } else {
+      navigate("/course", { replace: true });
+    }
+  }, [user, navigate]);
 
   async function handleLogin(data: LoginPayload) {
     try {
@@ -22,7 +28,8 @@ export default function LoginPage() {
 
       await login(data);
 
-      navigate(from, { replace: true });
+      // Role-based landing
+      navigate("/after-login", { replace: true });
     } catch {
       setError("Login failed");
     } finally {

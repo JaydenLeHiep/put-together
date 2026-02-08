@@ -22,36 +22,46 @@ public sealed class BunnyVideoProvider : IVideoProvider
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.Stream);
 
-        var libraryId = string.IsNullOrWhiteSpace(request.LibraryId)
-            ? _options.DefaultLibraryId
-            : request.LibraryId;
-        
-        if (string.IsNullOrWhiteSpace(libraryId))
-        {
-            throw new InvalidOperationException(
-                "VideoLibraryId is missing and DefaultLibraryId is not configured.");
-        }
-        
+        if (string.IsNullOrWhiteSpace(request.LibraryId))
+            throw new ArgumentException("LibraryId required");
+
+        if (string.IsNullOrWhiteSpace(request.StreamApiKey))
+            throw new ArgumentException("StreamApiKey required");
+
+        var libraryId = request.LibraryId;
+        var streamKey = request.StreamApiKey;
+
         var fileName = request.FileName;
 
         // ============================
         // STEP 1: Create video
         // ============================
+
         using var createReq = new HttpRequestMessage(
             HttpMethod.Post,
-            $"{_options.ApiBaseUrl}/library/{libraryId}/videos"
+            $"{_options.StreamBaseUrl}/library/{libraryId}/videos"
         );
 
-        createReq.Headers.Add("AccessKey", _options.ApiKey);
-        createReq.Content = JsonContent.Create(new
-        {
-            title = fileName
-        });
+        createReq.Headers.TryAddWithoutValidation("AccessKey", streamKey);
+
+        object payload = string.IsNullOrWhiteSpace(request.CollectionId)
+            ? new { title = fileName }
+            : new { title = fileName, collectionId = request.CollectionId };
+
+        createReq.Content = JsonContent.Create(payload);
 
         using var createRes = await _http.SendAsync(createReq, ct);
-        createRes.EnsureSuccessStatusCode();
+
+        if (!createRes.IsSuccessStatusCode)
+        {
+            var body = await createRes.Content.ReadAsStringAsync(ct);
+
+            throw new InvalidOperationException(
+                $"Bunny create video failed. Status={(int)createRes.StatusCode} Body={body}");
+        }
 
         var createJson = await createRes.Content.ReadAsStringAsync(ct);
+
         var videoGuid = JsonDocument
             .Parse(createJson)
             .RootElement
@@ -62,12 +72,13 @@ public sealed class BunnyVideoProvider : IVideoProvider
         // ============================
         // STEP 2: Upload binary
         // ============================
+
         using var uploadReq = new HttpRequestMessage(
             HttpMethod.Put,
-            $"{_options.ApiBaseUrl}/library/{libraryId}/videos/{videoGuid}"
+            $"{_options.StreamBaseUrl}/library/{libraryId}/videos/{videoGuid}"
         );
 
-        uploadReq.Headers.Add("AccessKey", _options.ApiKey);
+        uploadReq.Headers.TryAddWithoutValidation("AccessKey", streamKey);
 
         var streamContent = new StreamContent(request.Stream);
         streamContent.Headers.ContentType =
@@ -81,6 +92,7 @@ public sealed class BunnyVideoProvider : IVideoProvider
         // ============================
         // RESULT
         // ============================
+
         var playbackUrl =
             $"https://iframe.mediadelivery.net/embed/{libraryId}/{videoGuid}";
 
@@ -94,25 +106,30 @@ public sealed class BunnyVideoProvider : IVideoProvider
     public async Task DeleteAsync(
         string videoLibraryId,
         string videoGuid,
+        string streamApiKey,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(videoLibraryId))
-            throw new ArgumentException("videoLibraryId is required", nameof(videoLibraryId));
+            throw new ArgumentException(nameof(videoLibraryId));
 
         if (string.IsNullOrWhiteSpace(videoGuid))
-            throw new ArgumentException("videoGuid is required", nameof(videoGuid));
+            throw new ArgumentException(nameof(videoGuid));
+
+        if (string.IsNullOrWhiteSpace(streamApiKey))
+            throw new ArgumentException(nameof(streamApiKey));
 
         var url =
-            $"{_options.ApiBaseUrl}/library/{videoLibraryId}/videos/{videoGuid}";
+            $"{_options.StreamBaseUrl}/library/{videoLibraryId}/videos/{videoGuid}";
 
         using var req = new HttpRequestMessage(HttpMethod.Delete, url);
-        req.Headers.Add("AccessKey", _options.ApiKey);
+        req.Headers.TryAddWithoutValidation("AccessKey", streamApiKey);
 
         using var res = await _http.SendAsync(req, ct);
 
         if (!res.IsSuccessStatusCode)
         {
             var body = await res.Content.ReadAsStringAsync(ct);
+
             throw new InvalidOperationException(
                 $"Bunny delete failed. Status={(int)res.StatusCode} Body={body}");
         }

@@ -4,6 +4,7 @@ using backend_put_together.Application.Users.Queries;
 using backend_put_together.Application.Users.Services;
 using backend_put_together.Infrastructure.Tokens;
 using Carter;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -184,5 +185,23 @@ public class UserEndpoints : ICarterModule
                 }
             })
             .DisableAntiforgery();
+        
+        // GET /api/users/all (Admin only)
+        group.MapGet("/all", async (IUserQueryService query) =>
+            {
+                var users = await query.GetAllUsersAsync();
+                return Results.Ok(users);
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+
+        // GET /api/users/role/{role} (Admin only)
+        group.MapGet("/role/{role}", async (
+                string role, 
+                IUserQueryService query) =>
+            {
+                var users = await query.GetUsersByRoleAsync(role);
+                return Results.Ok(users);
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
     }
 }
