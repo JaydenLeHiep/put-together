@@ -29,11 +29,14 @@ public sealed class OrphanBunnyCleanupJob : IBackgroundJob
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var bunnyAdmin = scope.ServiceProvider.GetRequiredService<BunnyVideoAdminClient>();
         var videoProvider = scope.ServiceProvider.GetRequiredService<IVideoProvider>();
-        
-        // 1) Collect DB video references
+
+        // =============================
+        // Collect DB video references
+        // =============================
         var dbVideos = await db.Lessons
             .IgnoreQueryFilters()
             .Select(x => new { x.VideoLibraryId, x.VideoGuid })
+            .Where(x => x.VideoLibraryId != null && x.VideoGuid != null)
             .Distinct()
             .ToListAsync(ct);
 
@@ -41,37 +44,59 @@ public sealed class OrphanBunnyCleanupJob : IBackgroundJob
             .Select(x => $"{x.VideoLibraryId}:{x.VideoGuid}")
             .ToHashSet();
 
-        var libraries = dbVideos
-            .Select(x => x.VideoLibraryId)
-            .Distinct();
-        
-        // 2) Compare with Bunny storage
-        foreach (var libraryId in libraries)
+        // =============================
+        // Resolve libraries → categories (to get API keys)
+        // =============================
+        var libraryIds = dbVideos
+            .Select(x => x.VideoLibraryId!)
+            .Distinct()
+            .ToList();
+
+        var libraryCategories = await db.Categories
+            .IgnoreQueryFilters()
+            .Where(c => libraryIds.Contains(c.BunnyLibraryId))
+            .Select(c => new
+            {
+                c.BunnyLibraryId,
+                c.BunnyStreamApiKey
+            })
+            .ToListAsync(ct);
+
+        // =============================
+        // Compare Bunny storage
+        // =============================
+        foreach (var lib in libraryCategories)
         {
             IReadOnlyList<string> bunnyVideos;
 
             try
             {
-                bunnyVideos = await bunnyAdmin
-                    .GetAllVideoGuidsAsync(libraryId, ct);
+                bunnyVideos = await bunnyAdmin.GetAllVideoGuidsAsync(
+                    lib.BunnyLibraryId,
+                    lib.BunnyStreamApiKey,
+                    ct);
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine(
-                    $"[ORPHAN-CLEANUP] Failed to fetch videos for library {libraryId}: {ex.Message}");
+                    $"[ORPHAN-CLEANUP] Failed to fetch videos for library {lib.BunnyLibraryId}: {ex.Message}");
                 continue;
             }
 
             foreach (var guid in bunnyVideos)
             {
-                var key = $"{libraryId}:{guid}";
-                // 3) Orphan → delete
+                var key = $"{lib.BunnyLibraryId}:{guid}";
+
+                // =============================
+                // Orphan → delete
+                // =============================
                 if (!dbVideoSet.Contains(key))
                 {
                     try
                     {
                         await videoProvider.DeleteAsync(
-                            libraryId,
+                            lib.BunnyLibraryId,
+                            lib.BunnyStreamApiKey,
                             guid,
                             ct);
                     }

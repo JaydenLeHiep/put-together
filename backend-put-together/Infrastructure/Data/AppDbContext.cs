@@ -1,3 +1,6 @@
+using backend_put_together.Domain.Access;
+using backend_put_together.Domain.Category;
+using backend_put_together.Domain.Courses;
 using backend_put_together.Domain.Lessons;
 using backend_put_together.Domain.Users;
 using Microsoft.EntityFrameworkCore;
@@ -10,134 +13,291 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<User> Users => Set<User>();
     public DbSet<UserLogin> UserLogins => Set<UserLogin>();
     public DbSet<UserRefreshToken> UserRefreshTokens => Set<UserRefreshToken>();
+    public DbSet<Course> Courses => Set<Course>();
+    public DbSet<StudentCourseAccess> StudentCourseAccess => Set<StudentCourseAccess>();
+    public DbSet<LessonComment> LessonComments => Set<LessonComment>();
+    public DbSet<Category> Categories => Set<Category>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
+        // =====================================================
+        // CATEGORIES
+        // =====================================================
+        modelBuilder.Entity<Category>(b =>
+        {
+            b.ToTable("categories");
+            b.HasKey(x => x.Id);
+
+            // Business
+            b.Property(x => x.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            b.Property(x => x.Description)
+                .HasMaxLength(500);
+
+            // Bunny Stream (Library owned by Category)
+            b.Property(x => x.BunnyLibraryId)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            b.Property(x => x.BunnyStreamApiKey)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            b.Property(x => x.BunnyReadOnlyApiKey)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            // Audit
+            b.Property(x => x.CreatedAt)
+                .IsRequired();
+
+            b.Property(x => x.UpdatedAt);
+
+            // Soft delete
+            b.Property(x => x.IsDeleted)
+                .IsRequired();
+
+            b.Property(x => x.DeletedAt);
+
+            // Relations
+            b.HasMany(x => x.Courses)
+                .WithOne(x => x.Category)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes
+            b.HasIndex(x => x.Name).IsUnique();
+            b.HasIndex(x => x.BunnyLibraryId).IsUnique();
+
+            // Global filter
+            b.HasQueryFilter(x => !x.IsDeleted);
+        });
+        
+        // =====================================================
+        // COURSES
+        // =====================================================
+        modelBuilder.Entity<Course>(b =>
+        {
+            b.ToTable("courses");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.Title).IsRequired().HasMaxLength(250);
+            b.Property(x => x.Description).IsRequired();
+            b.Property(x => x.Level).HasMaxLength(50);
+            b.Property(x => x.BunnyCollectionId).IsRequired().HasMaxLength(100);
+            b.Property(x => x.Price).HasColumnType("decimal(10,2)");
+            b.Property(x => x.IsPublished).IsRequired();
+            b.Property(x => x.CreatedById).IsRequired();
+            b.Property(x => x.CreatedAt).IsRequired();
+            b.Property(x => x.UpdatedAt);
+            b.Property(x => x.IsDeleted).IsRequired();
+            b.Property(x => x.DeletedAt);
+            
+            // Link Course to Category
+            b.Property(x => x.CategoryId).IsRequired();
+
+            b.HasOne(x => x.Category)
+                .WithMany(x => x.Courses)
+                .HasForeignKey(x => x.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasMany(x => x.Lessons)
+                .WithOne(x => x.Course)
+                .HasForeignKey(x => x.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasIndex(x => x.Level);
+            b.HasIndex(x => x.IsPublished);
+            b.HasIndex(x => x.BunnyCollectionId).IsUnique();
+            b.HasIndex(x => x.CreatedById);
+
+            b.HasQueryFilter(x => !x.IsDeleted);
+        });
+
+        // =====================================================
+        // LESSONS
+        // =====================================================
         modelBuilder.Entity<Lesson>(b =>
         {
             b.ToTable("lessons");
             b.HasKey(x => x.Id);
-            b.Property(x => x.Title)
-                .IsRequired()
-                .HasMaxLength(250);
 
-            b.Property(x => x.Content)
-                .IsRequired();
-
-            b.Property(x => x.VideoLibraryId)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            b.Property(x => x.VideoGuid)
-                .IsRequired()
-                .HasMaxLength(100);
-
-            b.Property(x => x.CreatedAt)
-                .IsRequired();
-
-            b.Property(x => x.UpdatedAt)
-                .IsRequired(false);
+            b.Property(x => x.Title).IsRequired().HasMaxLength(250);
+            b.Property(x => x.Content).IsRequired();
             
-            b.Property(x => x.IsDeleted)
-                .IsRequired();
-
-            b.Property(x => x.DeletedAt)
-                .IsRequired(false);
+            // Video
+            b.Property(x => x.VideoLibraryId).HasMaxLength(50); 
+            b.Property(x => x.VideoGuid).HasMaxLength(100);    
+            b.Property(x => x.BunnyCollectionId).HasMaxLength(100);
             
+            // Course
+            b.Property(x => x.CourseId).IsRequired();
+            
+            // Publishing
+            b.Property(x => x.IsPublished).IsRequired();
+            b.Property(x => x.PublishedAt);
+            
+            // Author
+            b.Property(x => x.CreatedById).IsRequired();
+            
+            // Audit
+            b.Property(x => x.CreatedAt).IsRequired();
+            b.Property(x => x.UpdatedAt);
+            
+            // Soft delete
+            b.Property(x => x.IsDeleted).IsRequired();
+            b.Property(x => x.DeletedAt);
+
+            // Relations
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.CreatedById)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Indexes
             b.HasIndex(x => x.VideoGuid);
             b.HasIndex(x => x.CreatedAt);
             b.HasIndex(x => x.IsDeleted);
-            
+            b.HasIndex(x => x.CourseId);
+            b.HasIndex(x => x.CreatedById);
+
+            // Global filter
             b.HasQueryFilter(x => !x.IsDeleted);
         });
+
+        // =====================================================
+        // USERS
+        // =====================================================
         modelBuilder.Entity<User>(u =>
         {
             u.HasKey(x => x.Id);
 
-            u.Property(x => x.UserName)
-                .IsRequired()
-                .HasMaxLength(255);
-
-            u.Property(x => x.Email)
-                .IsRequired()
-                .HasMaxLength(255);
-            
+            u.Property(x => x.UserName).IsRequired().HasMaxLength(255);
+            u.Property(x => x.Email).IsRequired().HasMaxLength(255);
             u.Property(x => x.Role);
-
-            u.Property(x => x.CreatedAt)
-                .IsRequired();
-            
+            u.Property(x => x.CreatedAt).IsRequired();
             u.Property(x => x.DeletedAt);
 
-            u
-                .HasIndex(x => x.UserName)
+            u.HasIndex(x => x.UserName)
                 .IsUnique()
                 .HasFilter("\"deleted_at\" IS NULL");
-            u.
-                HasIndex(x => x.Email)
+
+            u.HasIndex(x => x.Email)
                 .IsUnique()
                 .HasFilter("\"deleted_at\" IS NULL");
         });
-        
+
+        // =====================================================
+        // USER LOGINS
+        // =====================================================
         modelBuilder.Entity<UserLogin>(u =>
         {
             u.HasKey(x => x.Id);
 
-            u.Property(x => x.Provider)
-                .IsRequired()
-                .HasMaxLength(255);
-            
-            u.Property(x => x.ProviderKey)
-                .HasMaxLength(255);
-
-            u.Property(x => x.HashedPassword)
-                .HasColumnType("text");
-
-            u.Property(x => x.CreatedAt)
-                .IsRequired();
+            u.Property(x => x.Provider).IsRequired().HasMaxLength(255);
+            u.Property(x => x.ProviderKey).HasMaxLength(255);
+            u.Property(x => x.HashedPassword).HasColumnType("text");
+            u.Property(x => x.CreatedAt).IsRequired();
 
             u.HasOne(x => x.User)
                 .WithMany(x => x.UserLogins)
-                .HasForeignKey(x => x.UserId);
-            
-            u
-                .HasIndex(x => new{x.Provider, x.ProviderKey})
-                .IsUnique();
-            u
-                .HasIndex(x => new { x.UserId, x.Provider})
-                .IsUnique();
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            u.HasIndex(x => new { x.Provider, x.ProviderKey }).IsUnique();
+            u.HasIndex(x => new { x.UserId, x.Provider }).IsUnique();
         });
-        
+
+        // =====================================================
+        // USER REFRESH TOKENS
+        // =====================================================
         modelBuilder.Entity<UserRefreshToken>(u =>
         {
             u.HasKey(x => x.Id);
 
-            u.Property(x => x.HashedToken)
-                .IsRequired()
-                .HasColumnType("text");
-            
-            u.Property(x => x.ExpiryTime)
-                .IsRequired();
-
-            u.Property(x => x.CreatedAt)
-                .IsRequired();
-            
+            u.Property(x => x.HashedToken).IsRequired().HasColumnType("text");
+            u.Property(x => x.ExpiryTime).IsRequired();
+            u.Property(x => x.CreatedAt).IsRequired();
             u.Property(x => x.RevokedAt);
 
             u.HasOne(x => x.User)
                 .WithMany(x => x.UserRefreshTokens)
-                .HasForeignKey(x => x.UserId);
+                .HasForeignKey(x => x.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            u
-                .HasIndex(x => new{x.UserId, x.ExpiryTime});
-            
-            u
-                .HasIndex(x => x.HashedToken)
-                .IsUnique();
-            
+            u.HasIndex(x => new { x.UserId, x.ExpiryTime });
+            u.HasIndex(x => x.HashedToken).IsUnique();
             u.HasIndex(x => x.ExpiryTime);
+        });
+
+        // =====================================================
+        // STUDENT COURSE ACCESS
+        // =====================================================
+        modelBuilder.Entity<StudentCourseAccess>(b =>
+        {
+            b.ToTable("student_course_access");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.StudentId).IsRequired();
+            b.Property(x => x.CourseId).IsRequired();
+            b.Property(x => x.PurchasedAt).IsRequired();
+            b.Property(x => x.ExpiresAt);
+            b.Property(x => x.GrantedById);
+
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.StudentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne<Course>()
+                .WithMany()
+                .HasForeignKey(x => x.CourseId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.GrantedById)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            b.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
+            b.HasIndex(x => x.StudentId);
+            b.HasIndex(x => x.CourseId);
+        });
+
+        // =====================================================
+        // LESSON COMMENTS
+        // =====================================================
+        modelBuilder.Entity<LessonComment>(b =>
+        {
+            b.ToTable("lesson_comments");
+            b.HasKey(x => x.Id);
+
+            b.Property(x => x.LessonId).IsRequired();
+            b.Property(x => x.AuthorId).IsRequired();
+            b.Property(x => x.Content).IsRequired();
+            b.Property(x => x.CreatedAt).IsRequired();
+
+            b.HasOne<Lesson>()
+                .WithMany()
+                .HasForeignKey(x => x.LessonId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            b.HasOne<User>()
+                .WithMany()
+                .HasForeignKey(x => x.AuthorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            b.HasIndex(x => x.LessonId);
+            b.HasIndex(x => x.AuthorId);
         });
     }
 }

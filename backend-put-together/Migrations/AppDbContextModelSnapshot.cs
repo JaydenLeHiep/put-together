@@ -22,17 +22,76 @@ namespace backend_put_together.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("backend_put_together.Domain.Lessons.Lesson", b =>
+            modelBuilder.Entity("backend_put_together.Domain.Access.StudentCourseAccess", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("Content")
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("course_id");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<Guid?>("GrantedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("granted_by_id");
+
+                    b.Property<DateTime>("PurchasedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("purchased_at");
+
+                    b.Property<Guid>("StudentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("student_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_student_course_access");
+
+                    b.HasIndex("CourseId")
+                        .HasDatabaseName("ix_student_course_access_course_id");
+
+                    b.HasIndex("GrantedById")
+                        .HasDatabaseName("ix_student_course_access_granted_by_id");
+
+                    b.HasIndex("StudentId")
+                        .HasDatabaseName("ix_student_course_access_student_id");
+
+                    b.HasIndex("StudentId", "CourseId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_student_course_access_student_id_course_id");
+
+                    b.ToTable("student_course_access", (string)null);
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Category.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BunnyLibraryId")
                         .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("content");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("bunny_library_id");
+
+                    b.Property<string>("BunnyReadOnlyApiKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bunny_read_only_api_key");
+
+                    b.Property<string>("BunnyStreamApiKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bunny_stream_api_key");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -42,9 +101,168 @@ namespace backend_put_together.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
 
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
                         .HasColumnName("is_deleted");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_categories");
+
+                    b.HasIndex("BunnyLibraryId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_categories_bunny_library_id");
+
+                    b.HasIndex("Name")
+                        .IsUnique()
+                        .HasDatabaseName("ix_categories_name");
+
+                    b.ToTable("categories", (string)null);
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Courses.Course", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BunnyCollectionId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bunny_collection_id");
+
+                    b.Property<Guid>("CategoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("category_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("description");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("level");
+
+                    b.Property<decimal?>("Price")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("price");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_courses");
+
+                    b.HasIndex("BunnyCollectionId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_courses_bunny_collection_id");
+
+                    b.HasIndex("CategoryId")
+                        .HasDatabaseName("ix_courses_category_id");
+
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_courses_created_by_id");
+
+                    b.HasIndex("IsPublished")
+                        .HasDatabaseName("ix_courses_is_published");
+
+                    b.HasIndex("Level")
+                        .HasDatabaseName("ix_courses_level");
+
+                    b.ToTable("courses", (string)null);
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Lessons.Lesson", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("BunnyCollectionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("bunny_collection_id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("course_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
+
+                    b.Property<bool>("IsPublished")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_published");
+
+                    b.Property<DateTime?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
 
                     b.Property<string>("Title")
                         .IsRequired()
@@ -57,13 +275,11 @@ namespace backend_put_together.Migrations
                         .HasColumnName("updated_at");
 
                     b.Property<string>("VideoGuid")
-                        .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("video_guid");
 
                     b.Property<string>("VideoLibraryId")
-                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)")
                         .HasColumnName("video_library_id");
@@ -71,8 +287,14 @@ namespace backend_put_together.Migrations
                     b.HasKey("Id")
                         .HasName("pk_lessons");
 
+                    b.HasIndex("CourseId")
+                        .HasDatabaseName("ix_lessons_course_id");
+
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("ix_lessons_created_at");
+
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_lessons_created_by_id");
 
                     b.HasIndex("IsDeleted")
                         .HasDatabaseName("ix_lessons_is_deleted");
@@ -81,6 +303,42 @@ namespace backend_put_together.Migrations
                         .HasDatabaseName("ix_lessons_video_guid");
 
                     b.ToTable("lessons", (string)null);
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Lessons.LessonComment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AuthorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("author_id");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lesson_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_lesson_comments");
+
+                    b.HasIndex("AuthorId")
+                        .HasDatabaseName("ix_lesson_comments_author_id");
+
+                    b.HasIndex("LessonId")
+                        .HasDatabaseName("ix_lesson_comments_lesson_id");
+
+                    b.ToTable("lesson_comments", (string)null);
                 });
 
             modelBuilder.Entity("backend_put_together.Domain.Users.User", b =>
@@ -203,19 +461,97 @@ namespace backend_put_together.Migrations
                         .HasColumnName("user_id");
 
                     b.HasKey("Id")
-                        .HasName("pk_user_refresh_token");
+                        .HasName("pk_user_refresh_tokens");
 
                     b.HasIndex("ExpiryTime")
-                        .HasDatabaseName("ix_user_refresh_token_expiry_time");
+                        .HasDatabaseName("ix_user_refresh_tokens_expiry_time");
 
                     b.HasIndex("HashedToken")
                         .IsUnique()
-                        .HasDatabaseName("ix_user_refresh_token_hashed_token");
+                        .HasDatabaseName("ix_user_refresh_tokens_hashed_token");
 
                     b.HasIndex("UserId", "ExpiryTime")
-                        .HasDatabaseName("ix_user_refresh_token_user_id_expiry_time");
+                        .HasDatabaseName("ix_user_refresh_tokens_user_id_expiry_time");
 
-                    b.ToTable("user_refresh_token", (string)null);
+                    b.ToTable("user_refresh_tokens", (string)null);
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Access.StudentCourseAccess", b =>
+                {
+                    b.HasOne("backend_put_together.Domain.Courses.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_student_course_access_courses_course_id");
+
+                    b.HasOne("backend_put_together.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("GrantedById")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_student_course_access_users_granted_by_id");
+
+                    b.HasOne("backend_put_together.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_student_course_access_users_student_id");
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Courses.Course", b =>
+                {
+                    b.HasOne("backend_put_together.Domain.Category.Category", "Category")
+                        .WithMany("Courses")
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_courses_categories_category_id");
+
+                    b.HasOne("backend_put_together.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_courses_users_created_by_id");
+
+                    b.Navigation("Category");
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Lessons.Lesson", b =>
+                {
+                    b.HasOne("backend_put_together.Domain.Courses.Course", "Course")
+                        .WithMany("Lessons")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_lessons_courses_course_id");
+
+                    b.HasOne("backend_put_together.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_lessons_users_created_by_id");
+
+                    b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Lessons.LessonComment", b =>
+                {
+                    b.HasOne("backend_put_together.Domain.Users.User", null)
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_lesson_comments_users_author_id");
+
+                    b.HasOne("backend_put_together.Domain.Lessons.Lesson", null)
+                        .WithMany()
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_lesson_comments_lessons_lesson_id");
                 });
 
             modelBuilder.Entity("backend_put_together.Domain.Users.UserLogin", b =>
@@ -237,9 +573,19 @@ namespace backend_put_together.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("fk_user_refresh_token_users_user_id");
+                        .HasConstraintName("fk_user_refresh_tokens_users_user_id");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Category.Category", b =>
+                {
+                    b.Navigation("Courses");
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Courses.Course", b =>
+                {
+                    b.Navigation("Lessons");
                 });
 
             modelBuilder.Entity("backend_put_together.Domain.Users.User", b =>

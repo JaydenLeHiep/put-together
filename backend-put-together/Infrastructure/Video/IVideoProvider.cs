@@ -9,5 +9,6 @@ public interface IVideoProvider
     Task DeleteAsync(
         string videoLibraryId,
         string videoGuid,
+        string streamApiKey,
         CancellationToken ct = default);
 }

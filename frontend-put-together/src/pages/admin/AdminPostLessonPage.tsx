@@ -1,14 +1,31 @@
-import {useState} from "react";
-import {createLesson} from "../services/lessonService";
+import { useEffect, useState } from "react";
+import { createLesson } from "../../services/lessonService";
+import { getAllCourses } from "../../services/courseService";
+import type { Course } from "../../types/Course";
 
 export default function AdminPage() {
     const [title, setTitle] = useState("");
     const [content, setContent] = useState("");
+    const [courses, setCourses] = useState<Course[]>([]);
+    const [courseId, setCourseId] = useState("");
     const [file, setFile] = useState<File | null>(null);
     const [loading, setLoading] = useState(false);
     const [dragActive, setDragActive] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const [successMessage, setSuccessMessage] = useState("");
+
+    useEffect(() => {
+        async function loadCourses() {
+            try {
+                const data = await getAllCourses();
+                setCourses(data);
+            } catch (err) {
+                console.error("Failed to load courses", err);
+            }
+        }
+
+        loadCourses();
+    }, []);
 
     const handleDrag = (e: React.DragEvent) => {
         e.preventDefault();
@@ -50,32 +67,34 @@ export default function AdminPage() {
     };
 
     async function submitLesson() {
+        if (!courseId) {
+            alert("Bitte Kurs auswählen");
+            return;
+        }
+
         if (!title.trim()) {
             alert("Bitte Titel eingeben");
             return;
         }
+
         if (!file) {
             alert("Bitte Video auswählen");
             return;
         }
 
         const form = new FormData();
+
+        form.append("courseId", courseId);
         form.append("title", title);
         form.append("content", content);
+
         form.append("file", file);
 
         setLoading(true);
         setUploadProgress(0);
 
-        // Simulate upload progress
         const progressInterval = setInterval(() => {
-            setUploadProgress((prev) => {
-                if (prev >= 90) {
-                    clearInterval(progressInterval);
-                    return 90;
-                }
-                return prev + 10;
-            });
+            setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
         }, 300);
 
         try {
@@ -83,17 +102,17 @@ export default function AdminPage() {
             setUploadProgress(100);
             setSuccessMessage("Lektion erfolgreich erstellt! 🎉");
 
-            // Reset form after success
             setTimeout(() => {
                 setTitle("");
                 setContent("");
+                setCourseId("");
                 setFile(null);
                 setSuccessMessage("");
                 setUploadProgress(0);
             }, 3000);
         } catch (err) {
-            alert("Upload fehlgeschlagen");
             console.error(err);
+            alert("Upload fehlgeschlagen");
             setUploadProgress(0);
         } finally {
             clearInterval(progressInterval);
@@ -118,8 +137,8 @@ export default function AdminPage() {
                 <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
                     <div className="flex items-center">
                         <svg className="w-6 h-6 text-green-500 mr-3" fill="none" stroke="currentColor"
-                             viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
+                            viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                         <p className="text-green-800 font-medium">{successMessage}</p>
                     </div>
@@ -128,6 +147,25 @@ export default function AdminPage() {
 
             <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
                 <div className="p-8 space-y-6">
+                    {/* Course Select */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Kurs auswählen *
+                        </label>
+                        <select
+                            className="w-full border-2 border-gray-200 rounded-xl p-4 focus:border-lila-500 focus:outline-none transition-colors text-gray-800"
+                            value={courseId}
+                            onChange={(e) => setCourseId(e.target.value)}
+                            disabled={loading}
+                        >
+                            <option value="">Bitte Kurs auswählen</option>
+                            {courses.map((course) => (
+                                <option key={course.id} value={course.id}>
+                                    {course.level} – {course.title}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
                     {/* Title Input */}
                     <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -172,7 +210,7 @@ export default function AdminPage() {
                                 : file
                                     ? "border-green-400 bg-green-50"
                                     : "border-gray-300 hover:border-lila-400"
-                            }`}
+                                }`}
                             onDragEnter={handleDrag}
                             onDragLeave={handleDrag}
                             onDragOver={handleDrag}
@@ -245,7 +283,7 @@ export default function AdminPage() {
                                     >
                                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                                  d="M6 18L18 6M6 6l12 12"/>
+                                                d="M6 18L18 6M6 6l12 12" />
                                         </svg>
                                     </button>
                                 </div>
@@ -257,17 +295,17 @@ export default function AdminPage() {
                     {loading && (
                         <div className="bg-lila-50 rounded-xl p-6">
                             <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-lila-700">
-                  Video wird hochgeladen...
-                </span>
+                                <span className="text-sm font-medium text-lila-700">
+                                    Video wird hochgeladen...
+                                </span>
                                 <span className="text-sm font-bold text-lila-700">
-                  {uploadProgress}%
-                </span>
+                                    {uploadProgress}%
+                                </span>
                             </div>
                             <div className="w-full bg-lila-200 rounded-full h-3 overflow-hidden">
                                 <div
                                     className="bg-gradient-to-r from-lila-500 to-lila-600 h-3 rounded-full transition-all duration-300 ease-out"
-                                    style={{width: `${uploadProgress}%`}}
+                                    style={{ width: `${uploadProgress}%` }}
                                 />
                             </div>
                         </div>
@@ -287,9 +325,9 @@ export default function AdminPage() {
                                 <>
                                     <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                                strokeWidth="4"/>
+                                            strokeWidth="4" />
                                         <path className="opacity-75" fill="currentColor"
-                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                                     </svg>
                                     <span>Wird hochgeladen...</span>
                                 </>
@@ -297,9 +335,9 @@ export default function AdminPage() {
                                 <>
                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                                              d="M5 13l4 4L19 7"/>
+                                            d="M5 13l4 4L19 7" />
                                     </svg>
-                                    <span>Lektion veröffentlichen</span>
+                                    <span>Lektion erstellen</span>
                                 </>
                             )}
                         </button>
@@ -312,7 +350,7 @@ export default function AdminPage() {
                 <h3 className="font-semibold text-lila-800 mb-3 flex items-center">
                     <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Tipps für erfolgreiche Lektionen
                 </h3>

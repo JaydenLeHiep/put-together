@@ -7,5 +7,9 @@ public sealed record LessonReadDto(
     string VideoLibraryId,
     string VideoGuid,
     string VideoUrl,
-    DateTime CreatedAt
+    Guid CourseId,
+    bool IsPublished,
+    Guid CreatedById,
+    DateTime CreatedAt,
+    DateTime? PublishedAt
 );

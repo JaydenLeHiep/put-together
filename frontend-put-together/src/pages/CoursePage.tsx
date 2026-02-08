@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { getLessons } from "../services/lessonService";
-import type { Lesson } from "../types/lesson";
+// import { getLessons } from "../services/lessonService";
+import type { Lesson } from "../types/Lesson";
 
 export default function CoursePage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -12,15 +12,19 @@ export default function CoursePage() {
   useEffect(() => {
     async function load() {
       try {
-        const data = await getLessons();
-        setLessons(data);
-        setSelected(data.length > 0 ? data[0] : null);
+        // const data = await getLessons();
+        // setLessons(data);
+        setSelected(null);
       } finally {
         setLoading(false);
       }
     }
     load();
   }, []);
+
+  useEffect(() => {
+    setIsPlaying(false);
+  }, [selected?.id]);
 
   const filteredLessons = lessons.filter((lesson) =>
     lesson.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -196,33 +200,36 @@ export default function CoursePage() {
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
               {/* Video */}
               <div className="relative bg-black aspect-video">
-                {!isPlaying ? (
-                  <div className="absolute inset-0 flex items-center justify-center">
+                {/* PLAY OVERLAY (iframe does NOT exist yet) */}
+                {!isPlaying && selected && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
                     <button
                       onClick={() => setIsPlaying(true)}
                       className="group"
                     >
-                      <div
-                        className="w-20 h-20 bg-lila-600 rounded-full flex items-center justify-center shadow-2xl group-hover:bg-lila-700 transition-all group-hover:scale-110">
+                      <div className="w-20 h-20 bg-lila-600 rounded-full flex items-center justify-center shadow-2xl group-hover:bg-lila-700 transition-all group-hover:scale-110">
                         <svg
                           className="w-10 h-10 text-white ml-1"
                           fill="currentColor"
                           viewBox="0 0 20 20"
                         >
-                          <path
-                            d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                         </svg>
                       </div>
                     </button>
                   </div>
-                ) : null}
-                <iframe
-                  src={`https://iframe.mediadelivery.net/embed/${selected.videoLibraryId}/${selected.videoGuid}?autoplay=${isPlaying ? 'true' : 'false'}`}
-                  loading="lazy"
-                  className="w-full h-full"
-                  allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                  allowFullScreen
-                ></iframe>
+                )}
+
+                {/* IFRAME — mounted ONLY after clicking Play */}
+                {isPlaying && selected && (
+                  <iframe
+                    key={`${selected.videoLibraryId}:${selected.videoGuid}`}
+                    src={`https://iframe.mediadelivery.net/embed/${selected.videoLibraryId}/${selected.videoGuid}?autoplay=true`}
+                    className="w-full h-full"
+                    allow="autoplay; encrypted-media; picture-in-picture;"
+                    allowFullScreen
+                  />
+                )}
               </div>
 
               {/* Video Info */}

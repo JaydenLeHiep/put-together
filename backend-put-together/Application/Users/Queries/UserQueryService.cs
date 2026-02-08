@@ -103,8 +103,13 @@ public class UserQueryService : IUserQueryService
             return RefreshResult.Fail();
         }
         
+        if (storedToken.RevokedAt != null)
+            return RefreshResult.Fail();
+        
         var user = storedToken.User;
         
+        storedToken.RevokedAt = DateTime.UtcNow;
+
         var newAccessToken = GenerateUserToken(
             user.Id,
             user.UserName,
@@ -181,5 +186,38 @@ public class UserQueryService : IUserQueryService
     private string ToRoleName(Role role)
     {
         return role.ToString();
+    }
+    
+    public async Task<IReadOnlyList<UserReadDto>> GetAllUsersAsync(CancellationToken ct = default)
+    {
+        return await _db.Users
+            .AsNoTracking()
+            .Where(u => u.DeletedAt == null)
+            .Select(u => new UserReadDto(
+                u.Id,
+                u.UserName,
+                u.Email,
+                u.Role.ToString(),
+                u.CreatedAt
+            ))
+            .ToListAsync(ct);
+    }
+
+    public async Task<IReadOnlyList<UserReadDto>> GetUsersByRoleAsync(string role, CancellationToken ct = default)
+    {
+        if (!Enum.TryParse<Role>(role, true, out var roleEnum))
+            return new List<UserReadDto>();
+
+        return await _db.Users
+            .AsNoTracking()
+            .Where(u => u.DeletedAt == null && u.Role == roleEnum)
+            .Select(u => new UserReadDto(
+                u.Id,
+                u.UserName,
+                u.Email,
+                u.Role.ToString(),
+                u.CreatedAt
+            ))
+            .ToListAsync(ct);
     }
 }

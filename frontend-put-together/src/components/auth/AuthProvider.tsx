@@ -7,6 +7,7 @@ import {
 } from "../../services/userService";
 import type { AuthUser, LoginPayload, AuthStatus } from "./typeAuth";
 import { ApiInitializer } from "./ApiInitializer";
+import { userFromAccessToken } from "../../utils/jwt";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -15,42 +16,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
-    let cancelled = false;
-
     async function bootstrap() {
       try {
         const res = await createRefreshTokenUser();
-        if (cancelled) return;
-
         setAccessToken(res.accessToken);
+        setUser(userFromAccessToken(res.accessToken));
         setStatus("authenticated");
       } catch {
+        setUser(null);
+        setAccessToken(null);
         setStatus("unauthenticated");
       } finally {
         setIsAuthReady(true);
       }
     }
-
     bootstrap();
-    return () => {
-      cancelled = true;
-    };
   }, []);
 
   const login = async (payload: LoginPayload) => {
     const res = await loginUser(payload);
 
-    setUser(res.userInfo);
+    localStorage.removeItem("pt_logged_out");
+
+    setUser({
+      id: res.userInfo.id,
+      userName: res.userInfo.userName,
+      email: res.userInfo.email,
+      role: res.userInfo.roleName,
+    });
+
     setAccessToken(res.accessToken);
     setStatus("authenticated");
   };
 
   const logout = async () => {
     try {
-      await logoutUser();
-    } catch {
-      // ignore
-    }
+      await logoutUser(); // backend deletes refresh cookie
+    } catch { }
 
     setAccessToken(null);
     setUser(null);

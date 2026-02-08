@@ -6,6 +6,6 @@ public class CreateLessonRequest
 {
     public string Title { get; set; } = string.Empty;
     public string? Content { get; set; }
-    public string? VideoLibraryId { get; set; }
+    public Guid CourseId { get; set; } 
     public IFormFile File { get; set; } = default!;
 }
