@@ -15,10 +15,13 @@ public class StoredFileQueryService : IStoredFileQueryService
     
     public async Task<List<LessonFileRequest>> GetFilesByLessonAsync(Guid lessonId, CancellationToken ct = default)
     {
-        return await _db.S3StoredFiles
-            .Where(f => f.LessonId == lessonId && f.DeletedAt != null)
+        List<LessonFileRequest> listFiles = await _db.S3StoredFiles
+            .Where(f => f.LessonId == lessonId)
             .OrderBy(f => f.CreatedAt)
-            .Select(f => new LessonFileRequest(lessonId, f.FileName))
+            .Select(f => new LessonFileRequest(f.Id, f.FileName))
             .ToListAsync(ct);
+        
+        
+        return listFiles;
     }
 }

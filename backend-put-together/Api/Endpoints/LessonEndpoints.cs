@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using backend_put_together.Application.Courses.Queries;
 using backend_put_together.Application.Lessons.DTOs;
 using backend_put_together.Application.Lessons.Services;
 using backend_put_together.Application.Lessons.Queries;
@@ -10,6 +11,9 @@ namespace backend_put_together.Api.Endpoints;
 
 public sealed class LessonEndpoints : ICarterModule
 {
+    // Just to match with rule in frontend (1 video + 5 documents =  max 6)
+    private const int MaxAmountOfFilesForALesson = 6;
+    
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/lessons");
@@ -51,22 +55,37 @@ public sealed class LessonEndpoints : ICarterModule
                 [FromForm] CreateLessonRequest req,
                 ILessonService service,
                 HttpContext httpContext, 
-                CancellationToken ct) =>
+                ICourseQueryService query,
+                CancellationToken ct,
+                ILogger<LessonEndpoints> logger) =>
             {
-                if (string.IsNullOrWhiteSpace(req.Title))
-                    return Results.BadRequest("title is required");
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(req.Title))
+                        return Results.BadRequest("title is required");
 
-                if (req.File is null || req.File.Length == 0)
-                    return Results.BadRequest("file is required");
-
-                // Extract userId from JWT
-                var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId is null) 
-                    return Results.Unauthorized();
-
-                // Pass userId as second parameter
-                var result = await service.CreateAsync(req, Guid.Parse(userId), ct);
-                return Results.Ok(result);
+                    if (req.Files != null && req.Files.Count > MaxAmountOfFilesForALesson)
+                    {
+                        return Results.BadRequest($"Maximum files to upload are {MaxAmountOfFilesForALesson}");
+                    }
+                    var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                    if (userId is null) 
+                        return Results.Unauthorized();
+                    
+                    var course = await query.GetByIdAsync(req.CourseId, ct);
+                    if (course is null)
+                    {
+                        return Results.BadRequest("Course not found");
+                    }
+                    
+                    await service.CreateAsync(req, Guid.Parse(userId), course.BunnyCollectionId, ct);
+                    return Results.Created();
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Failed to create lesson");
+                    return Results.BadRequest("Failed to create lesson");
+                }
             })
             .Accepts<CreateLessonRequest>("multipart/form-data")
             .DisableAntiforgery()
