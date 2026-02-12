@@ -30,7 +30,7 @@ public class StorageEndpoints : ICarterModule
                         return Results.BadRequest("LessonId is required!");
                     }
 
-                    await service.CreateAsync(files.ToList(), lessonId, ct);
+                    await service.CreateFileStorageAsync(files.ToList(), lessonId, ct);
                     return Results.Created();
                 }
                 catch (Exception ex)

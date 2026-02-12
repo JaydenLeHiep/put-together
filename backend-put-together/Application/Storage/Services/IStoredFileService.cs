@@ -2,7 +2,7 @@ namespace backend_put_together.Application.Storage.Services;
 
 public interface IStoredFileService
 {
-    Task CreateAsync(List<IFormFile> files,
+    Task CreateFileStorageAsync(List<IFormFile> files,
         Guid lessonId,
         CancellationToken ct = default);
 

@@ -18,7 +18,7 @@ public class StoredFileService : IStoredFileService
         _db = db;
     }
     
-    public async Task CreateAsync(List<IFormFile> files, Guid lessonId, CancellationToken ct = default)
+    public async Task CreateFileStorageAsync(List<IFormFile> files, Guid lessonId, CancellationToken ct = default)
     {
         _logger.LogInformation($"Creating files for {lessonId}");
         var listOfMetadata = new List<S3StoredFile>();
