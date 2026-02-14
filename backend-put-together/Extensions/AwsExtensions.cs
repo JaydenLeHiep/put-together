@@ -1,3 +1,5 @@
+using Amazon;
+using Amazon.Runtime;
 using Amazon.S3;
 
 namespace backend_put_together.Extensions;
@@ -6,9 +8,16 @@ public static class AwsExtensions
 {
     public static IServiceCollection AddAws(this IServiceCollection services, IConfiguration config)
     {
-        services.AddDefaultAWSOptions(config.GetAWSOptions());
-        services.AddAWSService<IAmazonS3>();  // AWS S3 service
-        
+        var accessKey = config["AWS:AccessKey"];
+        var secretKey = config["AWS:SecretKey"];
+        var region = config["AWS:Region"];
+
+        var credentials = new BasicAWSCredentials(accessKey, secretKey);
+
+        services.AddSingleton<IAmazonS3>(
+            new AmazonS3Client(credentials, RegionEndpoint.GetBySystemName(region))
+        );
+
         return services;
     }
 }
