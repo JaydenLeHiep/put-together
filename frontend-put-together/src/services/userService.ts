@@ -1,5 +1,6 @@
 import type { RegisterPayload, LoginPayload, LoginInfo } from "../components/auth/typeAuth";
-import type { UserReadDto } from "../types/User";
+import type { UserReadDto, RoleName } from "../types/User";
+import { ROLE_VALUES } from "../types/User";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
 
@@ -66,21 +67,43 @@ export async function logoutUser(): Promise<void> {
 // GET /api/users/all
 // =========================
 
-function mapUserReadDto(raw: any): UserReadDto {
+function toRoleName(value: unknown): RoleName {
+  if (typeof value !== "string") return "Student";
+  return ROLE_VALUES.includes(value as RoleName) ? (value as RoleName) : "Student";
+}
+
+function mapUserReadDto(raw: unknown): UserReadDto {
+  const obj = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
+
+  const pickString = (...keys: string[]): string => {
+    for (const k of keys) {
+      const v = obj[k];
+      if (typeof v === "string" && v.length > 0) return v;
+    }
+    return "";
+  };
+
+  const roleRaw =
+    obj["roleName"] ??
+    obj["RoleName"] ??
+    obj["role"] ??
+    obj["Role"];
+
   return {
-    id: raw.id ?? raw.Id,
-    userName: raw.userName ?? raw.UserName,
-    email: raw.email ?? raw.Email,
-    roleName: raw.roleName ?? raw.RoleName ?? raw.role ?? raw.Role, 
-    createdAt: raw.createdAt ?? raw.CreatedAt,
+    id: pickString("id", "Id"),
+    userName: pickString("userName", "UserName"),
+    email: pickString("email", "Email"),
+    roleName: toRoleName(roleRaw),
+    createdAt: pickString("createdAt", "CreatedAt"),
   };
 }
+
 
 export async function getAllUsers(): Promise<UserReadDto[]> {
   const res = await apiFetch(`${API}/all`, { method: "GET" });
   if (!res.ok) throw new Error("Load users fehlgeschlagen.");
 
-  const data = await res.json();
+  const data: unknown = await res.json();
   return Array.isArray(data) ? data.map(mapUserReadDto) : [];
 }
 
@@ -174,5 +197,6 @@ export async function getUsersByRole(role: string): Promise<UserReadDto[]> {
 
   if (!res.ok) throw new Error("Load users by role fehlgeschlagen.");
 
-  return res.json();
+  const data: unknown = await res.json();
+  return Array.isArray(data) ? data.map(mapUserReadDto) : [];
 }

@@ -33,22 +33,25 @@ export default function AdminDashboard() {
 
         // 2) load lessons per course (sum them)
         // If you have many courses, this can be heavy.
+        type CourseIdLike = { id?: string };
+
+        type CourseWithLessonsLike = { lessons?: unknown[] };
+
         const courseIds = (Array.isArray(courses) ? courses : [])
-          .map((c: any) => c.id)
-          .filter(Boolean);
+          .map((c: CourseIdLike) => c.id)
+          .filter((id): id is string => Boolean(id));
 
         const results = await Promise.allSettled(
-          courseIds.map((id: string) => getCourseWithLessons(id))
+          courseIds.map((id) => getCourseWithLessons(id))
         );
-
-        if (cancelled) return;
 
         const lessonsCount = results.reduce((sum, r) => {
           if (r.status === "fulfilled") {
-            const lessons = (r.value as any)?.lessons;
+            const maybe = r.value as CourseWithLessonsLike;
+            const lessons = maybe.lessons;
             return sum + (Array.isArray(lessons) ? lessons.length : 0);
           }
-          return sum; // ignore failed ones
+          return sum;
         }, 0);
 
         setTotalLessons(lessonsCount);
