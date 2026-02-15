@@ -20,7 +20,7 @@ public sealed class LessonService : ILessonService
         IVideoProvider video,
         IVideoContextResolver resolver,
         IStoredFileService storedFileService
-        )
+    )
     {
         _db = db;
         _video = video;
@@ -40,20 +40,25 @@ public sealed class LessonService : ILessonService
         string? videoLibraryId = null;
         string? videoGuid = null;
 
-        if (request.Files?[0].ContentType == "video/mp4")
+        // -----------------------------
+        // 1) Upload video (optional)
+        // -----------------------------
+        if (request.VideoFile is not null)
         {
-            var ctx = await _resolver.ResolveForCourseAsync(
-                request.CourseId,
-                ct);
+            // Accept any video/* (mp4, mov, etc.)
+            if (!request.VideoFile.ContentType.StartsWith("video/"))
+                throw new InvalidOperationException("VideoFile must be a video/* content type.");
 
-            await using var stream = request.Files[0].OpenReadStream();
+            var ctx = await _resolver.ResolveForCourseAsync(request.CourseId, ct);
+
+            await using var stream = request.VideoFile.OpenReadStream();
 
             var upload = await _video.UploadAsync(
                 new VideoUploadRequest
                 {
                     LibraryId = ctx.LibraryId,
                     StreamApiKey = ctx.StreamApiKey,
-                    FileName = request.Files[0].FileName,
+                    FileName = request.VideoFile.FileName,
                     Stream = stream,
                     CollectionId = ctx.CollectionId
                 },
@@ -63,6 +68,9 @@ public sealed class LessonService : ILessonService
             videoGuid = upload.VideoGuid;
         }
 
+        // -----------------------------
+        // 2) Create lesson in DB
+        // -----------------------------
         var lesson = new Lesson
         {
             Title = request.Title,
@@ -75,22 +83,27 @@ public sealed class LessonService : ILessonService
             CreatedById = userId,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         _db.Lessons.Add(lesson);
         await _db.SaveChangesAsync(ct);
-        
-        var listOfDocument = new List<IFormFile>();
-        
-        if (request.Files != null)
-        {
-            foreach (var file in request.Files)
 
-                if (file.ContentType == "application/pdf")
-                {
-                    listOfDocument.Add(file);
-                }
+        // -----------------------------
+        // 3) Upload documents (optional)
+        // -----------------------------
+        if (request.Documents is not null && request.Documents.Count > 0)
+        {
+            // Keep only PDFs (and validate hard)
+            var pdfs = request.Documents
+                .Where(f =>
+                    f.ContentType == "application/pdf" ||
+                    f.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (pdfs.Count != request.Documents.Count)
+                throw new InvalidOperationException("All Documents must be PDF files.");
+
+            await _storedFileService.CreateFileStorageAsync(pdfs, lesson.Id, ct);
         }
-        await _storedFileService.CreateFileStorageAsync(listOfDocument, lesson.Id, ct);
     }
 
     // =====================================================

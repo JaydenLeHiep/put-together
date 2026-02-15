@@ -12,31 +12,36 @@ public class S3StoredFileService : IS3StoredFileService
     public S3StoredFileService(IAmazonS3 s3Client, IConfiguration config)
     {
         _s3Client = s3Client;
-        _bucketName = config["Aws:BucketName"];
+        _bucketName = config["AWS:BucketName"];
     }
     
     public async Task<S3StoredFileResponse> UploadFileAsync(IFormFile file, S3StoredFileRequest storedFileRequest)
     {
-        var s3RuleFile = S3KeyBuilder.Build(storedFileRequest.LessonId, storedFileRequest.StoredFileId, file.FileName);
-        
-        var request = new PutObjectRequest
+        if (string.IsNullOrWhiteSpace(_bucketName))
+            throw new InvalidOperationException("AWS bucket name not configured.");
+
+        var s3Key = S3KeyBuilder.Build(storedFileRequest.LessonId, storedFileRequest.StoredFileId, file.FileName);
+
+        var put = new PutObjectRequest
         {
             BucketName = _bucketName,
-            Key = s3RuleFile,
+            Key = s3Key,
             InputStream = file.OpenReadStream(),
             ContentType = file.ContentType,
         };
 
-        await _s3Client.PutObjectAsync(request);
+        await _s3Client.PutObjectAsync(put);
 
-        var urlRequest = new GetPreSignedUrlRequest
+        var presign = new GetPreSignedUrlRequest
         {
             BucketName = _bucketName,
-            Key = s3RuleFile,
+            Key = s3Key,
             Expires = DateTime.UtcNow.AddHours(1)
         };
-        
-        return new S3StoredFileResponse(file.FileName, await _s3Client.GetPreSignedURLAsync(urlRequest));
+
+        var url = _s3Client.GetPreSignedURL(presign); // <-- standard
+
+        return new S3StoredFileResponse(file.FileName, url);
     }
 
     public async Task<List<S3StoredFileResponse>> GetFilesAsync()

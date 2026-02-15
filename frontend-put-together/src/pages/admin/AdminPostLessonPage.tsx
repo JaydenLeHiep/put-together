@@ -2,13 +2,11 @@ import { useEffect, useState } from "react";
 import { createLesson } from "../../services/lessonService";
 import { getAllCourses } from "../../services/courseService";
 
-import { CKEditor as CKEditorBase } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import CkEditorField from "../../components/editor/CkEditorField";
 
 import type { Course } from "../../types/Course";
 import "../../styles/editor.css";
 
-const CKEditor = CKEditorBase as any;
 import { UploadFileDocuments } from "../../components/inputFormComponents/UploadFileDocuments";
 
 export default function AdminPage() {
@@ -96,13 +94,15 @@ export default function AdminPage() {
     const form = new FormData();
     form.append("courseId", courseId);
     form.append("title", title.trim());
-    form.append("content", content);
+    form.append("content", content ?? "");
 
     if (file) {
-      form.append("files", file);
+      form.append("VideoFile", file);
     }
 
-    fileDocuments.forEach((doc) => form.append("files", doc));
+    fileDocuments.forEach((doc) => {
+      form.append("Documents", doc);
+    });
 
     setLoading(true);
     setUploadProgress(0);
@@ -267,39 +267,7 @@ export default function AdminPage() {
               Beschreibung & Lernziele
             </label>
             <div>
-              <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
-                <CKEditor
-                  editor={ClassicEditor}
-                  data={content}
-                  onChange={(_: any, editor: any) => {
-                    setContent(editor.getData());
-                  }}
-                  config={{
-                    toolbar: [
-                      "heading",
-                      "|",
-                      "bold",
-                      "italic",
-                      "underline",
-                      "strikethrough",
-                      "|",
-                      "fontSize",
-                      "fontFamily",
-                      "|",
-                      "alignment",
-                      "|",
-                      "bulletedList",
-                      "numberedList",
-                      "|",
-                      "blockQuote",
-                      "insertTable",
-                      "|",
-                      "undo",
-                      "redo",
-                    ],
-                  }}
-                />
-              </div>
+              <CkEditorField value={content} onChange={setContent} disabled={loading} />
             </div>
             <p className="text-sm text-gray-500 mt-2">
               {content.length} Zeichen

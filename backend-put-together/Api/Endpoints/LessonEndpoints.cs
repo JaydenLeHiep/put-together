@@ -13,7 +13,7 @@ public sealed class LessonEndpoints : ICarterModule
 {
     // Just to match with rule in frontend (1 video + 5 documents =  max 6)
     private const int MaxAmountOfFilesForALesson = 6;
-    
+
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/lessons");
@@ -22,31 +22,31 @@ public sealed class LessonEndpoints : ICarterModule
         // GET /api/lessons  (Teacher | Admin)
         // =========================================================
         group.MapGet("", async (ILessonQueryService query) =>
-        {
-            var lessons = await query.GetAllAsync();
-            return Results.Ok(lessons);
-        })
-        .RequireAuthorization(new AuthorizeAttribute
-        {
-            Roles = "Teacher,Admin"
-        });
+            {
+                var lessons = await query.GetAllAsync();
+                return Results.Ok(lessons);
+            })
+            .RequireAuthorization(new AuthorizeAttribute
+            {
+                Roles = "Teacher,Admin"
+            });
 
         // =========================================================
         // GET /api/lessons/{id}  (Teacher | Admin)
         // =========================================================
         group.MapGet("{id:guid}", async (
-            Guid id,
-            ILessonQueryService query) =>
-        {
-            var lesson = await query.GetByIdAsync(id);
-            return lesson is null
-                ? Results.NotFound()
-                : Results.Ok(lesson);
-        })
-        .RequireAuthorization(new AuthorizeAttribute
-        {
-            Roles = "Teacher,Admin"
-        });
+                Guid id,
+                ILessonQueryService query) =>
+            {
+                var lesson = await query.GetByIdAsync(id);
+                return lesson is null
+                    ? Results.NotFound()
+                    : Results.Ok(lesson);
+            })
+            .RequireAuthorization(new AuthorizeAttribute
+            {
+                Roles = "Teacher,Admin"
+            });
 
         // =========================================================
         // POST /api/lessons  (Teacher | Admin)
@@ -54,45 +54,69 @@ public sealed class LessonEndpoints : ICarterModule
         group.MapPost("", async (
                 [FromForm] CreateLessonRequest req,
                 ILessonService service,
-                HttpContext httpContext, 
-                ICourseQueryService query,
+                HttpContext httpContext,
+                ICourseQueryService courseQuery,
                 CancellationToken ct,
-                ILogger<LessonEndpoints> logger) =>
+                ILogger<LessonEndpoints> logger,
+                IWebHostEnvironment env
+            ) =>
             {
+                if (string.IsNullOrWhiteSpace(req.Title))
+                    return Results.BadRequest("title is required");
+
+                if (req.CourseId == Guid.Empty)
+                    return Results.BadRequest("courseId is required");
+
+                // Validate file counts: 1 video + max 5 pdf
+                const int maxDocs = 5;
+
+                if (req.Documents is { Count: > maxDocs })
+                    return Results.BadRequest($"Maximum documents are {maxDocs}");
+
+                // Validate video type (nên check startsWith("video/") thay vì == "video/mp4")
+                if (req.VideoFile is not null && !req.VideoFile.ContentType.StartsWith("video/"))
+                    return Results.BadRequest("VideoFile must be a video/* content type");
+
+                // Validate pdf types
+                if (req.Documents is not null)
+                {
+                    var nonPdfs = req.Documents
+                        .Where(f => !(f.ContentType == "application/pdf" ||
+                                      f.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)))
+                        .Select(f => f.FileName)
+                        .ToList();
+
+                    if (nonPdfs.Count > 0)
+                        return Results.BadRequest($"Documents must be PDF. Invalid: {string.Join(", ", nonPdfs)}");
+                }
+
+                var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId is null)
+                    return Results.Unauthorized();
+
+                var course = await courseQuery.GetByIdAsync(req.CourseId, ct);
+                if (course is null)
+                    return Results.BadRequest("Course not found");
+
                 try
                 {
-                    if (string.IsNullOrWhiteSpace(req.Title))
-                        return Results.BadRequest("title is required");
-
-                    if (req.Files != null && req.Files.Count > MaxAmountOfFilesForALesson)
-                    {
-                        return Results.BadRequest($"Maximum files to upload are {MaxAmountOfFilesForALesson}");
-                    }
-                    var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                    if (userId is null) 
-                        return Results.Unauthorized();
-                    
-                    var course = await query.GetByIdAsync(req.CourseId, ct);
-                    if (course is null)
-                    {
-                        return Results.BadRequest("Course not found");
-                    }
-                    
                     await service.CreateAsync(req, Guid.Parse(userId), course.BunnyCollectionId, ct);
-                    return Results.Created();
+                    return Results.Created($"/api/lessons", null);
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    logger.LogError(e, "Failed to create lesson");
+                    logger.LogError(ex, "Failed to create lesson");
+                    if (env.IsDevelopment())
+                        return Results.Problem(
+                            title: "Failed to create lesson",
+                            detail: ex.Message,
+                            statusCode: StatusCodes.Status400BadRequest);
                     return Results.BadRequest("Failed to create lesson");
                 }
             })
             .Accepts<CreateLessonRequest>("multipart/form-data")
             .DisableAntiforgery()
-            .RequireAuthorization(new AuthorizeAttribute
-            {
-                Roles = "Teacher,Admin"
-            });
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Teacher,Admin" });
 
         // =========================================================
         // PUT /api/lessons/{id}  (Teacher | Admin)
@@ -103,33 +127,33 @@ public sealed class LessonEndpoints : ICarterModule
                 ILessonService service,
                 HttpContext httpContext,
                 CancellationToken ct) =>
-        {
-            var actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (actorId is null) return Results.Unauthorized();
+            {
+                var actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (actorId is null) return Results.Unauthorized();
 
-            try
+                try
+                {
+                    await service.UpdateAsync(id, req, Guid.Parse(actorId), ct);
+                    return Results.NoContent();
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Problem(
+                        title: "Video provider update failed",
+                        detail: ex.Message,
+                        statusCode: StatusCodes.Status502BadGateway);
+                }
+            })
+            .Accepts<UpdateLessonRequest>("multipart/form-data")
+            .DisableAntiforgery()
+            .RequireAuthorization(new AuthorizeAttribute
             {
-                await service.UpdateAsync(id, req, Guid.Parse(actorId), ct);
-                return Results.NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return Results.NotFound();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.Problem(
-                    title: "Video provider update failed",
-                    detail: ex.Message,
-                    statusCode: StatusCodes.Status502BadGateway);
-            }
-        })
-        .Accepts<UpdateLessonRequest>("multipart/form-data")
-        .DisableAntiforgery()
-        .RequireAuthorization(new AuthorizeAttribute
-        {
-            Roles = "Teacher,Admin"
-        });
+                Roles = "Teacher,Admin"
+            });
 
         // =========================================================
         // DELETE /api/lessons/{id}  (Admin) (Teacher)
@@ -139,31 +163,31 @@ public sealed class LessonEndpoints : ICarterModule
                 ILessonService service,
                 HttpContext httpContext,
                 CancellationToken ct) =>
-        {
-            var actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (actorId is null) return Results.Unauthorized();
+            {
+                var actorId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (actorId is null) return Results.Unauthorized();
 
-            try
+                try
+                {
+                    await service.DeleteAsync(id, Guid.Parse(actorId), ct);
+                    return Results.NoContent();
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound();
+                }
+                catch (InvalidOperationException ex)
+                {
+                    return Results.Problem(
+                        title: "Video provider delete failed",
+                        detail: ex.Message,
+                        statusCode: StatusCodes.Status502BadGateway);
+                }
+            })
+            .RequireAuthorization(new AuthorizeAttribute
             {
-                await service.DeleteAsync(id, Guid.Parse(actorId), ct);
-                return Results.NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return Results.NotFound();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Results.Problem(
-                    title: "Video provider delete failed",
-                    detail: ex.Message,
-                    statusCode: StatusCodes.Status502BadGateway);
-            }
-        })
-        .RequireAuthorization(new AuthorizeAttribute
-        {
-            Roles = "Teacher,Admin"
-        });
+                Roles = "Teacher,Admin"
+            });
 
         // =========================================================
         // POST /api/lessons/{id}/restore  (Admin)
@@ -172,22 +196,22 @@ public sealed class LessonEndpoints : ICarterModule
                 Guid id,
                 ILessonService service,
                 CancellationToken ct) =>
-        {
-            try
             {
-                await service.RestoreAsync(id, ct);
-                return Results.NoContent();
-            }
-            catch (KeyNotFoundException)
+                try
+                {
+                    await service.RestoreAsync(id, ct);
+                    return Results.NoContent();
+                }
+                catch (KeyNotFoundException)
+                {
+                    return Results.NotFound();
+                }
+            })
+            .RequireAuthorization(new AuthorizeAttribute
             {
-                return Results.NotFound();
-            }
-        })
-        .RequireAuthorization(new AuthorizeAttribute
-        {
-            Roles = "Admin"
-        });
-        
+                Roles = "Admin"
+            });
+
         // =========================================================
         // GET /api/lessons/drafts  (Teacher | Admin)
         // Everyone can see all draft lessons (internal feed)
@@ -201,7 +225,7 @@ public sealed class LessonEndpoints : ICarterModule
             {
                 Roles = "Teacher,Admin"
             });
-        
+
         // =========================================================
         // POST /api/lessons/{id}/publish  (Teacher | Admin)
         // Only the owner can publish their own lesson
@@ -222,7 +246,7 @@ public sealed class LessonEndpoints : ICarterModule
             {
                 Roles = "Teacher,Admin"
             });
-        
+
         group.MapPost("{id:guid}/unpublish", async (
                 Guid id,
                 ILessonService service,
@@ -239,7 +263,7 @@ public sealed class LessonEndpoints : ICarterModule
             {
                 Roles = "Teacher,Admin"
             });
-        
+
         // =========================================================
         // POST /api/lessons/{id}/comments  (Teacher | Admin)
         // =========================================================
@@ -277,7 +301,7 @@ public sealed class LessonEndpoints : ICarterModule
             {
                 Roles = "Teacher,Admin"
             });
-        
+
         // =========================================================
         // GET /api/lessons/my-lessons  (Student)
         // Only lessons granted to the current student
@@ -301,7 +325,7 @@ public sealed class LessonEndpoints : ICarterModule
             {
                 Roles = "Student"
             });
-        
+
         // =========================================================
         // GET /api/lessons/published  (Teacher | Admin)
         // Public lessons for product / selling / dashboard views

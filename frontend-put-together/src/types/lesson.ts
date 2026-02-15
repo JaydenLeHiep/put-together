@@ -2,9 +2,9 @@ export type Lesson = {
   id: string;
   title: string;
   content: string;
-  videoGuid: string;
-  videoLibraryId: string;
-  videoUrl: string;
+  videoGuid?: string | null;
+  videoLibraryId?: string | null;
+  videoUrl?: string | null;
   courseId: string;
   isPublished: boolean;
   createdById: string;
@@ -16,13 +16,13 @@ export type CreateLessonRequest = {
   title: string;
   content?: string;
   courseId: string;
-  file: File;
+  videoFile?: File | null;
+  documents?: File[];
 };
 
 export type UpdateLessonRequest = {
   title?: string;
   content?: string;
-  file?: File | null;
-  videoLibraryId?: string;
+  videoFile?: File | null;
+  documents?: File[];
 };
-
