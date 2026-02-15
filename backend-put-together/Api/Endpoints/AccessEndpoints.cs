@@ -1,7 +1,6 @@
 using backend_put_together.Application.Access.Services;
 using Carter;
 using Microsoft.AspNetCore.Authorization;
-using System.Security.Claims;
 
 namespace backend_put_together.Api.Endpoints;
 
@@ -11,24 +10,30 @@ public sealed class AccessEndpoints : ICarterModule
     {
         var group = app.MapGroup("/api/access");
         
-        // POST /api/access/course (Admin only)
-        group.MapPost("/course", async (
+        group.MapGet("/course", async (
+                Guid studentId,
+                IAccessService service,
+                CancellationToken ct) =>
+            {
+                var courses = await service.GetStudentCourseAccessAsync(studentId, ct);
+                return Results.Ok(courses);
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+        
+        // POST /api/access/grant-course?studentId=...&courseId=...
+        group.MapPost("/grant-course", async (
                 Guid studentId,
                 Guid courseId,
                 IAccessService service,
-                HttpContext httpContext,
                 CancellationToken ct) =>
             {
-                var adminId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (adminId is null) return Results.Unauthorized();
-            
-                await service.GrantCourseAccessAsync(studentId, courseId, Guid.Parse(adminId), ct);
+                await service.GrantCourseAccessAsync(studentId, courseId, ct);
                 return Results.Ok();
             })
             .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
 
-        // DELETE /api/access/course (Admin only)
-        group.MapDelete("/course", async (
+        // POST /api/access/revoke-course?studentId=...&courseId=...
+        group.MapPost("/revoke-course", async (
                 Guid studentId,
                 Guid courseId,
                 IAccessService service,

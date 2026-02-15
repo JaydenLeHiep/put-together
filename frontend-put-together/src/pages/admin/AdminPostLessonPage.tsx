@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { createLesson } from "../../services/lessonService";
 import { getAllCourses } from "../../services/courseService";
+
+import { CKEditor as CKEditorBase } from "@ckeditor/ckeditor5-react";
+import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+
 import type { Course } from "../../types/Course";
+import "../../styles/editor.css";
+
+const CKEditor = CKEditorBase as any;
 import { UploadFileDocuments } from "../../components/inputFormComponents/UploadFileDocuments";
 
 export default function AdminPage() {
@@ -63,14 +70,6 @@ export default function AdminPage() {
     }
   };
 
-  const handleFileDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-
-    const filesArray = Array.from(e.target.files);
-
-    setFileDocuments((prev) => [...prev, ...filesArray]);
-  };
-
   const handleRemoveFile = (index: number) => {
     setFileDocuments((prev) => prev.filter((_, i) => i !== index));
   };
@@ -95,16 +94,15 @@ export default function AdminPage() {
     }
 
     const form = new FormData();
-
     form.append("courseId", courseId);
-    form.append("title", title);
+    form.append("title", title.trim());
     form.append("content", content);
 
-    if (file != null) {
+    if (file) {
       form.append("files", file);
     }
 
-    fileDocuments.forEach((file) => form.append("files", file));
+    fileDocuments.forEach((doc) => form.append("files", doc));
 
     setLoading(true);
     setUploadProgress(0);
@@ -136,6 +134,61 @@ export default function AdminPage() {
       setLoading(false);
     }
   }
+
+  function addPdfFiles(files: File[]) {
+    const pdfs = files.filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+
+    if (pdfs.length === 0) {
+      alert("Bitte nur PDF-Dateien hochladen");
+      return;
+    }
+
+    setFileDocuments((prev) => {
+      // dedupe by name+size+lastModified (optional but useful)
+      const existing = new Set(prev.map((f) => `${f.name}_${f.size}_${f.lastModified}`));
+      const deduped = pdfs.filter((f) => !existing.has(`${f.name}_${f.size}_${f.lastModified}`));
+
+      const remaining = MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD - prev.length;
+      if (remaining <= 0) {
+        alert(`Maximal ${MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD} Dateien erlaubt.`);
+        return prev;
+      }
+
+      const next = [...prev, ...deduped.slice(0, remaining)];
+
+      if (deduped.length > remaining) {
+        alert(`Nur ${remaining} weitere PDF-Datei(en) konnten hinzugefügt werden (Limit erreicht).`);
+      }
+
+      return next;
+    });
+  }
+
+  const handleDocsDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDocsDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const dropped = Array.from(e.dataTransfer.files ?? []);
+    if (dropped.length === 0) return;
+
+    addPdfFiles(dropped);
+  };
+
+  const handleFileDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+
+    addPdfFiles(Array.from(e.target.files));
+
+    // allow selecting same file again
+    e.target.value = "";
+  };
 
   return (
     <div className="max-w-5xl mx-auto">
@@ -213,13 +266,41 @@ export default function AdminPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Beschreibung & Lernziele
             </label>
-            <textarea
-              className="w-full border-2 border-gray-200 rounded-xl p-4 h-40 focus:border-lila-500 focus:outline-none transition-colors resize-none text-gray-800 placeholder-gray-400"
-              placeholder="Erklärung der Lektion, Beispiele, Hausaufgaben, wichtige Hinweise..."
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              disabled={loading}
-            />
+            <div>
+              <div className="border-2 border-gray-200 rounded-xl overflow-hidden">
+                <CKEditor
+                  editor={ClassicEditor}
+                  data={content}
+                  onChange={(_: any, editor: any) => {
+                    setContent(editor.getData());
+                  }}
+                  config={{
+                    toolbar: [
+                      "heading",
+                      "|",
+                      "bold",
+                      "italic",
+                      "underline",
+                      "strikethrough",
+                      "|",
+                      "fontSize",
+                      "fontFamily",
+                      "|",
+                      "alignment",
+                      "|",
+                      "bulletedList",
+                      "numberedList",
+                      "|",
+                      "blockQuote",
+                      "insertTable",
+                      "|",
+                      "undo",
+                      "redo",
+                    ],
+                  }}
+                />
+              </div>
+            </div>
             <p className="text-sm text-gray-500 mt-2">
               {content.length} Zeichen
             </p>
@@ -228,17 +309,16 @@ export default function AdminPage() {
           {/* File Upload Area */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Video hochladen *
+              Video hochladen (optional)
             </label>
 
             <div
-              className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${
-                dragActive
-                  ? "border-lila-500 bg-lila-50"
-                  : file
-                    ? "border-green-400 bg-green-50"
-                    : "border-gray-300 hover:border-lila-400"
-              }`}
+              className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${dragActive
+                ? "border-lila-500 bg-lila-50"
+                : file
+                  ? "border-green-400 bg-green-50"
+                  : "border-gray-300 hover:border-lila-400"
+                }`}
               onDragEnter={handleDrag}
               onDragLeave={handleDrag}
               onDragOver={handleDrag}
@@ -309,18 +389,9 @@ export default function AdminPage() {
                     disabled={loading}
                     className="text-red-500 hover:text-red-700 transition-colors p-2"
                   >
-                    <svg
-                      className="w-6 h-6"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
                 </div>
@@ -330,10 +401,10 @@ export default function AdminPage() {
 
           <UploadFileDocuments
             maxNumberOfFile={MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
+            onDragEnter={handleDocsDrag}
+            onDragLeave={handleDocsDrag}
+            onDragOver={handleDocsDrag}
+            onDrop={handleDocsDrop}
             onChange={handleFileDocumentChange}
             loading={loading}
             fileDocuments={fileDocuments}
@@ -362,49 +433,29 @@ export default function AdminPage() {
 
           {/* Submit Button */}
           <div className="flex items-center justify-between pt-4">
-            <p className="text-sm text-gray-500">* Pflichtfelder</p>
+            <p className="text-sm text-gray-500">
+              * Pflichtfelder
+            </p>
             <button
               onClick={submitLesson}
-              disabled={loading || !title.trim() || !file}
+              disabled={loading || !title.trim()}
               className="bg-gradient-to-r from-lila-600 to-lila-700 text-white px-8 py-4 rounded-xl font-semibold hover:from-lila-700 hover:to-lila-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center space-x-2"
             >
               {loading ? (
                 <>
-                  <svg
-                    className="animate-spin h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
+                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                      strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                   <span>Wird hochgeladen...</span>
                 </>
               ) : (
                 <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Lektion erstellen</span>
                 </>
@@ -417,35 +468,20 @@ export default function AdminPage() {
       {/* Help Section */}
       <div className="mt-8 bg-lila-50 rounded-xl p-6">
         <h3 className="font-semibold text-lila-800 mb-3 flex items-center">
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           Tipps für erfolgreiche Lektionen
         </h3>
         <ul className="space-y-2 text-sm text-lila-700">
           <li className="flex items-start">
             <span className="text-lila-500 mr-2">•</span>
-            <span>
-              Verwenden Sie aussagekräftige Titel mit Sprachniveau (A1, A2, B1,
-              etc.)
-            </span>
+            <span>Verwenden Sie aussagekräftige Titel mit Sprachniveau (A1, A2, B1, etc.)</span>
           </li>
           <li className="flex items-start">
             <span className="text-lila-500 mr-2">•</span>
-            <span>
-              Fügen Sie klare Lernziele und Übungsaufgaben in der Beschreibung
-              hinzu
-            </span>
+            <span>Fügen Sie klare Lernziele und Übungsaufgaben in der Beschreibung hinzu</span>
           </li>
           <li className="flex items-start">
             <span className="text-lila-500 mr-2">•</span>
@@ -453,9 +489,7 @@ export default function AdminPage() {
           </li>
           <li className="flex items-start">
             <span className="text-lila-500 mr-2">•</span>
-            <span>
-              Hochwertige Video- und Audioqualität verbessert das Lernerlebnis
-            </span>
+            <span>Hochwertige Video- und Audioqualität verbessert das Lernerlebnis</span>
           </li>
         </ul>
       </div>

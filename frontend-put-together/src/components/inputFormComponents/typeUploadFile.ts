@@ -1,8 +1,6 @@
 type DragHandler = React.DragEventHandler<HTMLDivElement>;
 type ChangeEvent = React.ChangeEventHandler<HTMLInputElement>;
 
-
-
 export type UploadFileProps = {
     maxNumberOfFile: number;
     onDragEnter: DragHandler;

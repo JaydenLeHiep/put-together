@@ -12,7 +12,7 @@ using backend_put_together.Infrastructure.Data;
 namespace backend_put_together.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260204201237_InitialCreate")]
+    [Migration("20260214030037_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -27,46 +27,40 @@ namespace backend_put_together.Migrations
 
             modelBuilder.Entity("backend_put_together.Domain.Access.StudentCourseAccess", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<Guid>("StudentId")
                         .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .HasColumnName("student_id");
 
                     b.Property<Guid>("CourseId")
                         .HasColumnType("uuid")
                         .HasColumnName("course_id");
 
-                    b.Property<DateTime?>("ExpiresAt")
+                    b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
+                        .HasColumnName("expires_at_utc");
 
-                    b.Property<Guid?>("GrantedById")
-                        .HasColumnType("uuid")
-                        .HasColumnName("granted_by_id");
-
-                    b.Property<DateTime>("PurchasedAt")
+                    b.Property<DateTime>("PurchasedAtUtc")
                         .HasColumnType("timestamp with time zone")
-                        .HasColumnName("purchased_at");
+                        .HasColumnName("purchased_at_utc");
 
-                    b.Property<Guid>("StudentId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("student_id");
+                    b.Property<DateTime?>("RevokedAtUtc")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("revoked_at_utc");
 
-                    b.HasKey("Id")
+                    b.HasKey("StudentId", "CourseId")
                         .HasName("pk_student_course_access");
 
                     b.HasIndex("CourseId")
                         .HasDatabaseName("ix_student_course_access_course_id");
 
-                    b.HasIndex("GrantedById")
-                        .HasDatabaseName("ix_student_course_access_granted_by_id");
+                    b.HasIndex("ExpiresAtUtc")
+                        .HasDatabaseName("ix_student_course_access_expires_at_utc");
+
+                    b.HasIndex("RevokedAtUtc")
+                        .HasDatabaseName("ix_student_course_access_revoked_at_utc");
 
                     b.HasIndex("StudentId")
                         .HasDatabaseName("ix_student_course_access_student_id");
-
-                    b.HasIndex("StudentId", "CourseId")
-                        .IsUnique()
-                        .HasDatabaseName("ix_student_course_access_student_id_course_id");
 
                     b.ToTable("student_course_access", (string)null);
                 });
@@ -344,6 +338,51 @@ namespace backend_put_together.Migrations
                     b.ToTable("lesson_comments", (string)null);
                 });
 
+            modelBuilder.Entity("backend_put_together.Domain.Storage.S3StoredFile", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("deleted_at");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("file_name");
+
+                    b.Property<Guid>("LessonId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lesson_id");
+
+                    b.Property<string>("S3Key")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)")
+                        .HasColumnName("s3key");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id")
+                        .HasName("pk_s3_stored_files");
+
+                    b.HasIndex("LessonId")
+                        .HasDatabaseName("ix_s3_stored_files_lesson_id")
+                        .HasFilter("\"deleted_at\" IS NULL");
+
+                    b.ToTable("s3_stored_files", (string)null);
+                });
+
             modelBuilder.Entity("backend_put_together.Domain.Users.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -490,12 +529,6 @@ namespace backend_put_together.Migrations
 
                     b.HasOne("backend_put_together.Domain.Users.User", null)
                         .WithMany()
-                        .HasForeignKey("GrantedById")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .HasConstraintName("fk_student_course_access_users_granted_by_id");
-
-                    b.HasOne("backend_put_together.Domain.Users.User", null)
-                        .WithMany()
                         .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -557,6 +590,18 @@ namespace backend_put_together.Migrations
                         .HasConstraintName("fk_lesson_comments_lessons_lesson_id");
                 });
 
+            modelBuilder.Entity("backend_put_together.Domain.Storage.S3StoredFile", b =>
+                {
+                    b.HasOne("backend_put_together.Domain.Lessons.Lesson", "Lesson")
+                        .WithMany("StoredFiles")
+                        .HasForeignKey("LessonId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_s3_stored_files_lessons_lesson_id");
+
+                    b.Navigation("Lesson");
+                });
+
             modelBuilder.Entity("backend_put_together.Domain.Users.UserLogin", b =>
                 {
                     b.HasOne("backend_put_together.Domain.Users.User", "User")
@@ -589,6 +634,11 @@ namespace backend_put_together.Migrations
             modelBuilder.Entity("backend_put_together.Domain.Courses.Course", b =>
                 {
                     b.Navigation("Lessons");
+                });
+
+            modelBuilder.Entity("backend_put_together.Domain.Lessons.Lesson", b =>
+                {
+                    b.Navigation("StoredFiles");
                 });
 
             modelBuilder.Entity("backend_put_together.Domain.Users.User", b =>

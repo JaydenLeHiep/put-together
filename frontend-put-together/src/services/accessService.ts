@@ -1,52 +1,57 @@
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
+import type { Course } from "../types/Course";
+
+type CourseId = Course["id"];
 
 const API = `${getApiBaseUrl()}/api/access`;
 
-// POST /api/access/lesson (Admin only)
-export async function grantLessonAccess(
-  studentId: string,
-  lessonId: string
-): Promise<void> {
-  const res = await apiFetch(
-    `${API}/lesson?studentId=${studentId}&lessonId=${lessonId}`,
-    {
-      method: "POST",
-    }
-  );
+function buildUrl(path: string, params?: Record<string, string>) {
+  if (!params || Object.keys(params).length === 0) return `${API}${path}`;
+  const qs = new URLSearchParams(params).toString();
+  return `${API}${path}?${qs}`;
+}
+
+async function requestVoid(url: string, method: "POST") {
+  const res = await apiFetch(url, { method });
+
   if (!res.ok) {
-    throw new Error("Failed to grant lesson access");
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Request failed (${res.status})`);
   }
 }
 
-// POST /api/access/course (Admin only)
-export async function grantCourseAccess(
-  studentId: string,
-  courseId: string
-): Promise<void> {
-  const res = await apiFetch(
-    `${API}/course?studentId=${studentId}&courseId=${courseId}`,
-    {
-      method: "POST",
-    }
-  );
+async function requestJson<T>(url: string, method: "GET" | "POST" = "GET") {
+  const res = await apiFetch(url, { method });
+
   if (!res.ok) {
-    throw new Error("Failed to grant course access");
+    const text = await res.text().catch(() => "");
+    throw new Error(text || `Request failed (${res.status})`);
   }
+
+  return (await res.json()) as T;
 }
 
-// DELETE /api/access/lesson (Admin only)
-export async function revokeLessonAccess(
-  studentId: string,
-  lessonId: string
-): Promise<void> {
-  const res = await apiFetch(
-    `${API}/lesson?studentId=${studentId}&lessonId=${lessonId}`,
-    {
-      method: "DELETE",
-    }
-  );
-  if (!res.ok) {
-    throw new Error("Failed to revoke lesson access");
-  }
+// POST /api/access/grant-course?studentId=...&courseId=...
+export async function grantCourseAccess(studentId: string, courseId: CourseId) {
+  const url = buildUrl("/grant-course", {
+    studentId,
+    courseId: String(courseId),
+  });
+  return requestVoid(url, "POST");
+}
+
+// POST /api/access/revoke-course?studentId=...&courseId=...
+export async function revokeCourseAccess(studentId: string, courseId: CourseId) {
+  const url = buildUrl("/revoke-course", {
+    studentId,
+    courseId: String(courseId),
+  });
+  return requestVoid(url, "POST");
+}
+
+// GET /api/access/course?studentId=...
+export async function getStudentCourseAccess(studentId: string): Promise<Course[]> {
+  const url = buildUrl("/course", { studentId });
+  return requestJson<Course[]>(url, "GET");
 }

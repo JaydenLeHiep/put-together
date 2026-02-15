@@ -51,6 +51,8 @@ public static class ApplicationExtensions
         services.AddScoped<HardDeleteLessonsJob>();
         services.AddScoped<OrphanBunnyCleanupJob>();
         services.AddHttpClient<BunnyLibraryClient>();
+        services.AddScoped<RevokeExpiredCourseAccessJob>();
+        services.AddScoped<CourseAccessCleanupJob>();
         
         // Scheduler (singleton)
         
@@ -59,8 +61,16 @@ public static class ApplicationExtensions
         services.Configure<CronOptions>(opts =>
         {
             opts.OrphanCleanupInterval = TimeSpan.FromHours(6);
+
             opts.HardDeleteInterval = TimeSpan.FromDays(1);
             opts.HardDeleteAfterDays = 30;
+
+            // Revoke expired course access (mark as revoked)
+            opts.RevokeExpiredCourseAccessInterval = TimeSpan.FromHours(6);
+
+            // Cleanup revoked/expired rows from DB (keep DB clean)
+            opts.CourseAccessCleanupInterval = TimeSpan.FromDays(1);
+            opts.CourseAccessCleanupAfterDays = 30;
         });
 
         // Courses

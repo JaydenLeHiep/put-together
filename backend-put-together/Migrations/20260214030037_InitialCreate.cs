@@ -166,28 +166,21 @@ namespace backend_put_together.Migrations
                 name: "student_course_access",
                 columns: table => new
                 {
-                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     student_id = table.Column<Guid>(type: "uuid", nullable: false),
                     course_id = table.Column<Guid>(type: "uuid", nullable: false),
-                    purchased_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    expires_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    granted_by_id = table.Column<Guid>(type: "uuid", nullable: true)
+                    purchased_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    expires_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    revoked_at_utc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("pk_student_course_access", x => x.id);
+                    table.PrimaryKey("pk_student_course_access", x => new { x.student_id, x.course_id });
                     table.ForeignKey(
                         name: "fk_student_course_access_courses_course_id",
                         column: x => x.course_id,
                         principalTable: "courses",
                         principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "fk_student_course_access_users_granted_by_id",
-                        column: x => x.granted_by_id,
-                        principalTable: "users",
-                        principalColumn: "id",
-                        onDelete: ReferentialAction.SetNull);
                     table.ForeignKey(
                         name: "fk_student_course_access_users_student_id",
                         column: x => x.student_id,
@@ -222,7 +215,7 @@ namespace backend_put_together.Migrations
                         principalColumn: "id",
                         onDelete: ReferentialAction.Restrict);
                 });
-            
+
             migrationBuilder.CreateTable(
                 name: "s3_stored_files",
                 columns: table => new
@@ -320,25 +313,30 @@ namespace backend_put_together.Migrations
                 column: "video_guid");
 
             migrationBuilder.CreateIndex(
+                name: "ix_s3_stored_files_lesson_id",
+                table: "s3_stored_files",
+                column: "lesson_id",
+                filter: "\"deleted_at\" IS NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "ix_student_course_access_course_id",
                 table: "student_course_access",
                 column: "course_id");
 
             migrationBuilder.CreateIndex(
-                name: "ix_student_course_access_granted_by_id",
+                name: "ix_student_course_access_expires_at_utc",
                 table: "student_course_access",
-                column: "granted_by_id");
+                column: "expires_at_utc");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_student_course_access_revoked_at_utc",
+                table: "student_course_access",
+                column: "revoked_at_utc");
 
             migrationBuilder.CreateIndex(
                 name: "ix_student_course_access_student_id",
                 table: "student_course_access",
                 column: "student_id");
-
-            migrationBuilder.CreateIndex(
-                name: "ix_student_course_access_student_id_course_id",
-                table: "student_course_access",
-                columns: new[] { "student_id", "course_id" },
-                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "ix_user_logins_provider_provider_key",
@@ -381,12 +379,6 @@ namespace backend_put_together.Migrations
                 column: "user_name",
                 unique: true,
                 filter: "\"deleted_at\" IS NULL");
-            
-            migrationBuilder.CreateIndex(
-                name: "ix_s3_stored_files_lesson_id",
-                table: "s3_stored_files",
-                column: "lesson_id",
-                filter: "\"deleted_at\" IS NULL");
         }
 
         /// <inheritdoc />
@@ -394,6 +386,9 @@ namespace backend_put_together.Migrations
         {
             migrationBuilder.DropTable(
                 name: "lesson_comments");
+
+            migrationBuilder.DropTable(
+                name: "s3_stored_files");
 
             migrationBuilder.DropTable(
                 name: "student_course_access");
@@ -415,9 +410,6 @@ namespace backend_put_together.Migrations
 
             migrationBuilder.DropTable(
                 name: "users");
-            
-            migrationBuilder.DropTable(
-                name: "s3_stored_files");
         }
     }
 }
