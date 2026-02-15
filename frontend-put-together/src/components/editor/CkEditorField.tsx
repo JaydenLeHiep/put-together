@@ -18,6 +18,9 @@ import {
   TableToolbar,
 } from "ckeditor5";
 
+// CKEditor core types
+import type { Editor } from "@ckeditor/ckeditor5-core";
+
 // CKEditor default styles (important)
 import "ckeditor5/ckeditor5.css";
 
@@ -27,9 +30,15 @@ type Props = {
   disabled?: boolean;
 };
 
+function getErrorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  return "Unknown error";
+}
+
 export default function CkEditorField({ value, onChange, disabled }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
-  const editorRef = useRef<any>(null);
+  const editorRef = useRef<Editor | null>(null);
   const lastValueRef = useRef<string>(value);
 
   useEffect(() => {
@@ -39,7 +48,7 @@ export default function CkEditorField({ value, onChange, disabled }: Props) {
       if (!hostRef.current) return;
 
       const editor = await ClassicEditor.create(hostRef.current, {
-        licenseKey: "GPL", 
+        licenseKey: "GPL",
         plugins: [
           Essentials,
           Paragraph,
@@ -105,11 +114,16 @@ export default function CkEditorField({ value, onChange, disabled }: Props) {
 
     return () => {
       cancelled = true;
+
       const editor = editorRef.current;
       editorRef.current = null;
 
       if (editor) {
-        editor.destroy().catch((err: any) => console.error("CKEditor destroy error", err));
+        editor
+          .destroy()
+          .catch((err: unknown) =>
+            console.error("CKEditor destroy error:", getErrorMessage(err))
+          );
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
