@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using backend_put_together.Application.Users.DTOs;
 using backend_put_together.Application.Users.Queries;
 using backend_put_together.Application.Users.Services;
+using backend_put_together.Application.Users.Shared;
 using backend_put_together.Infrastructure.Tokens;
 using Carter;
 using Microsoft.AspNetCore.Authorization;
@@ -145,7 +146,8 @@ public class UserEndpoints : ICarterModule
 
                         return Results.Ok(new
                         {
-                            accessToken = refreshResult.AccessToken
+                            accessToken = refreshResult.AccessToken,
+                            userInfo = refreshResult.UserInfo
                         });
                     }
                 }
@@ -195,12 +197,89 @@ public class UserEndpoints : ICarterModule
             .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
 
         // GET /api/users/role/{role} (Admin only)
-        group.MapGet("/role/{role}", async (
-                string role, 
-                IUserQueryService query) =>
+        group.MapGet("/role/{role}", async (string role, IUserQueryService query, CancellationToken ct) =>
             {
-                var users = await query.GetUsersByRoleAsync(role);
+                if (!Enum.TryParse<Role>(role, true, out _))
+                    return Results.BadRequest("invalid role");
+
+                var users = await query.GetUsersByRoleAsync(role, ct);
                 return Results.Ok(users);
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+        
+        group.MapGet("/{id:guid}", async (
+                Guid id,
+                IUserQueryService query,
+                CancellationToken ct) =>
+            {
+                var user = await query.GetUserByIdAsync(id, ct);
+                return user == null ? Results.NotFound() : Results.Ok(user);
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+        
+        group.MapPatch("/{id:guid}/role", async (
+                Guid id,
+                [FromBody] UpdateUserRoleRequest req,
+                IUserService service,
+                CancellationToken ct) =>
+            {
+                if (string.IsNullOrWhiteSpace(req.Role))
+                    return Results.BadRequest("role is required");
+
+                // Only allow Student / Teacher
+                var normalized = req.Role.Trim();
+                if (!string.Equals(normalized, "Student", StringComparison.OrdinalIgnoreCase) &&
+                    !string.Equals(normalized, "Teacher", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Results.BadRequest("only Student or Teacher is allowed");
+                }
+
+                var ok = await service.UpdateRoleStudentTeacherOnlyAsync(id, normalized, ct);
+
+                return ok switch
+                {
+                    UpdateRoleResult.Success => Results.Ok(),
+                    UpdateRoleResult.UserNotFound => Results.NotFound(),
+                    UpdateRoleResult.TargetIsAdmin => Results.Forbid(),
+                    UpdateRoleResult.InvalidRole => Results.BadRequest("invalid role"),
+                    _ => Results.BadRequest("update role failed")
+                };
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+        
+        group.MapPatch("/{id:guid}/deactivate", async (
+                Guid id,
+                IUserQueryService query,
+                IUserService service,
+                CancellationToken ct) =>
+            {
+                var details = await query.GetUserByIdAsync(id, ct);
+                if (details == null) return Results.NotFound();
+                if (details.RoleName == "Admin") return Results.Forbid();
+
+                var ok = await service.DeactivateAsync(id, ct);
+                return ok ? Results.Ok() : Results.BadRequest();
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+
+        group.MapPatch("/{id:guid}/activate", async (
+                Guid id,
+                IUserService service,
+                CancellationToken ct) =>
+            {
+                var ok = await service.ActivateAsync(id, ct);
+                return ok ? Results.Ok() : Results.NotFound();
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+        
+        group.MapPost("/{id:guid}/reset-password", async (
+                Guid id,
+                [FromBody] ResetPasswordRequest req,
+                IUserService service,
+                CancellationToken ct) =>
+            {
+                var ok = await service.ResetPasswordAsync(id, req.NewPassword, ct);
+                return ok ? Results.Ok() : Results.BadRequest("Reset password failed");
             })
             .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
     }

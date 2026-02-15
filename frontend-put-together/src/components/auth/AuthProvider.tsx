@@ -7,7 +7,6 @@ import {
 } from "../../services/userService";
 import type { AuthUser, LoginPayload, AuthStatus } from "./typeAuth";
 import { ApiInitializer } from "./ApiInitializer";
-import { userFromAccessToken } from "../../utils/jwt";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -20,7 +19,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const res = await createRefreshTokenUser();
         setAccessToken(res.accessToken);
-        setUser(userFromAccessToken(res.accessToken));
+        setUser({
+          id: res.userInfo.id,
+          userName: res.userInfo.userName,
+          email: res.userInfo.email,
+          role: res.userInfo.roleName,
+        });
         setStatus("authenticated");
       } catch {
         setUser(null);
@@ -52,7 +56,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = async () => {
     try {
       await logoutUser(); // backend deletes refresh cookie
-    } catch { }
+    } catch (err) {
+      console.error("Logout failed:", err);
+    }
 
     setAccessToken(null);
     setUser(null);

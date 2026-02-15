@@ -10,4 +10,5 @@ public interface IUserQueryService
     Task LogoutAsync(string refreshToken, CancellationToken ct);
     Task<IReadOnlyList<UserReadDto>> GetAllUsersAsync(CancellationToken ct = default);
     Task<IReadOnlyList<UserReadDto>> GetUsersByRoleAsync(string role, CancellationToken ct = default);
+    Task<UserDetailsDto?> GetUserByIdAsync(Guid id, CancellationToken ct = default);
 }

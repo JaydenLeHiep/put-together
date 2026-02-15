@@ -31,16 +31,16 @@ type EditingCourse = {
 export default function ManageStructurePage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
-  
+
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
-  
+
   const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [showCourseForm, setShowCourseForm] = useState<string | null>(null);
-  
+
   const [editingCategory, setEditingCategory] = useState<EditingCategory | null>(null);
   const [editingCourse, setEditingCourse] = useState<EditingCourse | null>(null);
-  
+
   const [newCategory, setNewCategory] = useState({ name: "", description: "" });
   const [newCourse, setNewCourse] = useState({
     title: "",
@@ -50,17 +50,26 @@ export default function ManageStructurePage() {
   });
 
   useEffect(() => {
-    loadData();
-  }, []);
+    let cancelled = false;
 
-  async function loadData() {
-    const [cat, crs] = await Promise.all([
-      getAllCategories(),
-      getAllCourses(),
-    ]);
-    setCategories(cat);
-    setCourses(crs);
-  }
+    async function fetchData() {
+      const [cat, crs] = await Promise.all([
+        getAllCategories(),
+        getAllCourses(),
+      ]);
+
+      if (!cancelled) {
+        setCategories(cat);
+        setCourses(crs);
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Category operations
   async function handleCreateCategory() {
@@ -70,10 +79,10 @@ export default function ManageStructurePage() {
       name: newCategory.name,
       description: newCategory.description || undefined,
     });
-    
+
     setNewCategory({ name: "", description: "" });
     setShowCategoryForm(false);
-    await loadData();
+    await reloadData();
   }
 
   async function handleUpdateCategory() {
@@ -83,9 +92,9 @@ export default function ManageStructurePage() {
       name: editingCategory.name,
       description: editingCategory.description || undefined,
     });
-    
+
     setEditingCategory(null);
-    await loadData();
+    await reloadData();
   }
 
   async function handleDeleteCategory(id: string) {
@@ -97,7 +106,7 @@ export default function ManageStructurePage() {
       next.delete(id);
       return next;
     });
-    await loadData();
+    await reloadData();
   }
 
   // Course operations
@@ -111,10 +120,10 @@ export default function ManageStructurePage() {
       level: newCourse.level,
       price: newCourse.price,
     });
-    
+
     setNewCourse({ title: "", description: "", level: "A1", price: null });
     setShowCourseForm(null);
-    await loadData();
+    await reloadData();
   }
 
   async function handleUpdateCourse() {
@@ -126,9 +135,9 @@ export default function ManageStructurePage() {
       level: editingCourse.level,
       price: editingCourse.price,
     });
-    
+
     setEditingCourse(null);
-    await loadData();
+    await reloadData();
   }
 
   async function handleDeleteCourse(id: string) {
@@ -140,7 +149,7 @@ export default function ManageStructurePage() {
       next.delete(id);
       return next;
     });
-    await loadData();
+    await reloadData();
   }
 
   function toggleCategory(id: string) {
@@ -169,6 +178,15 @@ export default function ManageStructurePage() {
 
   function getCategoryTitle(category: Category) {
     return `${category.name} (${category.courseCount} ${category.courseCount === 1 ? 'Kurs' : 'Kurse'})`;
+  }
+
+  async function reloadData() {
+    const [cat, crs] = await Promise.all([
+      getAllCategories(),
+      getAllCourses(),
+    ]);
+    setCategories(cat);
+    setCourses(crs);
   }
 
   return (

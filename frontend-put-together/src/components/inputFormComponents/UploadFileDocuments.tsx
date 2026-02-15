@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { UploadFileProps } from "./typeUploadFile";
 
 export const UploadFileDocuments = ({
@@ -11,8 +12,29 @@ export const UploadFileDocuments = ({
   fileDocuments,
   onRemoveFileDocument,
 }: UploadFileProps) => {
+  const [isDragging, setIsDragging] = useState(false);
+
   const hasFiles = fileDocuments.length > 0;
   const reachedMax = fileDocuments.length >= maxNumberOfFile;
+
+  const handleEnter: React.DragEventHandler<HTMLDivElement> = (e) => {
+    setIsDragging(true);
+    onDragEnter(e);
+  };
+
+  const handleLeave: React.DragEventHandler<HTMLDivElement> = (e) => {
+    setIsDragging(false);
+    onDragLeave(e);
+  };
+
+  const handleOver: React.DragEventHandler<HTMLDivElement> = (e) => {
+    onDragOver(e);
+  };
+
+  const handleDropInternal: React.DragEventHandler<HTMLDivElement> = (e) => {
+    setIsDragging(false);
+    onDrop(e);
+  };
 
   return (
     <>
@@ -23,15 +45,17 @@ export const UploadFileDocuments = ({
           </label>
 
           <div
-            className="relative border-2 border-dashed rounded-xl p-8 transition-all"
-            onDragEnter={onDragEnter}
-            onDragLeave={onDragLeave}
-            onDragOver={onDragOver}
-            onDrop={onDrop}
+            className={`relative border-2 border-dashed rounded-xl p-8 transition-all
+              ${isDragging ? "border-lila-500 bg-lila-50" : hasFiles ? "border-green-400 bg-green-50" : "border-gray-300 hover:border-lila-400"}
+            `}
+            onDragEnter={handleEnter}
+            onDragLeave={handleLeave}
+            onDragOver={handleOver}
+            onDrop={handleDropInternal}
           >
             <input
               type="file"
-              accept="application/pdf"
+              accept="application/pdf,.pdf"
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
               onChange={onChange}
               disabled={loading}
@@ -56,7 +80,9 @@ export const UploadFileDocuments = ({
               <p className="text-lg font-medium text-gray-700 mb-2">
                 Datei hierher ziehen oder klicken
               </p>
-              <p className="text-sm text-gray-500">Nur PDF Datei</p>
+              <p className="text-sm text-gray-500">
+                Nur PDF Datei · {fileDocuments.length}/{maxNumberOfFile}
+              </p>
             </div>
           </div>
         </div>
@@ -73,13 +99,7 @@ export const UploadFileDocuments = ({
           {fileDocuments.map((file, index) => (
             <li
               key={`${file.name}-${index}`}
-              className="
-                  flex items-center justify-between
-                  rounded-xl
-                  border border-lila-200
-                  bg-lila-50
-                  px-5 py-4
-                "
+              className="flex items-center justify-between rounded-xl border border-lila-200 bg-lila-50 px-5 py-4"
             >
               <div>
                 <p className="font-medium text-gray-800">{file.name}</p>

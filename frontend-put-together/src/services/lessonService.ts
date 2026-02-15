@@ -33,8 +33,16 @@ export async function createLesson(form: FormData): Promise<void> {
   });
 
   if (!res.ok) {
-    const text = await res.text();
-    throw new Error(text || "Upload failed");
+    let message = "Failed to create lesson";
+
+    try {
+      const text = await res.text();
+      if (text) message = text;
+    } catch {
+      // ignore parse errors
+    }
+
+    throw new Error(message);
   }
 }
 

@@ -12,3 +12,16 @@ export type UserInfo = {
   email: string;
   roleName: string;
 };
+
+export type UserReadDto = {
+  id: string;
+  userName: string;
+  email: string;
+  roleName: "Admin" | "Teacher" | "Student";
+  createdAt: string;
+};
+
+export type UserRegisterRequest = {
+    identifier: string;
+    password: string;
+};

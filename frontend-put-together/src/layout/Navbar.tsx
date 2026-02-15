@@ -63,7 +63,7 @@ export default function Navbar() {
                 Lila Deutsch
               </span>
               <span className="text-xs text-gray-500 block leading-tight">
-                Sprachzentrum
+                Sprachschule
               </span>
             </div>
           </button>

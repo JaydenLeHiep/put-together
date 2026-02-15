@@ -247,13 +247,17 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         modelBuilder.Entity<StudentCourseAccess>(b =>
         {
             b.ToTable("student_course_access");
-            b.HasKey(x => x.Id);
+
+            // Composite key (no Id column) => also guarantees uniqueness
+            b.HasKey(x => new { x.StudentId, x.CourseId });
 
             b.Property(x => x.StudentId).IsRequired();
             b.Property(x => x.CourseId).IsRequired();
-            b.Property(x => x.PurchasedAt).IsRequired();
-            b.Property(x => x.ExpiresAt);
-            b.Property(x => x.GrantedById);
+
+            b.Property(x => x.PurchasedAtUtc).IsRequired();
+            b.Property(x => x.ExpiresAtUtc).IsRequired();
+
+            b.Property(x => x.RevokedAtUtc);
 
             b.HasOne<User>()
                 .WithMany()
@@ -265,14 +269,11 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .HasForeignKey(x => x.CourseId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            b.HasOne<User>()
-                .WithMany()
-                .HasForeignKey(x => x.GrantedById)
-                .OnDelete(DeleteBehavior.SetNull);
-
-            b.HasIndex(x => new { x.StudentId, x.CourseId }).IsUnique();
+            // Indexes for faster lookups
             b.HasIndex(x => x.StudentId);
             b.HasIndex(x => x.CourseId);
+            b.HasIndex(x => x.ExpiresAtUtc);
+            b.HasIndex(x => x.RevokedAtUtc);
         });
 
         // =====================================================

@@ -128,9 +128,18 @@ public class UserQueryService : IUserQueryService
 
         await _db.SaveChangesAsync(ct);
 
+        var userInfo = new UserInfo
+        {
+            Id = user.Id,
+            UserName = user.UserName,
+            Email = user.Email,
+            RoleName = ToRoleName(user.Role)
+        };
+
         return RefreshResult.Ok(
             newAccessToken,
-            newRefreshToken
+            newRefreshToken,
+            userInfo
         );
     }
 
@@ -219,5 +228,24 @@ public class UserQueryService : IUserQueryService
                 u.CreatedAt
             ))
             .ToListAsync(ct);
+    }
+    
+    public async Task<UserDetailsDto?> GetUserByIdAsync(Guid id, CancellationToken ct = default)
+    {
+        var u = await _db.Users
+            .AsNoTracking()
+            .Where(x => x.Id == id)
+            .Select(x => new UserDetailsDto(
+                x.Id,
+                x.UserName,
+                x.Email,
+                x.Role.ToString(),
+                x.CreatedAt,
+                x.DeletedAt,
+                x.DeletedAt == null
+            ))
+            .FirstOrDefaultAsync(ct);
+
+        return u;
     }
 }

@@ -43,7 +43,6 @@ export type AuthContextType = {
 
 export type RefreshInfo = {
   accessToken: string;
-  expirationInSeconds: number;
   userInfo: BackendUserInfo;
 };
 
