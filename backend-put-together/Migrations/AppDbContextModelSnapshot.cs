@@ -32,10 +32,6 @@ namespace backend_put_together.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("course_id");
 
-                    b.Property<Guid>("CategoryId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("category_id");
-
                     b.Property<DateTime>("ExpiresAtUtc")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("expires_at_utc");
@@ -50,9 +46,6 @@ namespace backend_put_together.Migrations
 
                     b.HasKey("StudentId", "CourseId")
                         .HasName("pk_student_course_access");
-
-                    b.HasIndex("CategoryId")
-                        .HasDatabaseName("ix_student_course_access_category_id");
 
                     b.HasIndex("CourseId")
                         .HasDatabaseName("ix_student_course_access_course_id");

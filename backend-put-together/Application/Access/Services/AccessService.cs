@@ -18,16 +18,9 @@ public sealed class AccessService : IAccessService
     {
         var now = DateTime.UtcNow;
 
-        var expires = now.AddDays(30);
-
-        var course = await _db.Courses
-            .AsNoTracking()
-            .Where(c => c.Id == courseId && !c.IsDeleted)
-            .Select(c => new { c.CategoryId })
-            .SingleOrDefaultAsync(ct);
-
-        if (course is null)
-            throw new KeyNotFoundException("Course not found");
+        // Choose ONE:
+        var expires = now.AddDays(30);   // exactly 30 days
+        // var expires = now.AddMonths(1); // calendar month
 
         var row = await _db.StudentCourseAccess
             .SingleOrDefaultAsync(x => x.StudentId == studentId && x.CourseId == courseId, ct);
@@ -38,7 +31,6 @@ public sealed class AccessService : IAccessService
             {
                 StudentId = studentId,
                 CourseId = courseId,
-                CategoryId = course.CategoryId,
                 PurchasedAtUtc = now,
                 ExpiresAtUtc = expires,
                 RevokedAtUtc = null
@@ -53,7 +45,6 @@ public sealed class AccessService : IAccessService
         row.PurchasedAtUtc = now;
         row.ExpiresAtUtc = expires;
         row.RevokedAtUtc = null;
-        row.CategoryId = course.CategoryId;
 
         await _db.SaveChangesAsync(ct);
     }
