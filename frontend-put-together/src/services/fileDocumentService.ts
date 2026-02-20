@@ -1,6 +1,6 @@
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
-import type { FileDocument, FileUrl } from "../components/displayComponents/typeDisplayFileDocuments";
+import type { FileDocument, FileUrl } from "../components/displayComponents/lessonFileDocuments/typeDisplayFileDocuments";
 
 const API = `${getApiBaseUrl()}/api/storages/lessons`;
 

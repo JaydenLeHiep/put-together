@@ -111,4 +111,16 @@ public sealed class CourseQueryService : ICourseQueryService
 
         return course;
     }
+
+    public async Task<List<CourseStudentReadDto>> GetPaidCoursesByStudentIdAsync(Guid studentId,
+        CancellationToken ct = default)
+    {
+        var course = await _db.StudentCourseAccess
+            .AsNoTracking()
+            .Where(c => c.StudentId == studentId)
+            .Select(c => new CourseStudentReadDto(c.StudentId, c.PurchasedAtUtc, c.ExpiresAtUtc))
+            .ToListAsync(ct);
+
+        return course;
+    }
 }
