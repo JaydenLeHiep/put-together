@@ -4,8 +4,9 @@ public class StudentCourseAccess
 {
     public Guid StudentId { get; set; }
     public Guid CourseId { get; set; }
-    public Guid CategoryId { get; set; }
+
     public DateTime PurchasedAtUtc { get; set; }
     public DateTime ExpiresAtUtc { get; set; }
+
     public DateTime? RevokedAtUtc { get; set; }
 }

@@ -253,7 +253,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
             b.Property(x => x.StudentId).IsRequired();
             b.Property(x => x.CourseId).IsRequired();
-            b.Property(x => x.CategoryId).HasColumnName("category_id").IsRequired();
+
             b.Property(x => x.PurchasedAtUtc).IsRequired();
             b.Property(x => x.ExpiresAtUtc).IsRequired();
 
@@ -272,7 +272,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             // Indexes for faster lookups
             b.HasIndex(x => x.StudentId);
             b.HasIndex(x => x.CourseId);
-            b.HasIndex(x => x.CategoryId);
             b.HasIndex(x => x.ExpiresAtUtc);
             b.HasIndex(x => x.RevokedAtUtc);
         });
