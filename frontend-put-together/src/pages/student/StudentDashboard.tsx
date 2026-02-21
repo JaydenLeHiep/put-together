@@ -7,7 +7,9 @@ import { DisplayLesson } from "../../components/displayComponents/lesson/Display
 
 export const StudentDashboard = () => {
   // They are actually both categories and course together (not optimal -_- !!)
-  const [categories, setCategories] = useState<CategoryWithCourses[]>([]);
+  const [categoriesWithCourses, setCategoriesWithCourses] = useState<
+    CategoryWithCourses[]
+  >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,7 +23,7 @@ export const StudentDashboard = () => {
     async function load() {
       try {
         const data = await getCategoriesCourseForStudent();
-        setCategories(data);
+        setCategoriesWithCourses(data);
       } catch (err) {
         console.log(err);
         setError("Failed to load courses");
@@ -56,7 +58,7 @@ export const StudentDashboard = () => {
 
           <div className="p-3">
             <DisplayCategory
-              categoriesWithCourses={categories}
+              categoriesWithCourses={categoriesWithCourses}
               openCategoryId={openCategoryId}
               onToggleCategory={handleToggleCategory}
               openCourseId={openCourseId}
