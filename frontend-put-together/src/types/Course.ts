@@ -13,7 +13,7 @@ export type Course = {
 
 export type CourseWithLessons = {
   id: string;
-  categoryId: string; 
+  categoryId: string;
   title: string;
   description: string;
   level: string;
@@ -51,3 +51,9 @@ export type UpdateCourseRequest = {
   price?: number | null;
   isPublished?: boolean;
 };
+
+export type DisplayCourse = {
+  courseId: string,
+  title: string,
+  expiresAtUtc: string
+}

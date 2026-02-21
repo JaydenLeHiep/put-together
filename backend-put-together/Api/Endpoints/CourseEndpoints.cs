@@ -5,6 +5,7 @@ using Carter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using backend_put_together.Application.Lessons.Queries;
 
 namespace backend_put_together.Api.Endpoints;
 
@@ -117,5 +118,26 @@ public sealed class CourseEndpoints : ICarterModule
                 return course is null ? Results.NotFound() : Results.Ok(course);
             })
             .RequireAuthorization();
+        
+        group.MapGet("/student-paid-category-course", async (
+                ICourseQueryService query,
+                HttpContext httpContext,
+                CancellationToken ct) =>
+            {
+                var userId = httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+                
+                if (userId is null)
+                    return Results.Unauthorized();
+                
+                if(!Guid.TryParse(userId, out var studentId))
+                    return Results.Unauthorized();
+                
+                var course = await query.GetPaidCoursesByStudentIdAsync(studentId, ct);
+                return Results.Ok(course);
+            })
+            .RequireAuthorization(new AuthorizeAttribute
+            {
+                Roles = "Student"
+            });
     }
 }

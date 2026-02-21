@@ -8,4 +8,7 @@ public interface ICourseQueryService
     Task<IReadOnlyList<CourseReadDto>> GetPublishedAsync(CancellationToken ct = default);
     Task<CourseReadDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     public Task<CourseWithLessonsDto?> GetCourseWithLessonsAsync(Guid courseId, CancellationToken ct = default);
+    public Task<List<CategoryWithCoursesDto>> GetPaidCoursesByStudentIdAsync(Guid studentId,
+        CancellationToken ct = default);
+    
 }
