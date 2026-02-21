@@ -1,31 +1,26 @@
-import React from "react";
-import type { CategoryWithCourses } from "./typeDisplayCategoryCourse";
-import { DisplayCourse } from "./DisplayCourse";
+import { DisplayCourse } from "../course/DisplayCourse";
+import type { DisplayCategoryCourseProps } from "./typeDisplayCategory";
 
 export const DisplayCategory = ({
-  categories,
+  categoriesWithCourses,
   openCategoryId,
   onToggleCategory,
   openCourseId,
   onToggleCourse,
-}: {
-  categories: CategoryWithCourses[];
-  openCategoryId: string | null;
-  onToggleCategory: (id: string | null) => void;
-  openCourseId: string | null;
-  onToggleCourse: (id: string | null) => void;
-}) => {
+  selectedLesson,
+  onSelectLesson,
+}: DisplayCategoryCourseProps) => {
   return (
     <div className="px-3">
-      {categories.map((category) => {
-        const isOpen = openCategoryId === category.categoryId;
+      {categoriesWithCourses.map((categoryAndCourse) => {
+        const isOpen = openCategoryId === categoryAndCourse.categoryId;
 
         return (
-          <div key={category.categoryId} className="mb-2">
+          <div key={categoryAndCourse.categoryId} className="mb-2">
             {/* CATEGORY HEADER */}
             <button
               onClick={() =>
-                onToggleCategory(isOpen ? null : category.categoryId)
+                onToggleCategory(isOpen ? null : categoryAndCourse.categoryId)
               }
               className="w-full flex items-center justify-between px-3 py-2.5 font-bold text-sm text-gray-800 hover:bg-gray-100 rounded-lg transition-colors duration-150"
             >
@@ -60,23 +55,25 @@ export const DisplayCategory = ({
                   />
                 </svg>
 
-                {category.categoryName}
+                {categoryAndCourse.categoryName}
               </span>
 
               <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded-full font-medium">
-                {category.courses.length}
+                {categoryAndCourse.courses.length}
               </span>
             </button>
 
             {/* COURSES */}
             {isOpen && (
               <div className="mt-1 ml-6 space-y-1">
-                {category.courses.map((course) => (
+                {categoryAndCourse.courses.map((course) => (
                   <DisplayCourse
                     key={course.courseId}
                     course={course}
                     isOpen={openCourseId === course.courseId}
                     onToggle={onToggleCourse}
+                    selectedLesson={selectedLesson}
+                    onSelectLesson={onSelectLesson}
                   />
                 ))}
               </div>

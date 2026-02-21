@@ -7,6 +7,7 @@ import type {
 } from "../types/LessonComment";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
+import type { DisplayLessonType } from "../components/displayComponents/lesson/typeDisplayLesson";
 
 const API = `${getApiBaseUrl()}/api/lessons`;
 
@@ -152,6 +153,16 @@ export async function getPublishedLessons(): Promise<Lesson[]> {
 
   if (!res.ok) {
     throw new Error(`Failed to load published lessons (${res.status})`);
+  }
+
+  return res.json();
+}
+
+export async function getLessonsByCourseIdForStudent(courseId: string): Promise<DisplayLessonType[]> {
+  const res = await apiFetch(`${API}/${courseId}/course`, { method: "GET" });
+
+  if (!res.ok) {
+    throw new Error(`Failed to load categories (${res.status})`);
   }
 
   return res.json();

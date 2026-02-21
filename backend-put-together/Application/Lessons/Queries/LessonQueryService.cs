@@ -137,4 +137,33 @@ public sealed class LessonQueryService : ILessonQueryService
             ))
             .ToListAsync(ct);
     }
+
+    public async Task<List<LessonStudentReadDto>>
+        GetLessonsByCourseIdAsync(
+            Guid courseId,
+            CancellationToken ct = default)
+    {
+        var lessons = await _db.Lessons
+            .AsNoTracking()
+            .Where(l => l.CourseId == courseId)
+            .Where(l => l.IsPublished)
+            .OrderBy(l => l.CreatedAt)
+            .Select(l => new LessonStudentReadDto(
+                l.Id,
+                l.Title,
+                l.Content,
+                l.VideoLibraryId,
+                l.VideoGuid,
+                l.StoredFiles
+                    .Where(f => f.DeletedAt == null)
+                    .Select(f => new FileDocumentDto(
+                        f.Id,
+                        f.FileName
+                    ))
+                    .ToList()
+            ))
+            .ToListAsync(ct);
+
+        return lessons;
+    }
 }

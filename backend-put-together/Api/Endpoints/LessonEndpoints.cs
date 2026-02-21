@@ -317,5 +317,20 @@ public sealed class LessonEndpoints : ICarterModule
             {
                 Roles = "Teacher,Admin"
             });
+        
+        group.MapGet("/{courseId:guid}/course", async (
+                Guid courseId,
+                ILessonQueryService query,
+                CancellationToken ct) =>
+            {
+                var lessons = await query
+                    .GetLessonsByCourseIdAsync(courseId, ct);
+
+                return Results.Ok(lessons);
+            })
+            .RequireAuthorization(new AuthorizeAttribute
+            {
+                Roles = "Student"
+            });
     }
 }

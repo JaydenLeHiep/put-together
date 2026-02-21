@@ -112,15 +112,47 @@ public sealed class CourseQueryService : ICourseQueryService
         return course;
     }
 
-    public async Task<List<CourseStudentReadDto>> GetPaidCoursesByStudentIdAsync(Guid studentId,
-        CancellationToken ct = default)
+    public async Task<List<CategoryWithCoursesDto>>
+        GetPaidCoursesByStudentIdAsync(
+            Guid studentId,
+            CancellationToken ct = default)
     {
-        var course = await _db.StudentCourseAccess
-            .AsNoTracking()
-            .Where(c => c.StudentId == studentId)
-            .Select(c => new CourseStudentReadDto(c.StudentId, c.PurchasedAtUtc, c.ExpiresAtUtc))
-            .ToListAsync(ct);
+        var flatData =
+            await (from sca in _db.StudentCourseAccess.AsNoTracking()
+                    join c in _db.Courses.AsNoTracking()
+                        on sca.CourseId equals c.Id
+                    join cat in _db.Categories.AsNoTracking()
+                        on c.CategoryId equals cat.Id
+                    where sca.StudentId == studentId
+                          && sca.RevokedAtUtc == null
+                          && sca.ExpiresAtUtc > DateTime.UtcNow
+                    select new
+                    {
+                        CategoryId = cat.Id,
+                        CategoryName = cat.Name,
+                        CourseId = c.Id,
+                        CourseTitle = c.Title,
+                        sca.ExpiresAtUtc
+                    })
+                .ToListAsync(ct);
+        
+        var result = flatData
+            .GroupBy(x => new { x.CategoryId, x.CategoryName })
+            .Select(group => new CategoryWithCoursesDto(
+                group.Key.CategoryId,
+                group.Key.CategoryName,
+                group
+                    .OrderBy(x => x.CourseTitle)
+                    .Select(course => new CourseAccessDto(
+                        course.CourseId,
+                        course.CourseTitle,
+                        course.ExpiresAtUtc
+                    ))
+                    .ToList()
+            ))
+            .OrderBy(x => x.CategoryName)
+            .ToList();
 
-        return course;
+        return result;
     }
 }

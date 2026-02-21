@@ -1,52 +1,77 @@
-import React from "react";
-import { useState } from "react";
-import type { CategoryWithCourses } from "../../components/displayComponents/typeDisplayCategoryCourse";
-import { DisplayCategory } from "../../components/displayComponents/DisplayCategory";
+import { useState, useEffect } from "react";
+import type { CategoryWithCourses } from "../../components/displayComponents/category/typeDisplayCategory";
+import { DisplayCategory } from "../../components/displayComponents/category/DisplayCategory";
+import { getCategoriesCourseForStudent } from "../../services/categoryCourseService";
+import type { DisplayLessonType } from "../../types/Lesson";
+import { DisplayLesson } from "../../components/displayComponents/lesson/DisplayLesson";
 
 export const StudentDashboard = () => {
-  const FAKE_DATA: CategoryWithCourses[] = [
-    {
-      categoryId: "1",
-      categoryName: "A1 Beginner",
-      courses: [
-        {
-          courseId: "101",
-          title: "A1 Grammar",
-          expiresAtUtc: "2026-03-19T15:16:09Z",
-        },
-        {
-          courseId: "102",
-          title: "A1 Vocabulary",
-          expiresAtUtc: "2026-04-10T10:00:00Z",
-        },
-      ],
-    },
-    {
-      categoryId: "2",
-      categoryName: "B1 Intermediate",
-      courses: [
-        {
-          courseId: "201",
-          title: "B1 Speaking",
-          expiresAtUtc: "2026-05-01T12:00:00Z",
-        },
-      ],
-    },
-  ];
+  // They are actually both categories and course together (not optimal -_- !!)
+  const [categories, setCategories] = useState<CategoryWithCourses[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [openCourseId, setOpenCourseId] = useState<string | null>(null);
 
+  const [selectedLesson, setSelectedLesson] =
+    useState<DisplayLessonType | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const data = await getCategoriesCourseForStudent();
+        setCategories(data);
+      } catch (err) {
+        console.log(err);
+        setError("Failed to load courses");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    load();
+  }, []);
+
+  function handleToggleCategory(id: string | null) {
+    setOpenCategoryId(id);
+    setOpenCourseId(null);
+  }
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-500">{error}</div>;
+  }
   return (
-    <>
-      <h1>Deine Kurse</h1>
-      <DisplayCategory
-        categories={FAKE_DATA}
-        openCategoryId={openCategoryId}
-        onToggleCategory={setOpenCategoryId}
-        openCourseId={openCourseId}
-        onToggleCourse={setOpenCourseId}
-      ></DisplayCategory>
-    </>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* SIDEBAR */}
+      <aside className="lg:col-span-4">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-lila-600 to-lila-700 p-6">
+            <h2 className="text-xl font-bold text-white">Deine Kurse</h2>
+          </div>
+
+          <div className="p-3">
+            <DisplayCategory
+              categoriesWithCourses={categories}
+              openCategoryId={openCategoryId}
+              onToggleCategory={handleToggleCategory}
+              openCourseId={openCourseId}
+              onToggleCourse={setOpenCourseId}
+              onSelectLesson={setSelectedLesson}
+              selectedLesson={selectedLesson}
+            />
+          </div>
+        </div>
+      </aside>
+
+      {/* MAIN CONTENT */}
+      <section className="lg:col-span-8 space-y-6">
+        <DisplayLesson selectedLesson={selectedLesson} />
+      </section>
+    </div>
   );
 };

@@ -13,4 +13,5 @@ public interface ILessonQueryService
     Task<IReadOnlyList<LessonReadDto>> GetAccessibleLessonsForStudentAsync(Guid studentId, CancellationToken ct = default);
 
     Task<IReadOnlyList<LessonReadDto>> GetPublishedAsync(CancellationToken ct = default);
+    Task<List<LessonStudentReadDto>> GetLessonsByCourseIdAsync(Guid courseId, CancellationToken ct = default);
 }
