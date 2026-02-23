@@ -15,7 +15,7 @@ public class Course
     public Guid CategoryId { get; set; }
     public Category.Category Category { get; set; } = null!;
     public decimal? Price { get; set; }
-    public Guid CreatedById { get; set; }
+    public Guid UserId { get; set; }
     
     // Audit
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;

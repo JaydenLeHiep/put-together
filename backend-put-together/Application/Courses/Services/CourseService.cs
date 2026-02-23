@@ -50,7 +50,7 @@ public sealed class CourseService : ICourseService
             CategoryId = request.CategoryId, 
             BunnyCollectionId = collectionId,
             Price = request.Price,
-            CreatedById = adminId,
+            UserId = adminId,
             CreatedAt = DateTime.UtcNow
         };
 
