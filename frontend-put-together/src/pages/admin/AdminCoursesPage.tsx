@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
 import "../../styles/editor.css";
-import type { LessonComment } from "../../types/LessonComment";
-import type { CourseWithLessons, LessonInCourse } from "../../types/Course";
-import type { Category } from "../../types/Category";
+import type { LessonComment } from "../../types/lessonComment";
+import type { CourseWithLessons, LessonInCourse } from "../../types/course";
+import type { Category } from "../../types/category";
 
 import {
   getLessonComments,

@@ -50,8 +50,7 @@ public sealed class CourseService : ICourseService
             CategoryId = request.CategoryId, 
             BunnyCollectionId = collectionId,
             Price = request.Price,
-            IsPublished = false,
-            CreatedById = adminId,
+            UserId = adminId,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -79,7 +78,6 @@ public sealed class CourseService : ICourseService
         if (request.Description is not null) course.Description = request.Description;
         if (request.Level is not null) course.Level = request.Level;
         if (request.Price.HasValue) course.Price = request.Price;
-        if (request.IsPublished.HasValue) course.IsPublished = request.IsPublished.Value;
 
         course.Touch();
         await _db.SaveChangesAsync(ct);
@@ -127,31 +125,6 @@ public sealed class CourseService : ICourseService
 
         // Soft delete
         course.SoftDelete();
-        await _db.SaveChangesAsync(ct);
-    }
-
-    // =====================================================
-    // PUBLISH
-    // =====================================================
-    public async Task PublishAsync(Guid id, CancellationToken ct = default)
-    {
-        var course = await _db.Courses.FindAsync(new object[] { id }, ct);
-        if (course is null) throw new KeyNotFoundException();
-
-        course.IsPublished = true;
-        course.Touch();
-
-        await _db.SaveChangesAsync(ct);
-    }
-
-    public async Task UnpublishAsync(Guid id, CancellationToken ct = default)
-    {
-        var course = await _db.Courses.FindAsync(new object[] { id }, ct);
-        if (course is null) throw new KeyNotFoundException();
-
-        course.IsPublished = false;
-        course.Touch();
-
         await _db.SaveChangesAsync(ct);
     }
 }

@@ -1,13 +1,13 @@
 import type {
   Lesson,
-} from "../types/Lesson";
+} from "../types/lesson";
 import type {
   LessonComment,
   CreateLessonCommentRequest,
-} from "../types/LessonComment";
+} from "../types/lessonComment";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
-import type { DisplayLessonType } from "../components/displayComponents/lesson/typeDisplayLesson";
+import type { DisplayLessonType } from "../types/lesson";
 
 const API = `${getApiBaseUrl()}/api/lessons`;
 

@@ -3,7 +3,7 @@ import type {
   CategoryWithCourses,
   CreateCategoryRequest,
   UpdateCategoryRequest,
-} from "../types/Category";
+} from "../types/category";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
 

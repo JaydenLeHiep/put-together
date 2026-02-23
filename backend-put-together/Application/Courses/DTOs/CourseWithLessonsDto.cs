@@ -9,6 +9,5 @@ public sealed record CourseWithLessonsDto(
     string Description,
     string Level,
     decimal? Price,
-    bool IsPublished,
     List<LessonReadDto> Lessons
 );

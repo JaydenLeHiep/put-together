@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { DisplayCourseProps } from "./typeDisplayCourses";
-import type { DisplayLessonType } from "../../../types/Lesson";
+import type { DisplayLessonType } from "../../../types/lesson";
 import { getLessonsByCourseIdForStudent } from "../../../services/lessonService";
 
 export const DisplayCourse = ({

@@ -1,5 +1,5 @@
-import type { DisplayLessonType } from "../../../types/Lesson";
-import type { DisplayCourse } from "../../../types/Course";
+import type { DisplayLessonType } from "../../../types/lesson";
+import type { DisplayCourse } from "../../../types/course";
 
 export type CategoryWithCourses = {
     categoryId: string;

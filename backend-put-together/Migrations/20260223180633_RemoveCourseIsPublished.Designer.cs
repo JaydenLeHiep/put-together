@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend_put_together.Infrastructure.Data;
@@ -11,9 +12,11 @@ using backend_put_together.Infrastructure.Data;
 namespace backend_put_together.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260223180633_RemoveCourseIsPublished")]
+    partial class RemoveCourseIsPublished
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -150,6 +153,10 @@ namespace backend_put_together.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
@@ -183,10 +190,6 @@ namespace backend_put_together.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
                     b.HasKey("Id")
                         .HasName("pk_courses");
 
@@ -197,11 +200,11 @@ namespace backend_put_together.Migrations
                     b.HasIndex("CategoryId")
                         .HasDatabaseName("ix_courses_category_id");
 
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_courses_created_by_id");
+
                     b.HasIndex("Level")
                         .HasDatabaseName("ix_courses_level");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_courses_user_id");
 
                     b.ToTable("courses", (string)null);
                 });
@@ -536,10 +539,10 @@ namespace backend_put_together.Migrations
 
                     b.HasOne("backend_put_together.Domain.Users.User", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_courses_users_user_id");
+                        .HasConstraintName("fk_courses_users_created_by_id");
 
                     b.Navigation("Category");
                 });

@@ -1,6 +1,6 @@
 import type { RegisterPayload, LoginPayload, LoginInfo } from "../components/auth/typeAuth";
-import type { UserReadDto, RoleName } from "../types/User";
-import { ROLE_VALUES } from "../types/User";
+import type { UserReadDto, RoleName } from "../types/user";
+import { ROLE_VALUES } from "../types/user";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
 

@@ -3,7 +3,7 @@ import type {
   CourseWithLessons,
   CreateCourseRequest,
   UpdateCourseRequest,
-} from "../types/Course";
+} from "../types/course";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
 

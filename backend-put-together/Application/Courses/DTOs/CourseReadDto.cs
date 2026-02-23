@@ -8,7 +8,6 @@ public sealed record CourseReadDto(
     string Level,
     string BunnyCollectionId,
     decimal? Price,
-    bool IsPublished,
     int LessonCount,
     DateTime CreatedAt
 );

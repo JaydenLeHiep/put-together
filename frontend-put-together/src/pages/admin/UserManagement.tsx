@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import type { UserReadDto } from "../../types/User";
+import type { UserReadDto } from "../../types/user";
 import {
   activateUser,
   deactivateUser,
@@ -9,7 +9,7 @@ import {
   updateUserRole,
   type UserDetailsDto,
 } from "../../services/userService";
-import type { Course } from "../../types/Course";
+import type { Course } from "../../types/course";
 import { getAllCourses } from "../../services/courseService";
 import {
   grantCourseAccess,

@@ -1,4 +1,4 @@
-import type { DisplayLessonType } from "../../../types/Lesson";
+import type { DisplayLessonType } from "../../../types/lesson";
 
 export type DisplayLessonProps = {
     selectedLesson: DisplayLessonType | null
