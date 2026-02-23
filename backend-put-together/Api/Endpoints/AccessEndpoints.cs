@@ -10,16 +10,6 @@ public sealed class AccessEndpoints : ICarterModule
     {
         var group = app.MapGroup("/api/access");
         
-        group.MapGet("/course", async (
-                Guid studentId,
-                IAccessService service,
-                CancellationToken ct) =>
-            {
-                var courses = await service.GetStudentCourseAccessAsync(studentId, ct);
-                return Results.Ok(courses);
-            })
-            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
-        
         // POST /api/access/grant-course?studentId=...&courseId=...
         group.MapPost("/grant-course", async (
                 Guid studentId,

@@ -6,5 +6,4 @@ public sealed class UpdateCourseRequest
     public string? Description { get; set; }
     public string? Level { get; set; }
     public decimal? Price { get; set; }
-    public bool? IsPublished { get; set; }
 }

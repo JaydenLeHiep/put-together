@@ -5,7 +5,6 @@ using Carter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
-using backend_put_together.Application.Lessons.Queries;
 
 namespace backend_put_together.Api.Endpoints;
 
@@ -83,24 +82,6 @@ public sealed class CourseEndpoints : ICarterModule
             {
                 await service.DeleteAsync(id, ct);
                 return Results.NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return Results.NotFound();
-            }
-        })
-        .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
-        
-        // POST /api/courses/{id}/publish (Admin only)
-        group.MapPost("{id:guid}/publish", async (
-            Guid id,
-            ICourseService service,
-            CancellationToken ct) =>
-        {
-            try
-            {
-                await service.PublishAsync(id, ct);
-                return Results.Ok();
             }
             catch (KeyNotFoundException)
             {

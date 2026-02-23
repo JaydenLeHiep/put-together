@@ -92,7 +92,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.Property(x => x.Level).HasMaxLength(50);
             b.Property(x => x.BunnyCollectionId).IsRequired().HasMaxLength(100);
             b.Property(x => x.Price).HasColumnType("decimal(10,2)");
-            b.Property(x => x.IsPublished).IsRequired();
             b.Property(x => x.CreatedById).IsRequired();
             b.Property(x => x.CreatedAt).IsRequired();
             b.Property(x => x.UpdatedAt);
@@ -118,7 +117,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .OnDelete(DeleteBehavior.Cascade);
 
             b.HasIndex(x => x.Level);
-            b.HasIndex(x => x.IsPublished);
             b.HasIndex(x => x.BunnyCollectionId).IsUnique();
             b.HasIndex(x => x.CreatedById);
 

@@ -26,7 +26,6 @@ public sealed class CourseQueryService : ICourseQueryService
                 c.Level,
                 c.BunnyCollectionId,
                 c.Price,
-                c.IsPublished,
                 c.Lessons.Count(l => !l.IsDeleted),
                 c.CreatedAt
             ))
@@ -37,7 +36,6 @@ public sealed class CourseQueryService : ICourseQueryService
     {
         return await _db.Courses
             .AsNoTracking()
-            .Where(c => c.IsPublished)
             .Select(c => new CourseReadDto(
                 c.Id,
                 c.CategoryId,
@@ -46,7 +44,6 @@ public sealed class CourseQueryService : ICourseQueryService
                 c.Level,
                 c.BunnyCollectionId,
                 c.Price,
-                c.IsPublished,
                 c.Lessons.Count(l => !l.IsDeleted && l.IsPublished),
                 c.CreatedAt
             ))
@@ -66,7 +63,6 @@ public sealed class CourseQueryService : ICourseQueryService
                 c.Level,
                 c.BunnyCollectionId,
                 c.Price,
-                c.IsPublished,
                 c.Lessons.Count(l => !l.IsDeleted),
                 c.CreatedAt
             ))
@@ -87,7 +83,6 @@ public sealed class CourseQueryService : ICourseQueryService
                 c.Description,
                 c.Level,
                 c.Price,
-                c.IsPublished,
                 c.Lessons
                     .Where(l => !l.IsDeleted)
                     .Select(l => new LessonReadDto(

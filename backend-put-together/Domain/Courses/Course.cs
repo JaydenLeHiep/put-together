@@ -15,7 +15,6 @@ public class Course
     public Guid CategoryId { get; set; }
     public Category.Category Category { get; set; } = null!;
     public decimal? Price { get; set; }
-    public bool IsPublished { get; set; }
     public Guid CreatedById { get; set; }
     
     // Audit
