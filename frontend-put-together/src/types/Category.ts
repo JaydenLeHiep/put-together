@@ -1,4 +1,4 @@
-import type { Course } from "./Course";
+import type { Course } from "./course";
 
 export type Category = {
   id: string;

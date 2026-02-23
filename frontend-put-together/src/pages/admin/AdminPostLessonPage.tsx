@@ -4,7 +4,7 @@ import { getAllCourses } from "../../services/courseService";
 
 import CkEditorField from "../../components/editor/CkEditorField";
 
-import type { Course } from "../../types/Course";
+import type { Course } from "../../types/course";
 import "../../styles/editor.css";
 
 import { UploadFileDocuments } from "../../components/inputFormComponents/UploadFileDocuments";

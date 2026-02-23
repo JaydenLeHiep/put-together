@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getPublishedLessons } from "../../services/lessonService";
-import type { Lesson } from "../../types/Lesson";
+import type { Lesson } from "../../types/lesson";
 
 export default function AdminProductCoursesPage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);

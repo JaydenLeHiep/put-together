@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import type { CategoryWithCourses } from "../../components/displayComponents/category/typeDisplayCategory";
 import { DisplayCategory } from "../../components/displayComponents/category/DisplayCategory";
 import { getCategoriesCourseForStudent } from "../../services/categoryCourseService";
-import type { DisplayLessonType } from "../../types/Lesson";
+import type { DisplayLessonType } from "../../types/lesson";
 import { DisplayLesson } from "../../components/displayComponents/lesson/DisplayLesson";
 
 export const StudentDashboard = () => {

@@ -11,8 +11,8 @@ import {
   updateCourse,
   deleteCourse,
 } from "../../services/courseService";
-import type { Category } from "../../types/Category";
-import type { Course } from "../../types/Course";
+import type { Category } from "../../types/category";
+import type { Course } from "../../types/course";
 
 type EditingCategory = {
   id: string;

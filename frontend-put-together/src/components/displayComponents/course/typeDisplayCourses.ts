@@ -1,5 +1,5 @@
-import type { DisplayCourse } from "../../../types/Course";
-import type { DisplayLessonType } from "../../../types/Lesson";
+import type { DisplayCourse } from "../../../types/course";
+import type { DisplayLessonType } from "../../../types/lesson";
 
 export type DisplayCourseProps = {
     course: DisplayCourse;
