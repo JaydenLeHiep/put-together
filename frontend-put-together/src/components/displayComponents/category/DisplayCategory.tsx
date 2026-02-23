@@ -7,7 +7,6 @@ export const DisplayCategory = ({
   onToggleCategory,
   openCourseId,
   onToggleCourse,
-  selectedLesson,
   onSelectLesson,
 }: DisplayCategoryCourseProps) => {
   return (
@@ -72,7 +71,6 @@ export const DisplayCategory = ({
                     course={course}
                     isOpen={openCourseId === course.courseId}
                     onToggle={onToggleCourse}
-                    selectedLesson={selectedLesson}
                     onSelectLesson={onSelectLesson}
                   />
                 ))}

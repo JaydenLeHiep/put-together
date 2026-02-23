@@ -13,7 +13,6 @@ export type DisplayCategoryCourseProps = {
     onToggleCategory: (id: string | null) => void;
     openCourseId: string | null;
     onToggleCourse: (id: string | null) => void;
-    selectedLesson: DisplayLessonType | null;
     onSelectLesson: (lesson: DisplayLessonType) => void;
 };
 

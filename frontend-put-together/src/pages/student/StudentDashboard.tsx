@@ -64,7 +64,6 @@ export const StudentDashboard = () => {
               openCourseId={openCourseId}
               onToggleCourse={setOpenCourseId}
               onSelectLesson={setSelectedLesson}
-              selectedLesson={selectedLesson}
             />
           </div>
         </div>

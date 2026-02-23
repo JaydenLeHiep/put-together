@@ -7,7 +7,6 @@ export const DisplayCourse = ({
   course,
   isOpen,
   onToggle,
-  selectedLesson,
   onSelectLesson,
 }: DisplayCourseProps) => {
   const [lessons, setLessons] = useState<DisplayLessonType[]>([]);
@@ -80,15 +79,7 @@ export const DisplayCourse = ({
 
           {!loading &&
             lessons.map((lesson) => (
-              <button
-                key={lesson.id}
-                onClick={() => onSelectLesson(lesson)}
-                className={`w-full text-left px-3 py-2 text-sm rounded-lg transition ${
-                  selectedLesson?.id === lesson.id
-                    ? "bg-lila-100 text-lila-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-100"
-                }`}
-              >
+              <button key={lesson.id} onClick={() => onSelectLesson(lesson)}>
                 {lesson.title}
               </button>
             ))}
