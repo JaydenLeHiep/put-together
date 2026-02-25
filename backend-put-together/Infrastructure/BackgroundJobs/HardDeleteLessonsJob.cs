@@ -27,11 +27,10 @@ public sealed class HardDeleteLessonsJob : IBackgroundJob
         var cutoff = DateTime.UtcNow.AddDays(-_options.HardDeleteAfterDays);
 
         var lessons = await db.Lessons
-            .IgnoreQueryFilters() 
+            .IgnoreQueryFilters()
             .Where(x =>
-                x.IsDeleted &&
-                x.DeletedAt.HasValue &&     
-                x.DeletedAt.Value < cutoff) 
+                x.DeletedAt.HasValue &&
+                x.DeletedAt.Value < cutoff)
             .ToListAsync(ct);
 
         if (lessons.Count == 0)

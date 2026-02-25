@@ -20,7 +20,7 @@ public sealed class LessonService : ILessonService
         IVideoProvider video,
         IVideoContextResolver resolver,
         IStoredFileService storedFileService
-        )
+    )
     {
         _db = db;
         _video = video;
@@ -42,9 +42,7 @@ public sealed class LessonService : ILessonService
 
         if (request.Files?[0].ContentType == "video/mp4")
         {
-            var ctx = await _resolver.ResolveForCourseAsync(
-                request.CourseId,
-                ct);
+            var ctx = await _resolver.ResolveForCourseAsync(request.CourseId, ct);
 
             await using var stream = request.Files[0].OpenReadStream();
 
@@ -72,24 +70,26 @@ public sealed class LessonService : ILessonService
             VideoGuid = videoGuid,
             BunnyCollectionId = bunnyCollectionId,
             IsPublished = false,
-            CreatedById = userId,
+            UserId = userId,
             CreatedAt = DateTime.UtcNow
         };
-        
+
         _db.Lessons.Add(lesson);
         await _db.SaveChangesAsync(ct);
-        
+
         var listOfDocument = new List<IFormFile>();
-        
+
         if (request.Files != null)
         {
             foreach (var file in request.Files)
-
+            {
                 if (file.ContentType == "application/pdf")
                 {
                     listOfDocument.Add(file);
                 }
+            }
         }
+
         await _storedFileService.CreateFileStorageAsync(listOfDocument, lesson.Id, ct);
     }
 
@@ -103,12 +103,12 @@ public sealed class LessonService : ILessonService
         CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null, ct);
 
         if (lesson is null)
             throw new KeyNotFoundException();
 
-        if (lesson.CreatedById != actorId)
+        if (lesson.UserId != actorId)
             throw new InvalidOperationException();
 
         if (request.Title is not null)
@@ -155,16 +155,11 @@ public sealed class LessonService : ILessonService
             {
                 try
                 {
-                    await _video.DeleteAsync(
-                        oldLibraryId,
-                        ctx.StreamApiKey,
-                        oldGuid,
-                        ct);
+                    await _video.DeleteAsync(oldLibraryId, ctx.StreamApiKey, oldGuid, ct);
                 }
                 catch (Exception ex)
                 {
-                    Console.Error.WriteLine(
-                        $"[WARN] Delete old video failed: {ex.Message}");
+                    Console.Error.WriteLine($"[WARN] Delete old video failed: {ex.Message}");
                 }
             }
 
@@ -183,12 +178,12 @@ public sealed class LessonService : ILessonService
         CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null, ct);
 
         if (lesson is null)
             throw new KeyNotFoundException();
 
-        if (lesson.CreatedById != actorId)
+        if (lesson.UserId != actorId)
             throw new InvalidOperationException();
 
         if (!string.IsNullOrWhiteSpace(lesson.VideoLibraryId)
@@ -210,12 +205,11 @@ public sealed class LessonService : ILessonService
     // =====================================================
     // RESTORE / PUBLISH
     // =====================================================
-
     public async Task RestoreAsync(Guid id, CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt != null, ct);
 
         if (lesson is null)
             throw new KeyNotFoundException();
@@ -229,9 +223,10 @@ public sealed class LessonService : ILessonService
     public async Task PublishAsync(Guid lessonId, Guid actorId, CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == lessonId && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == lessonId && x.DeletedAt == null, ct);
 
-        if (lesson is null) throw new KeyNotFoundException();
+        if (lesson is null)
+            throw new KeyNotFoundException();
 
         lesson.Publish(actorId);
         await _db.SaveChangesAsync(ct);
@@ -240,9 +235,10 @@ public sealed class LessonService : ILessonService
     public async Task UnpublishAsync(Guid lessonId, Guid actorId, CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == lessonId && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == lessonId && x.DeletedAt == null, ct);
 
-        if (lesson is null) throw new KeyNotFoundException();
+        if (lesson is null)
+            throw new KeyNotFoundException();
 
         lesson.Unpublish(actorId);
         await _db.SaveChangesAsync(ct);

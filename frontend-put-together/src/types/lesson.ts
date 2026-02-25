@@ -1,4 +1,4 @@
-import type { FileDocument } from "./FileDocument";
+import type { FileDocument } from "./fileDocument";
 export type Lesson = {
   id: string;
   title: string;

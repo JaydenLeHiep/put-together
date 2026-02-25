@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { createLesson } from "../../services/lessonService";
 import { getAllCourses } from "../../services/courseService";
-
 import CkEditorField from "../../components/editor/CkEditorField";
-
 import type { Course } from "../../types/course";
 import "../../styles/editor.css";
 
 import { UploadFileDocuments } from "../../components/inputFormComponents/UploadFileDocuments";
+import SuccessAlert from "../../components/feedback/SuccessAlert";
+import PostLessonHeader from "../../components/admin/postLesson/PostLessonHeader";
+import VideoDropzone from "../../components/admin/postLesson/VideoDropZone";
+import UploadProgressBar from "../../components/admin/postLesson/UploadProgressBar";
+import PostLessonTips from "../../components/admin/postLesson/PostLessonTips";
 
 export default function AdminPage() {
   const MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD = 5;
@@ -17,6 +20,7 @@ export default function AdminPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [courseId, setCourseId] = useState("");
   const [file, setFile] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -33,18 +37,17 @@ export default function AdminPage() {
         console.error("Failed to load courses", err);
       }
     }
-
     loadCourses();
   }, []);
 
+  // -----------------------
+  // VIDEO drag/drop handlers
+  // -----------------------
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
+    if (e.type === "dragenter" || e.type === "dragover") setDragActive(true);
+    else if (e.type === "dragleave") setDragActive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -52,57 +55,86 @@ export default function AdminPage() {
     e.stopPropagation();
     setDragActive(false);
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type.startsWith("video/")) {
-        setFile(droppedFile);
-      } else {
-        alert("Bitte nur Videodateien hochladen");
-      }
-    }
+    const droppedFile = e.dataTransfer.files?.[0];
+    if (!droppedFile) return;
+
+    if (droppedFile.type.startsWith("video/")) setFile(droppedFile);
+    else alert("Bitte nur Videodateien hochladen");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
-    }
+    const f = e.target.files?.[0];
+    if (f) setFile(f);
   };
 
+  // -----------------------
+  // PDF helpers
+  // -----------------------
   const handleRemoveFile = (index: number) => {
     setFileDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
+  function addPdfFiles(files: File[]) {
+    const pdfs = files.filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+    );
+
+    if (pdfs.length === 0) {
+      alert("Bitte nur PDF-Dateien hochladen");
+      return;
+    }
+
+    setFileDocuments((prev) => {
+      const existing = new Set(prev.map((f) => `${f.name}_${f.size}_${f.lastModified}`));
+      const deduped = pdfs.filter((f) => !existing.has(`${f.name}_${f.size}_${f.lastModified}`));
+
+      const remaining = MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD - prev.length;
+      if (remaining <= 0) {
+        alert(`Maximal ${MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD} Dateien erlaubt.`);
+        return prev;
+      }
+
+      const next = [...prev, ...deduped.slice(0, remaining)];
+      if (deduped.length > remaining) {
+        alert(`Nur ${remaining} weitere PDF-Datei(en) konnten hinzugefügt werden (Limit erreicht).`);
+      }
+      return next;
+    });
+  }
+
+  const handleDocsDrag = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
   };
 
-  async function submitLesson() {
-    if (!courseId) {
-      alert("Bitte Kurs auswählen");
-      return;
-    }
+  const handleDocsDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const dropped = Array.from(e.dataTransfer.files ?? []);
+    if (dropped.length === 0) return;
+    addPdfFiles(dropped);
+  };
 
-    if (!title.trim()) {
-      alert("Bitte Titel eingeben");
-      return;
-    }
+  const handleFileDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    addPdfFiles(Array.from(e.target.files));
+    e.target.value = "";
+  };
+
+  // -----------------------
+  // Submit
+  // -----------------------
+  async function submitLesson() {
+    if (!courseId) return alert("Bitte Kurs auswählen");
+    if (!title.trim()) return alert("Bitte Titel eingeben");
 
     const form = new FormData();
     form.append("courseId", courseId);
     form.append("title", title.trim());
     form.append("content", content ?? "");
 
-    if (file) {
-      form.append("VideoFile", file);
-    }
-
-    fileDocuments.forEach((doc) => {
-      form.append("Documents", doc);
-    });
+    if (file) form.append("VideoFile", file);
+    fileDocuments.forEach((doc) => form.append("Documents", doc));
 
     setLoading(true);
     setUploadProgress(0);
@@ -135,95 +167,11 @@ export default function AdminPage() {
     }
   }
 
-  function addPdfFiles(files: File[]) {
-    const pdfs = files.filter(
-      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
-    );
-
-    if (pdfs.length === 0) {
-      alert("Bitte nur PDF-Dateien hochladen");
-      return;
-    }
-
-    setFileDocuments((prev) => {
-      // dedupe by name+size+lastModified (optional but useful)
-      const existing = new Set(prev.map((f) => `${f.name}_${f.size}_${f.lastModified}`));
-      const deduped = pdfs.filter((f) => !existing.has(`${f.name}_${f.size}_${f.lastModified}`));
-
-      const remaining = MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD - prev.length;
-      if (remaining <= 0) {
-        alert(`Maximal ${MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD} Dateien erlaubt.`);
-        return prev;
-      }
-
-      const next = [...prev, ...deduped.slice(0, remaining)];
-
-      if (deduped.length > remaining) {
-        alert(`Nur ${remaining} weitere PDF-Datei(en) konnten hinzugefügt werden (Limit erreicht).`);
-      }
-
-      return next;
-    });
-  }
-
-  const handleDocsDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
-
-  const handleDocsDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    const dropped = Array.from(e.dataTransfer.files ?? []);
-    if (dropped.length === 0) return;
-
-    addPdfFiles(dropped);
-  };
-
-  const handleFileDocumentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-
-    addPdfFiles(Array.from(e.target.files));
-
-    // allow selecting same file again
-    e.target.value = "";
-  };
-
   return (
     <div className="max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold text-lila-700 mb-2">
-          Neue Lektion erstellen
-        </h1>
-        <p className="text-gray-600">
-          Laden Sie Videolektionen hoch und erstellen Sie begleitende Inhalte
-          für Ihre Schüler
-        </p>
-      </div>
+      <PostLessonHeader />
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
-          <div className="flex items-center">
-            <svg
-              className="w-6 h-6 text-green-500 mr-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-            <p className="text-green-800 font-medium">{successMessage}</p>
-          </div>
-        </div>
-      )}
+      <SuccessAlert message={successMessage} />
 
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
         <div className="p-8 space-y-6">
@@ -246,7 +194,8 @@ export default function AdminPage() {
               ))}
             </select>
           </div>
-          {/* Title Input */}
+
+          {/* Title */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Titel der Lektion *
@@ -261,112 +210,27 @@ export default function AdminPage() {
             />
           </div>
 
-          {/* Content Textarea */}
+          {/* Content */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Beschreibung & Lernziele
             </label>
-            <div>
-              <CkEditorField value={content} onChange={setContent} disabled={loading} />
-            </div>
-            <p className="text-sm text-gray-500 mt-2">
-              {content.length} Zeichen
-            </p>
+            <CkEditorField value={content} onChange={setContent} disabled={loading} />
+            <p className="text-sm text-gray-500 mt-2">{content.length} Zeichen</p>
           </div>
 
-          {/* File Upload Area */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Video hochladen (optional)
-            </label>
+          {/* Video Upload */}
+          <VideoDropzone
+            file={file}
+            dragActive={dragActive}
+            loading={loading}
+            onDrag={handleDrag}
+            onDrop={handleDrop}
+            onFileChange={handleFileChange}
+            onRemove={() => setFile(null)}
+          />
 
-            <div
-              className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${dragActive
-                ? "border-lila-500 bg-lila-50"
-                : file
-                  ? "border-green-400 bg-green-50"
-                  : "border-gray-300 hover:border-lila-400"
-                }`}
-              onDragEnter={handleDrag}
-              onDragLeave={handleDrag}
-              onDragOver={handleDrag}
-              onDrop={handleDrop}
-            >
-              <input
-                type="file"
-                accept="video/*"
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                onChange={handleFileChange}
-                disabled={loading}
-                id="file-upload"
-              />
-
-              {!file ? (
-                <div className="text-center">
-                  <svg
-                    className="mx-auto h-16 w-16 text-lila-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                    />
-                  </svg>
-                  <p className="text-lg font-medium text-gray-700 mb-2">
-                    Video hierher ziehen oder klicken
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    MP4, MOV, AVI bis zu 2GB
-                  </p>
-                </div>
-              ) : (
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="bg-lila-100 rounded-lg p-3">
-                      <svg
-                        className="w-8 h-8 text-lila-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-800">{file.name}</p>
-                      <p className="text-sm text-gray-500">
-                        {formatFileSize(file.size)}
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setFile(null);
-                    }}
-                    disabled={loading}
-                    className="text-red-500 hover:text-red-700 transition-colors p-2"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-
+          {/* PDF Upload */}
           <UploadFileDocuments
             maxNumberOfFile={MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD}
             onDragEnter={handleDocsDrag}
@@ -380,30 +244,12 @@ export default function AdminPage() {
           />
 
           {/* Upload Progress */}
-          {loading && (
-            <div className="bg-lila-50 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-lila-700">
-                  Video wird hochgeladen...
-                </span>
-                <span className="text-sm font-bold text-lila-700">
-                  {uploadProgress}%
-                </span>
-              </div>
-              <div className="w-full bg-lila-200 rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-lila-500 to-lila-600 h-3 rounded-full transition-all duration-300 ease-out"
-                  style={{ width: `${uploadProgress}%` }}
-                />
-              </div>
-            </div>
-          )}
+          <UploadProgressBar loading={loading} progress={uploadProgress} />
 
-          {/* Submit Button */}
+          {/* Submit */}
           <div className="flex items-center justify-between pt-4">
-            <p className="text-sm text-gray-500">
-              * Pflichtfelder
-            </p>
+            <p className="text-sm text-gray-500">* Pflichtfelder</p>
+
             <button
               onClick={submitLesson}
               disabled={loading || !title.trim()}
@@ -412,18 +258,19 @@ export default function AdminPage() {
               {loading ? (
                 <>
                   <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                      strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
                   </svg>
                   <span>Wird hochgeladen...</span>
                 </>
               ) : (
                 <>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M5 13l4 4L19 7" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                   <span>Lektion erstellen</span>
                 </>
@@ -432,35 +279,7 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-
-      {/* Help Section */}
-      <div className="mt-8 bg-lila-50 rounded-xl p-6">
-        <h3 className="font-semibold text-lila-800 mb-3 flex items-center">
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Tipps für erfolgreiche Lektionen
-        </h3>
-        <ul className="space-y-2 text-sm text-lila-700">
-          <li className="flex items-start">
-            <span className="text-lila-500 mr-2">•</span>
-            <span>Verwenden Sie aussagekräftige Titel mit Sprachniveau (A1, A2, B1, etc.)</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-lila-500 mr-2">•</span>
-            <span>Fügen Sie klare Lernziele und Übungsaufgaben in der Beschreibung hinzu</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-lila-500 mr-2">•</span>
-            <span>Videos sollten idealerweise 10-20 Minuten lang sein</span>
-          </li>
-          <li className="flex items-start">
-            <span className="text-lila-500 mr-2">•</span>
-            <span>Hochwertige Video- und Audioqualität verbessert das Lernerlebnis</span>
-          </li>
-        </ul>
-      </div>
+      <PostLessonTips />
     </div>
   );
 }

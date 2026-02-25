@@ -96,7 +96,7 @@ public sealed class CourseService : ICourseService
             throw new KeyNotFoundException($"Course '{id}' not found.");
 
         // Check active lessons
-        var activeLessons = course.Lessons.Where(l => !l.IsDeleted).ToList();
+        var activeLessons = course.Lessons.Where(l => l.DeletedAt == null).ToList();
 
         if (activeLessons.Any())
         {

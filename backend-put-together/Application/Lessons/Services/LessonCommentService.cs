@@ -24,7 +24,7 @@ public sealed class LessonCommentService : ILessonCommentService
             throw new ArgumentException("Comment content is required.");
 
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(l => l.Id == lessonId && !l.IsDeleted, ct);
+            .FirstOrDefaultAsync(l => l.Id == lessonId && l.DeletedAt == null, ct);
 
         if (lesson is null)
             throw new KeyNotFoundException("Lesson not found.");
