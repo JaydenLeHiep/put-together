@@ -23,14 +23,13 @@ public class Lesson
     public DateTime? PublishedAt { get; set; }
     
     // Author
-    public Guid CreatedById { get; set; }
+    public Guid UserId { get; set; }
     
     // Audit
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     
     // Soft delete
-    public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
 
     public ICollection<S3StoredFile> StoredFiles { get; set; } = new List<S3StoredFile>();
@@ -39,18 +38,16 @@ public class Lesson
     public void Touch() => UpdatedAt = DateTime.UtcNow;
     public void SoftDelete()
     {
-        IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
     }
     public void Restore()
     {
-        IsDeleted = false;
         DeletedAt = null;
     }
     
     public void Publish(Guid actorId)
     {
-        if (CreatedById != actorId)
+        if (UserId != actorId)
             throw new InvalidOperationException("Only the lesson owner can publish this lesson.");
 
         IsPublished = true;
@@ -60,7 +57,7 @@ public class Lesson
 
     public void Unpublish(Guid actorId)
     {
-        if (CreatedById != actorId)
+        if (UserId != actorId)
             throw new InvalidOperationException("Only the lesson owner can unpublish this lesson.");
 
         IsPublished = false;

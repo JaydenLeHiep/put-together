@@ -147,31 +147,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.Property(x => x.PublishedAt);
             
             // Author
-            b.Property(x => x.CreatedById).IsRequired();
+            b.Property(x => x.UserId).IsRequired();
             
             // Audit
             b.Property(x => x.CreatedAt).IsRequired();
             b.Property(x => x.UpdatedAt);
             
             // Soft delete
-            b.Property(x => x.IsDeleted).IsRequired();
             b.Property(x => x.DeletedAt);
 
             // Relations
             b.HasOne<User>()
                 .WithMany()
-                .HasForeignKey(x => x.CreatedById)
+                .HasForeignKey(x => x.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // Indexes
             b.HasIndex(x => x.VideoGuid);
             b.HasIndex(x => x.CreatedAt);
-            b.HasIndex(x => x.IsDeleted);
             b.HasIndex(x => x.CourseId);
-            b.HasIndex(x => x.CreatedById);
+            b.HasIndex(x => x.UserId);
 
             // Global filter
-            b.HasQueryFilter(x => !x.IsDeleted);
+            b.HasQueryFilter(x => x.DeletedAt == null);
         });
 
         // =====================================================
