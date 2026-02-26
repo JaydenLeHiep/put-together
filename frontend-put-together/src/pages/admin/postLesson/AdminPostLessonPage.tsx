@@ -1,16 +1,16 @@
 import { useEffect, useState } from "react";
-import { createLesson } from "../../services/lessonService";
-import { getAllCourses } from "../../services/courseService";
-import CkEditorField from "../../components/editor/CkEditorField";
-import type { Course } from "../../types/course";
-import "../../styles/editor.css";
+import { createLesson } from "../../../services/lessonService";
+import { getAllCourses } from "../../../services/courseService";
+import CkEditorField from "../../../components/editor/CkEditorField";
+import type { Course } from "../../../types/course";
+import "../../../styles/editor.css";
 
-import { UploadFileDocuments } from "../../components/inputFormComponents/UploadFileDocuments";
-import SuccessAlert from "../../components/feedback/SuccessAlert";
-import PostLessonHeader from "../../components/admin/postLesson/PostLessonHeader";
-import VideoDropzone from "../../components/admin/postLesson/VideoDropZone";
-import UploadProgressBar from "../../components/admin/postLesson/UploadProgressBar";
-import PostLessonTips from "../../components/admin/postLesson/PostLessonTips";
+import { UploadFileDocuments } from "../../../components/inputFormComponents/UploadFileDocuments";
+import SuccessAlert from "../../../components/feedback/SuccessAlert";
+import PostLessonHeader from "./PostLessonHeader";
+import VideoDropzone from "./VideoDropzone"
+import UploadProgressBar from "./UploadProgressBar";
+import PostLessonTips from "./PostLessonTips";
 
 export default function AdminPage() {
   const MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD = 5;

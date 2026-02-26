@@ -10,9 +10,9 @@ import AfterLoginRedirect from "./components/auth/AfterLoginRedirect";
 
 // Admin
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminPostLessonPage from "./pages/admin/AdminPostLessonPage";
+import AdminPostLessonPage from "./pages/admin/postLesson/AdminPostLessonPage";
 import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
-import AdminProductCoursesPage from "./pages/admin/AdminProductCoursesPage";
+import AdminProductCoursesPage from "./pages/admin/productCourses/AdminProductCoursesPage";
 import ManageStructurePage from "./pages/admin/ManageStructurePage";
 import UserManagement from "./pages/admin/UserManagement";
 import { StudentRoute } from "./components/auth/StudentRoute";
