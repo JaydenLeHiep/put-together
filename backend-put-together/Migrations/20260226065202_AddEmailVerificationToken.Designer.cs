@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend_put_together.Infrastructure.Data;
@@ -11,9 +12,11 @@ using backend_put_together.Infrastructure.Data;
 namespace backend_put_together.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260226065202_AddEmailVerificationToken")]
+    partial class AddEmailVerificationToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -231,9 +234,17 @@ namespace backend_put_together.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean")
@@ -252,10 +263,6 @@ namespace backend_put_together.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
 
                     b.Property<string>("VideoGuid")
                         .HasMaxLength(100)
@@ -276,8 +283,11 @@ namespace backend_put_together.Migrations
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("ix_lessons_created_at");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_lessons_user_id");
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_lessons_created_by_id");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("ix_lessons_is_deleted");
 
                     b.HasIndex("VideoGuid")
                         .HasDatabaseName("ix_lessons_video_guid");
@@ -594,10 +604,10 @@ namespace backend_put_together.Migrations
 
                     b.HasOne("backend_put_together.Domain.Users.User", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_lessons_users_user_id");
+                        .HasConstraintName("fk_lessons_users_created_by_id");
 
                     b.Navigation("Course");
                 });

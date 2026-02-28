@@ -87,6 +87,10 @@ public class UserEndpoints : ICarterModule
                     var loginResult = await service.LoginAsync(req, ct);
                     if (!loginResult.Success)
                     {
+                        if (loginResult.NotVerified)
+                        {
+                            return Results.BadRequest("Email is not verified.");
+                        }
                         return Results.Json(
                             new { message = "Invalid username or password" },
                             statusCode: StatusCodes.Status401Unauthorized
@@ -282,5 +286,36 @@ public class UserEndpoints : ICarterModule
                 return ok ? Results.Ok() : Results.BadRequest("Reset password failed");
             })
             .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+        
+        group.MapPost("/verify-email", async (
+                [FromQuery] string token,
+                IUserService service,
+                CancellationToken ct) =>
+            {
+                var result = await service.VerifyRegistrationEmailAsync(token, ct);
+
+                if (!result.Success)
+                    return Results.BadRequest(result.Message);
+
+                return Results.Ok(result.Message);
+            })
+            .DisableAntiforgery();
+        
+        group.MapPost("/resend-verification", async (
+                [FromBody] ResendVerificationRequest req,
+                IUserService service,
+                CancellationToken ct) =>
+            {
+                if (string.IsNullOrWhiteSpace(req.Email))
+                    return Results.BadRequest("email is required");
+
+                var result = await service.ResendVerificationEmailAsync(req.Email, ct);
+
+                if (!result.Success)
+                    return Results.BadRequest(result.Message);
+
+                return Results.Ok(result.Message);
+            })
+            .DisableAntiforgery();
     }
 }

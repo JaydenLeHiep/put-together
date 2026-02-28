@@ -19,6 +19,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<LessonComment> LessonComments => Set<LessonComment>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<S3StoredFile> S3StoredFiles => Set<S3StoredFile>();
+    public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,7 +30,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // =====================================================
         modelBuilder.Entity<Category>(b =>
         {
-            b.ToTable("categories");
             b.HasKey(x => x.Id);
 
             // Business
@@ -84,7 +84,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // =====================================================
         modelBuilder.Entity<Course>(b =>
         {
-            b.ToTable("courses");
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Title).IsRequired().HasMaxLength(250);
@@ -128,7 +127,6 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         // =====================================================
         modelBuilder.Entity<Lesson>(b =>
         {
-            b.ToTable("lessons");
             b.HasKey(x => x.Id);
 
             b.Property(x => x.Title).IsRequired().HasMaxLength(250);
@@ -184,6 +182,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             u.Property(x => x.Role);
             u.Property(x => x.CreatedAt).IsRequired();
             u.Property(x => x.DeletedAt);
+            u.Property(x => x.EmailVerifiedAt);
 
             u.HasIndex(x => x.UserName)
                 .IsUnique()
@@ -327,6 +326,27 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             s
                 .HasIndex(x => x.LessonId)
                 .HasFilter("\"deleted_at\" IS NULL");
+        });
+        
+        modelBuilder.Entity<EmailVerificationToken>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.TokenHash)
+                .IsRequired()
+                .HasMaxLength(255);
+            
+            e.Property(x => x.CreatedAt)
+                .IsRequired();
+            
+            e.Property(x => x.ExpiresAt);
+            
+            e.Property(x => x.UsedAt);
+            
+            e.HasIndex(x => x.TokenHash).IsUnique();
+            
+            e.HasOne(x => x.User)
+                .WithMany(u => u.EmailVerificationTokens)
+                .HasForeignKey(x => x.UserId);
         });
     }
 }

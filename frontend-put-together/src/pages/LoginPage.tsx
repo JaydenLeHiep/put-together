@@ -3,13 +3,16 @@ import AuthForm from "../components/auth/AuthForm";
 import type { LoginPayload } from "../components/auth/typeAuth";
 import { useAuth } from "../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
+import SuccessMessage from "../components/SuccessMessage";
+import ErrorMessage from "../components/ErrorMessage";
 
 export default function LoginPage() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -26,25 +29,39 @@ export default function LoginPage() {
   async function handleLogin(data: LoginPayload) {
     try {
       setLoading(true);
-      setError(null);
+      setErrorMessage(null);
 
       await login(data);
-
-      // Role-based landing
-      navigate("/after-login", { replace: true });
+      setSuccessMessage("Login successful!.");
     } catch {
-      setError("Login failed");
+      setErrorMessage("Login failed");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <AuthForm
-      mode="login"
-      onSubmit={handleLogin}
-      loading={loading}
-      error={error}
-    />
+    <>
+      {successMessage && (
+        <SuccessMessage
+          title="Success!"
+          message={successMessage}
+          onClose={() => setSuccessMessage(null)}
+        />
+      )}
+      {errorMessage && (
+        <ErrorMessage
+          title="Error!"
+          message={errorMessage}
+          onClose={() => setErrorMessage(null)}
+        />
+      )}
+      <AuthForm
+        mode="login"
+        onSubmit={handleLogin}
+        loading={loading}
+        error={errorMessage}
+      />
+    </>
   );
 }
