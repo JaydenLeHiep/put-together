@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using backend_put_together.Infrastructure.Data;
@@ -11,9 +12,11 @@ using backend_put_together.Infrastructure.Data;
 namespace backend_put_together.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260225211950_AddEmailVerifyUser")]
+    partial class AddEmailVerifyUser
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -231,9 +234,17 @@ namespace backend_put_together.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<Guid>("CreatedById")
+                        .HasColumnType("uuid")
+                        .HasColumnName("created_by_id");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_deleted");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean")
@@ -252,10 +263,6 @@ namespace backend_put_together.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
 
                     b.Property<string>("VideoGuid")
                         .HasMaxLength(100)
@@ -276,8 +283,11 @@ namespace backend_put_together.Migrations
                     b.HasIndex("CreatedAt")
                         .HasDatabaseName("ix_lessons_created_at");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_lessons_user_id");
+                    b.HasIndex("CreatedById")
+                        .HasDatabaseName("ix_lessons_created_by_id");
+
+                    b.HasIndex("IsDeleted")
+                        .HasDatabaseName("ix_lessons_is_deleted");
 
                     b.HasIndex("VideoGuid")
                         .HasDatabaseName("ix_lessons_video_guid");
@@ -364,48 +374,6 @@ namespace backend_put_together.Migrations
                         .HasFilter("\"deleted_at\" IS NULL");
 
                     b.ToTable("s3_stored_files", (string)null);
-                });
-
-            modelBuilder.Entity("backend_put_together.Domain.Users.EmailVerificationToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("token_hash");
-
-                    b.Property<DateTime?>("UsedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("used_at");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("user_id");
-
-                    b.HasKey("Id")
-                        .HasName("pk_email_verification_tokens");
-
-                    b.HasIndex("TokenHash")
-                        .IsUnique()
-                        .HasDatabaseName("ix_email_verification_tokens_token_hash");
-
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("ix_email_verification_tokens_user_id");
-
-                    b.ToTable("email_verification_tokens", (string)null);
                 });
 
             modelBuilder.Entity("backend_put_together.Domain.Users.User", b =>
@@ -594,10 +562,10 @@ namespace backend_put_together.Migrations
 
                     b.HasOne("backend_put_together.Domain.Users.User", null)
                         .WithMany()
-                        .HasForeignKey("UserId")
+                        .HasForeignKey("CreatedById")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("fk_lessons_users_user_id");
+                        .HasConstraintName("fk_lessons_users_created_by_id");
 
                     b.Navigation("Course");
                 });
@@ -629,18 +597,6 @@ namespace backend_put_together.Migrations
                         .HasConstraintName("fk_s3_stored_files_lessons_lesson_id");
 
                     b.Navigation("Lesson");
-                });
-
-            modelBuilder.Entity("backend_put_together.Domain.Users.EmailVerificationToken", b =>
-                {
-                    b.HasOne("backend_put_together.Domain.Users.User", "User")
-                        .WithMany("EmailVerificationTokens")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_email_verification_tokens_users_user_id");
-
-                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("backend_put_together.Domain.Users.UserLogin", b =>
@@ -684,8 +640,6 @@ namespace backend_put_together.Migrations
 
             modelBuilder.Entity("backend_put_together.Domain.Users.User", b =>
                 {
-                    b.Navigation("EmailVerificationTokens");
-
                     b.Navigation("UserLogins");
 
                     b.Navigation("UserRefreshTokens");

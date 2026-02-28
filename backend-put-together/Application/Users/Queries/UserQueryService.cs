@@ -43,6 +43,11 @@ public class UserQueryService : IUserQueryService
 
         if (user == null)
             return LoginResult.Fail();
+        
+        if (user.EmailVerifiedAt == null)
+        {
+            return LoginResult.NotVerifiedUser();
+        }
 
         var login = user.UserLogins.FirstOrDefault(l => l.Provider == LocalRegistrationProvider);
 

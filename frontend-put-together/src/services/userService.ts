@@ -1,6 +1,6 @@
 import type { RegisterPayload, LoginPayload, LoginInfo } from "../components/auth/typeAuth";
-import type { UserReadDto, RoleName } from "../types/user";
-import { ROLE_VALUES } from "../types/user";
+import type { UserReadDto, RoleName } from "../types/User";
+import { ROLE_VALUES } from "../types/User";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
 
@@ -199,4 +199,27 @@ export async function getUsersByRole(role: string): Promise<UserReadDto[]> {
 
   const data: unknown = await res.json();
   return Array.isArray(data) ? data.map(mapUserReadDto) : [];
+}
+
+export async function verifyEmail(token: string): Promise<void> {
+  const res = await apiFetch(`${API}/verify-email?token=${encodeURIComponent(token)}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) throw new Error("User verify fehlgeschlagen.");
+}
+
+export async function resendVerification(email: string): Promise<void> {
+  const res = await apiFetch(`${API}/resend-verification`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email })
+  });
+
+  if (!res.ok) throw new Error("User verify fehlgeschlagen.");
 }

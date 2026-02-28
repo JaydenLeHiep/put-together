@@ -29,6 +29,7 @@ export default function AuthForm({
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -138,14 +139,54 @@ export default function AuthForm({
                 )} */}
               </div>
 
-              <div className="mt-2">
+              <div className="mt-2 relative">
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full border-2 border-gray-200 rounded-xl p-4 focus:border-lila-500 focus:outline-none transition-colors text-gray-800 placeholder-gray-400"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  {showPassword ? (
+                    // Eye Off
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.8}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 3l18 18M10.584 10.587a2 2 0 002.829 2.828M9.88 4.24A9.77 9.77 0 0112 4.5c5 0 9 7.5 9 7.5a15.05 15.05 0 01-4.293 4.918M6.53 6.53C4.89 7.86 3.75 9.5 3 12c0 0 4 7.5 9 7.5 1.32 0 2.58-.28 3.73-.78"
+                      />
+                    </svg>
+                  ) : (
+                    // Eye
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.8}
+                      stroke="currentColor"
+                      className="w-5 h-5"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M2.25 12s3.75-7.5 9.75-7.5S21.75 12 21.75 12 18 19.5 12 19.5 2.25 12 2.25 12z"
+                      />
+                      <circle cx="12" cy="12" r="3" />
+                    </svg>
+                  )}
+                </button>
               </div>
             </div>
 

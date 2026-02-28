@@ -3,6 +3,7 @@ using backend_put_together.Application.Category.Queries;
 using backend_put_together.Application.Category.Services;
 using backend_put_together.Application.Courses.Queries;
 using backend_put_together.Application.Courses.Services;
+using backend_put_together.Application.Email.Services;
 using backend_put_together.Application.Lessons.Queries;
 using backend_put_together.Application.Lessons.Services;
 using backend_put_together.Application.Storage.Queries;
@@ -85,6 +86,8 @@ public static class ApplicationExtensions
         services.AddScoped<ICategoryQueryService, CategoryQueryService>();
         
         services.AddScoped<IVideoContextResolver, VideoContextResolver>();
+        
+        services.AddScoped<IEmailService, EmailService>();
         
         return services;
     }
