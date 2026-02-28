@@ -10,7 +10,9 @@ public class User
     public required string Email { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? DeletedAt { get; set; }
+    public DateTime? EmailVerifiedAt { get; set; } 
     public Role Role { get; set; }
     public ICollection<UserLogin> UserLogins { get; set; } = new List<UserLogin>();
     public ICollection<UserRefreshToken> UserRefreshTokens { get; set; } = new List<UserRefreshToken>();
+    public ICollection<EmailVerificationToken> EmailVerificationTokens { get; set; } = new List<EmailVerificationToken>();
 }
