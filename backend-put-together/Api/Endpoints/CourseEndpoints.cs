@@ -19,8 +19,7 @@ public sealed class CourseEndpoints : ICarterModule
         {
             var courses = await query.GetAllAsync();
             return Results.Ok(courses);
-        })
-        .RequireAuthorization();
+        });
         
         // GET /api/courses/published (Public published courses)
         group.MapGet("/published", async (ICourseQueryService query) =>
@@ -97,8 +96,7 @@ public sealed class CourseEndpoints : ICarterModule
             {
                 var course = await query.GetCourseWithLessonsAsync(id);
                 return course is null ? Results.NotFound() : Results.Ok(course);
-            })
-            .RequireAuthorization();
+            });
         
         group.MapGet("/student-paid-category-course", async (
                 ICourseQueryService query,
