@@ -6,6 +6,8 @@ public class CreateLessonRequest
 {
     public string Title { get; set; } = string.Empty;
     public string? Content { get; set; }
-    public string? VideoLibraryId { get; set; }
-    public IFormFile File { get; set; } = default!;
+    public Guid CourseId { get; set; } 
+    
+    // first file is the video, others are documents file
+    public IFormFileCollection? Files { get; set; }
 }

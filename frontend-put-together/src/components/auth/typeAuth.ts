@@ -1,0 +1,49 @@
+// export type AuthMode = "login" | "register";
+
+export type RegisterPayload = {
+    username: string;
+    email: string;
+    password: string;
+};
+
+export type LoginPayload = {
+    identifier: string;
+    password: string;
+};
+
+export type LoginInfo = {
+  accessToken: string;
+  refreshToken: string;
+  userInfo: BackendUserInfo;
+};
+
+export type BackendUserInfo = {
+  id: string;
+  userName: string;
+  email: string;
+  roleName: string;
+};
+
+export type AuthUser = {
+    id: string;
+    userName: string;
+    email: string;
+    role: string;
+};
+
+export type AuthContextType = {
+    user: AuthUser | null;
+    accessToken: string | null;
+    isAuthenticated: boolean;
+    isAuthReady: boolean;
+    login: (payload: LoginPayload) => Promise<void>;
+    logout: () => Promise<void>;
+    setAccessToken: (token: string | null) => void;
+};
+
+export type RefreshInfo = {
+  accessToken: string;
+  userInfo: BackendUserInfo;
+};
+
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";

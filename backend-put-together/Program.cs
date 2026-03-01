@@ -27,13 +27,18 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = long.MaxValue;
 });
 
-// Application services
+// Services
 builder.Services
     .AddEndpointsApiExplorer()
     .AddSwaggerGen()
     .AddDatabase(builder.Configuration)
     .AddApplication()
-    .AddCors(builder.Configuration);
+    .AddCors(builder.Configuration)
+    .AddJwt(builder.Configuration, builder.Environment)
+    .AddAuthorizationPolicy()
+    .AddAws(builder.Configuration)
+    .AddAuthorizationPolicy()
+    .AddAuthentication();
 
 // Bunny configuration
 builder.Services.Configure<BunnyOptions>(
@@ -53,22 +58,30 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.UseHttpsRedirection();
 
-// Swagger (development only)
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Middleware pipeline
 app.UseCors(CorsExtension.PolicyName);
+
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapCarter();
 
-// Health check
 app.MapGet("/", (ILogger<Program> logger) =>
 {
     logger.LogInformation("OK!");
     return "OK";
 });
+
+app.MapGet("/test-jwt", (ILogger<Program> logger) =>
+    {
+        logger.LogInformation("Test JWT!");
+        return "Test JWT";
+    })
+    .RequireAuthorization("AdminOnly");
 
 app.Run();

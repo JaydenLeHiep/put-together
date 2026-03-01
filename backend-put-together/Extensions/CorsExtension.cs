@@ -20,7 +20,10 @@ public static class CorsExtension
                 listOfAllowedCorsOrigins.ToArray()
             )
             .AllowAnyHeader()
-            .AllowAnyMethod()));
+            .AllowAnyMethod()
+            .AllowCredentials()
+            )
+        );
 
         return services;
     }

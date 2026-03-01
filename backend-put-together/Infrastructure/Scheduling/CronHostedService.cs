@@ -12,10 +12,11 @@ public sealed class CronHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Run each job in its own loop
         await Task.WhenAll(
             RunJobAsync<HardDeleteLessonsJob>(stoppingToken),
-            RunJobAsync<OrphanBunnyCleanupJob>(stoppingToken)
+            RunJobAsync<OrphanBunnyCleanupJob>(stoppingToken),
+            RunJobAsync<RevokeExpiredCourseAccessJob>(stoppingToken),
+            RunJobAsync<CourseAccessCleanupJob>(stoppingToken)
         );
     }
 

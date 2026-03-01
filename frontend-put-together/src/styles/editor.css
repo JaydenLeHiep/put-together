@@ -1,0 +1,30 @@
+/* Make editor resizable */
+.ck-editor__editable {
+  min-height: 300px;
+  resize: vertical;
+}
+
+/* Fix Tailwind removing list styles */
+.ck-content ul {
+  list-style: disc !important;
+  padding-left: 1.5rem !important;
+}
+
+.ck-content ol {
+  list-style: decimal !important;
+  padding-left: 1.5rem !important;
+}
+
+/* Fix alignment if Tailwind overrides */
+.ck-content {
+  text-align: left;
+}
+
+/* Make editor toolbar nicer */
+.ck-toolbar {
+  border-radius: 0.75rem 0.75rem 0 0 !important;
+}
+
+.ck-editor__editable {
+  border-radius: 0 0 0.75rem 0.75rem !important;
+}

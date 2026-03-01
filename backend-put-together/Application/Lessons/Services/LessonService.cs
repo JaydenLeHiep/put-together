@@ -1,6 +1,8 @@
 using backend_put_together.Application.Lessons.DTOs;
-using backend_put_together.Infrastructure.Data;
+using backend_put_together.Application.Storage.Services;
+using backend_put_together.Application.Video;
 using backend_put_together.Domain.Lessons;
+using backend_put_together.Infrastructure.Data;
 using backend_put_together.Infrastructure.Video;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,180 +12,235 @@ public sealed class LessonService : ILessonService
 {
     private readonly AppDbContext _db;
     private readonly IVideoProvider _video;
+    private readonly IVideoContextResolver _resolver;
+    private readonly IStoredFileService _storedFileService;
 
-    public LessonService(AppDbContext db, IVideoProvider video)
+    public LessonService(
+        AppDbContext db,
+        IVideoProvider video,
+        IVideoContextResolver resolver,
+        IStoredFileService storedFileService
+    )
     {
         _db = db;
         _video = video;
+        _resolver = resolver;
+        _storedFileService = storedFileService;
     }
 
     // =====================================================
     // CREATE
     // =====================================================
-    public async Task<CreateLessonResponse> CreateAsync(
+    public async Task CreateAsync(
         CreateLessonRequest request,
+        Guid userId,
+        string bunnyCollectionId,
         CancellationToken ct = default)
     {
-        if (string.IsNullOrWhiteSpace(request.Title))
-            throw new ArgumentException("Title is required.", nameof(request.Title));
+        string? videoLibraryId = null;
+        string? videoGuid = null;
 
-        if (request.File is null || request.File.Length == 0)
-            throw new ArgumentException("Video file is required.", nameof(request.File));
+        if (request.Files?[0].ContentType == "video/mp4")
+        {
+            var ctx = await _resolver.ResolveForCourseAsync(request.CourseId, ct);
 
-        await using var stream = request.File.OpenReadStream();
+            await using var stream = request.Files[0].OpenReadStream();
 
-        var upload = await _video.UploadAsync(
-            new VideoUploadRequest(
-                stream,
-                request.File.FileName,
-                request.VideoLibraryId),
-            ct);
+            var upload = await _video.UploadAsync(
+                new VideoUploadRequest
+                {
+                    LibraryId = ctx.LibraryId,
+                    StreamApiKey = ctx.StreamApiKey,
+                    FileName = request.Files[0].FileName,
+                    Stream = stream,
+                    CollectionId = ctx.CollectionId
+                },
+                ct);
+
+            videoLibraryId = upload.LibraryId;
+            videoGuid = upload.VideoGuid;
+        }
 
         var lesson = new Lesson
         {
             Title = request.Title,
             Content = request.Content ?? string.Empty,
-            VideoLibraryId = upload.LibraryId,
-            VideoGuid = upload.VideoGuid,
-            CreatedAt = DateTime.UtcNow,
-            IsDeleted = false
+            CourseId = request.CourseId,
+            VideoLibraryId = videoLibraryId,
+            VideoGuid = videoGuid,
+            BunnyCollectionId = bunnyCollectionId,
+            IsPublished = false,
+            UserId = userId,
+            CreatedAt = DateTime.UtcNow
         };
 
         _db.Lessons.Add(lesson);
         await _db.SaveChangesAsync(ct);
 
-        return new CreateLessonResponse(
-            lesson.Id,
-            lesson.Title,
-            lesson.Content,
-            upload.PlaybackUrl
-        );
+        var listOfDocument = new List<IFormFile>();
+
+        if (request.Files != null)
+        {
+            foreach (var file in request.Files)
+            {
+                if (file.ContentType == "application/pdf")
+                {
+                    listOfDocument.Add(file);
+                }
+            }
+        }
+
+        await _storedFileService.CreateFileStorageAsync(listOfDocument, lesson.Id, ct);
     }
 
     // =====================================================
-    // UPDATE (with optional video replacement)
+    // UPDATE
     // =====================================================
     public async Task UpdateAsync(
         Guid id,
         UpdateLessonRequest request,
+        Guid actorId,
         CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null, ct);
 
         if (lesson is null)
-            throw new KeyNotFoundException($"Lesson '{id}' not found.");
+            throw new KeyNotFoundException();
 
-        // =====================================================
-        // PARTIAL UPDATE (fields optional)
-        // =====================================================
+        if (lesson.UserId != actorId)
+            throw new InvalidOperationException();
+
         if (request.Title is not null)
             lesson.Title = request.Title;
 
         if (request.Content is not null)
             lesson.Content = request.Content;
 
-        // mark entity as updated
         lesson.Touch();
 
-        // =====================================================
-        // OPTIONAL VIDEO REPLACEMENT
-        // =====================================================
+        // ================= VIDEO REPLACEMENT =================
         if (request.File is not null && request.File.Length > 0)
         {
-            // NOTE:
-            // If DB commit succeeds but Bunny delete fails,
-            // orphan cleanup job will handle it later.
-
             await using var tx = await _db.Database.BeginTransactionAsync(ct);
 
-            // 1) Upload NEW video
+            var ctx = await _resolver.ResolveForLessonAsync(id, ct);
+
             await using var stream = request.File.OpenReadStream();
 
             var upload = await _video.UploadAsync(
-                new VideoUploadRequest(
-                    stream,
-                    request.File.FileName,
-                    string.IsNullOrWhiteSpace(request.VideoLibraryId)
-                        ? lesson.VideoLibraryId
-                        : request.VideoLibraryId),
+                new VideoUploadRequest
+                {
+                    LibraryId = ctx.LibraryId,
+                    StreamApiKey = ctx.StreamApiKey,
+                    FileName = request.File.FileName,
+                    Stream = stream,
+                    CollectionId = ctx.CollectionId
+                },
                 ct);
 
-            // Backup old refs
             var oldLibraryId = lesson.VideoLibraryId;
-            var oldVideoGuid = lesson.VideoGuid;
+            var oldGuid = lesson.VideoGuid;
 
-            // 2) Update DB refs
             lesson.VideoLibraryId = upload.LibraryId;
             lesson.VideoGuid = upload.VideoGuid;
-
-            // mark update again because video changed
             lesson.Touch();
 
             await _db.SaveChangesAsync(ct);
-
-            // 3) Commit DB (source of truth)
             await tx.CommitAsync(ct);
 
-            // 4) Best-effort delete old video
-            try
+            // best effort cleanup
+            if (!string.IsNullOrWhiteSpace(oldLibraryId)
+                && !string.IsNullOrWhiteSpace(oldGuid))
             {
-                await _video.DeleteAsync(oldLibraryId, oldVideoGuid, ct);
-            }
-            catch (Exception ex)
-            {
-                // DO NOT throw
-                Console.Error.WriteLine(
-                    $"[WARN] Failed to delete old video {oldVideoGuid}: {ex.Message}");
+                try
+                {
+                    await _video.DeleteAsync(oldLibraryId, ctx.StreamApiKey, oldGuid, ct);
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"[WARN] Delete old video failed: {ex.Message}");
+                }
             }
 
             return;
         }
 
-        // =====================================================
-        // NO VIDEO CHANGE
-        // =====================================================
         await _db.SaveChangesAsync(ct);
     }
 
     // =====================================================
-    // DELETE (SOFT DELETE + Bunny delete)
+    // DELETE
     // =====================================================
-    public async Task DeleteAsync(Guid id, CancellationToken ct = default)
+    public async Task DeleteAsync(
+        Guid id,
+        Guid actorId,
+        CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == id && !x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null, ct);
 
         if (lesson is null)
-            throw new KeyNotFoundException($"Lesson '{id}' not found.");
+            throw new KeyNotFoundException();
 
-        // Strong consistency: delete video first
-        await _video.DeleteAsync(
-            lesson.VideoLibraryId,
-            lesson.VideoGuid,
-            ct);
+        if (lesson.UserId != actorId)
+            throw new InvalidOperationException();
 
-        // Soft delete
+        if (!string.IsNullOrWhiteSpace(lesson.VideoLibraryId)
+            && !string.IsNullOrWhiteSpace(lesson.VideoGuid))
+        {
+            var ctx = await _resolver.ResolveForLessonAsync(id, ct);
+
+            await _video.DeleteAsync(
+                lesson.VideoLibraryId,
+                ctx.StreamApiKey,
+                lesson.VideoGuid,
+                ct);
+        }
+
         lesson.SoftDelete();
-
         await _db.SaveChangesAsync(ct);
     }
 
     // =====================================================
-    // RESTORE
+    // RESTORE / PUBLISH
     // =====================================================
     public async Task RestoreAsync(Guid id, CancellationToken ct = default)
     {
         var lesson = await _db.Lessons
             .IgnoreQueryFilters()
-            .FirstOrDefaultAsync(x => x.Id == id && x.IsDeleted, ct);
+            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt != null, ct);
 
         if (lesson is null)
-            throw new KeyNotFoundException($"Lesson '{id}' not found or not deleted.");
+            throw new KeyNotFoundException();
 
         lesson.Restore();
         lesson.Touch();
 
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task PublishAsync(Guid lessonId, Guid actorId, CancellationToken ct = default)
+    {
+        var lesson = await _db.Lessons
+            .FirstOrDefaultAsync(x => x.Id == lessonId && x.DeletedAt == null, ct);
+
+        if (lesson is null)
+            throw new KeyNotFoundException();
+
+        lesson.Publish(actorId);
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task UnpublishAsync(Guid lessonId, Guid actorId, CancellationToken ct = default)
+    {
+        var lesson = await _db.Lessons
+            .FirstOrDefaultAsync(x => x.Id == lessonId && x.DeletedAt == null, ct);
+
+        if (lesson is null)
+            throw new KeyNotFoundException();
+
+        lesson.Unpublish(actorId);
         await _db.SaveChangesAsync(ct);
     }
 }
