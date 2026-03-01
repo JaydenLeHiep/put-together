@@ -13,7 +13,7 @@ import UploadProgressBar from "./UploadProgressBar";
 import PostLessonTips from "./PostLessonTips";
 
 export default function AdminPage() {
-  const MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD = 5;
+  const MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD = 10;
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -146,7 +146,7 @@ export default function AdminPage() {
     try {
       await createLesson(form);
       setUploadProgress(100);
-      setSuccessMessage("Lektion erfolgreich erstellt! 🎉");
+      setSuccessMessage("Lektion erfolgreich erstellt!");
 
       setTimeout(() => {
         setTitle("");

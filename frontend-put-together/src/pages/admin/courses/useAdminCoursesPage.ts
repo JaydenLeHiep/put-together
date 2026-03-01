@@ -51,10 +51,10 @@ export function useAdminCoursesPage() {
   );
 
   const canEditLesson = useMemo(() => {
-    if (!selectedLesson) return false;
-    if (!user?.id) return false;
-    return user.id === selectedLesson.createdById;
-  }, [selectedLesson, user?.id]);
+  if (!selectedLesson) return false;
+  if (!user?.id) return false;
+  return user.id === selectedLesson.userId;
+}, [selectedLesson, user?.id]);
 
   useEffect(() => {
     let cancelled = false;

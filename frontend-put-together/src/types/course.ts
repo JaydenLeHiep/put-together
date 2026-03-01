@@ -31,7 +31,7 @@ export type LessonInCourse = {
   videoUrl: string;
   courseId: string;
   isPublished: boolean;
-  createdById: string;
+  userId: string;
   createdAt: string;
   publishedAt: string | null;
 };
