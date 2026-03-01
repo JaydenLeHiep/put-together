@@ -9,6 +9,8 @@ type ProductCourseDetailProps = {
 export default function ProductCourseDetail({
   selectedLesson,
 }: ProductCourseDetailProps) {
+  const NOT_PLAY_VIDEO: boolean = false;
+
   return (
     <section className="lg:col-span-8 space-y-6">
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden relative">
@@ -19,6 +21,7 @@ export default function ProductCourseDetail({
         <DisplayLessonVideo
           videoLibraryId={selectedLesson.videoLibraryId}
           videoGuid={selectedLesson.videoGuid}
+          showVideo={NOT_PLAY_VIDEO}
         />
 
         <div className="p-6">

@@ -34,6 +34,10 @@ export default function App() {
           <Route path="/resend-verify" element={<ResendVerifyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route
+            path="/product-courses"
+            element={<AdminProductCoursesPage />}
+          />
 
           {/* Authenticated */}
           <Route element={<ProtectedRoute />}>
@@ -49,10 +53,7 @@ export default function App() {
                 element={<AdminPostLessonPage />}
               />
               <Route path="/admin/courses" element={<AdminCoursesPage />} />
-              <Route
-                path="/admin/product-courses"
-                element={<AdminProductCoursesPage />}
-              />
+
               <Route
                 path="/admin/manage-structure"
                 element={<ManageStructurePage />}

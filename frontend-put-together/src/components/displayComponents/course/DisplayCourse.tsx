@@ -79,8 +79,15 @@ export const DisplayCourse = ({
 
           {!loading &&
             lessons.map((lesson) => (
-              <button key={lesson.id} onClick={() => onSelectLesson(lesson)}>
-                {lesson.title}
+              <button
+                key={lesson.id}
+                onClick={() => onSelectLesson(lesson)}
+                className="w-full text-left px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-lila-50 hover:text-lila-700 transition-colors duration-150 group"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-lila-400 rounded-full group-hover:bg-lila-600 transition-colors" />
+                  <span className="truncate">{lesson.title}</span>
+                </span>
               </button>
             ))}
         </div>

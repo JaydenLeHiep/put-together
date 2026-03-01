@@ -22,9 +22,10 @@ export default function Navbar() {
   };
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2 rounded-lg font-medium transition-all ${isActive
-      ? "bg-lila-600 text-white shadow-lg"
-      : "text-gray-700 hover:bg-lila-50 hover:text-lila-700"
+    `px-4 py-2 rounded-lg font-medium transition-all ${
+      isActive
+        ? "bg-lila-600 text-white shadow-lg"
+        : "text-gray-700 hover:bg-lila-50 hover:text-lila-700"
     }`;
 
   return (
@@ -65,6 +66,9 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-2">
               {!isAuthenticated && (
                 <>
+                  <NavLink to="/product-courses" className={linkClass}>
+                    Entdeckt
+                  </NavLink>
                   <NavLink to="/login" className={linkClass}>
                     Login
                   </NavLink>
@@ -80,7 +84,11 @@ export default function Navbar() {
                   {user?.role === "Admin" && (
                     <>
                       {adminNavItems.map((item) => (
-                        <NavLink key={item.to} to={item.to} className={linkClass}>
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={linkClass}
+                        >
                           {item.label}
                         </NavLink>
                       ))}
