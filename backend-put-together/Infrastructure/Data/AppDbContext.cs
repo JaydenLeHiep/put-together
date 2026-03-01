@@ -1,3 +1,4 @@
+using backend_put_together.Application.Users.Shared;
 using backend_put_together.Domain.Access;
 using backend_put_together.Domain.Category;
 using backend_put_together.Domain.Courses;
@@ -20,6 +21,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<S3StoredFile> S3StoredFiles => Set<S3StoredFile>();
     public DbSet<EmailVerificationToken> EmailVerificationTokens => Set<EmailVerificationToken>();
+    public DbSet<PasswordResetToken>  PasswordResetTokens => Set<PasswordResetToken>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -346,6 +348,29 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             
             e.HasOne(x => x.User)
                 .WithMany(u => u.EmailVerificationTokens)
+                .HasForeignKey(x => x.UserId);
+        });
+        
+        modelBuilder.Entity<PasswordResetToken>(e =>
+        {
+            e.HasKey(x => x.Id);
+
+            e.Property(x => x.TokenHash)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            e.Property(x => x.CreatedAt)
+                .IsRequired();
+
+            e.Property(x => x.ExpiresAt);
+
+            e.Property(x => x.UsedAt);
+
+            e.HasIndex(x => x.TokenHash)
+                .IsUnique();
+
+            e.HasOne(x => x.User)
+                .WithMany(u => u.PasswordResetTokens)
                 .HasForeignKey(x => x.UserId);
         });
     }

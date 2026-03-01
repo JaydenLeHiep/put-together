@@ -12,4 +12,6 @@ public interface IUserService
     Task<bool> ResetPasswordAsync(Guid userId, string newPassword, CancellationToken ct);
     Task<VerifyRegistrationEmailResult> VerifyRegistrationEmailAsync(string token, CancellationToken ct);
     Task<ResendVerificationResult> ResendVerificationEmailAsync(string email, CancellationToken ct);
+    Task ForgotPasswordAsync(string email, CancellationToken ct);
+    Task<bool> ResetPasswordWithTokenAsync(string token, string newPassword, CancellationToken ct);
 }

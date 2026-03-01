@@ -1,26 +1,29 @@
-import { useState, useEffect } from "react";
-import { resendVerification } from "../services/userService";
+import React, { useState, useEffect } from "react";
+import { forgotPassword } from "../services/userService";
 import SuccessMessage from "../components/SuccessMessage";
 import ErrorMessage from "../components/ErrorMessage";
 
-export default function ResendVerifyPage() {
+export const ForgotPasswordPage = () => {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleResend = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     try {
       setLoading(true);
       setErrorMessage(null);
+      setSuccessMessage(null);
 
-      await resendVerification(email);
+      await forgotPassword(email);
 
-      setSuccessMessage("Verification email has been sent again.");
+      setSuccessMessage(
+        "If the email exists, a password reset link has been sent.",
+      );
     } catch {
-      setErrorMessage("Failed to resend verification email.");
+      setErrorMessage("Failed to send password reset email.");
     } finally {
       setLoading(false);
     }
@@ -60,10 +63,8 @@ export default function ResendVerifyPage() {
         />
       )}
 
-      <form onSubmit={handleResend} className="space-y-4">
-        <h2 className="text-xl font-semibold text-center">
-          Resend Verification Email
-        </h2>
+      <form onSubmit={handleForgotPassword} className="space-y-4">
+        <h2 className="text-xl font-semibold text-center">Forgot Password</h2>
 
         <input
           type="email"
@@ -71,17 +72,17 @@ export default function ResendVerifyPage() {
           placeholder="Enter your email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="w-full border-2 border-gray-200 rounded-xl p-4"
+          className="w-full border-2 border-gray-200 rounded-xl p-4 focus:outline-none focus:border-indigo-500 transition-colors"
         />
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-500 text-white py-2 rounded-lg"
+          className="w-full bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-400 transition disabled:opacity-50"
         >
-          {loading ? "Sending..." : "Resend Email"}
+          {loading ? "Sending..." : "Send Reset Link"}
         </button>
       </form>
     </div>
   );
-}
+};
