@@ -253,4 +253,13 @@ public class UserQueryService : IUserQueryService
 
         return u;
     }
+
+    public async Task<bool> CheckEmailAvailableAsync(string email, CancellationToken ct = default)
+    {
+        var e = await _db.Users
+            .AsNoTracking()
+            .Where(u => u.Email == email)
+            .FirstOrDefaultAsync(ct);
+        return e != null;
+    }
 }

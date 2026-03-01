@@ -45,6 +45,26 @@ export const EmailVerifyPage = () => {
     verify();
   }, [searchParams, navigate]);
 
+  useEffect(() => {
+    if (!errorMessage) return;
+
+    const timer = setTimeout(() => {
+      setErrorMessage(null);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [errorMessage]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+    }, 3000);
+
+    return () => clearTimeout(timer);
+  }, [successMessage]);
+
   return (
     <div className="mt-20 flex flex-col items-center">
       {loading && (

@@ -317,5 +317,72 @@ public class UserEndpoints : ICarterModule
                 return Results.Ok(result.Message);
             })
             .DisableAntiforgery();
+        
+        group.MapPost("/forgot-password", async (
+                [FromBody] ForgotPasswordRequest req,
+                IUserService service,
+                IUserQueryService query,
+                CancellationToken ct,
+                ILogger<UserEndpoints> logger) =>
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(req.Email))
+                        return Results.BadRequest("email is required");
+
+                    if (!new EmailAddressAttribute().IsValid(req.Email))
+                        return Results.BadRequest("invalid email address");
+
+                    if (!await query.CheckEmailAvailableAsync(req.Email, ct))
+                    {
+                        return Results.BadRequest("invalid email address");
+                    }
+                    
+                    await service.ForgotPasswordAsync(req.Email, ct);
+                    
+                    return Results.Ok("If the email exists, a reset link has been sent.");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Unhandled exception during forgot password");
+                    return Results.BadRequest("Something went wrong!");
+                }
+            })
+            .DisableAntiforgery();
+        
+        group.MapPost("/reset-password", async (
+                [FromBody] ResetPasswordWithTokenRequest req,
+                IUserService service,
+                CancellationToken ct,
+                ILogger<UserEndpoints> logger) =>
+            {
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(req.Token))
+                        return Results.BadRequest("token is required");
+
+                    if (string.IsNullOrWhiteSpace(req.NewPassword))
+                        return Results.BadRequest("new password is required");
+
+                    if (req.NewPassword.Length < 8)
+                        return Results.BadRequest("password must be at least 8 characters long");
+
+                    var success = await service.ResetPasswordWithTokenAsync(
+                        req.Token,
+                        req.NewPassword,
+                        ct);
+
+                    if (!success)
+                        return Results.BadRequest("Invalid or expired token");
+
+                    return Results.Ok("Password has been reset successfully.");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "Unhandled exception during reset password");
+                    return Results.BadRequest("Something went wrong!");
+                }
+            })
+            .DisableAntiforgery();
     }
 }

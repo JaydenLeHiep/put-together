@@ -11,4 +11,5 @@ public interface IUserQueryService
     Task<IReadOnlyList<UserReadDto>> GetAllUsersAsync(CancellationToken ct = default);
     Task<IReadOnlyList<UserReadDto>> GetUsersByRoleAsync(string role, CancellationToken ct = default);
     Task<UserDetailsDto?> GetUserByIdAsync(Guid id, CancellationToken ct = default);
+    Task<bool> CheckEmailAvailableAsync(string email, CancellationToken ct = default);
 }

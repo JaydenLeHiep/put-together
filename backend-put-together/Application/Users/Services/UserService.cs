@@ -275,4 +275,109 @@ public class UserService : IUserService
 
         return ResendVerificationResult.Ok();
     }
+
+    public async Task ForgotPasswordAsync(string email, CancellationToken ct)
+    {
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        var user = await _db.Users
+            .Include(u => u.UserLogins)
+            .FirstOrDefaultAsync(u =>
+                    u.Email.ToLower() == normalizedEmail &&
+                    u.DeletedAt == null,
+                ct);
+        
+        if (user == null)
+            return;
+        
+        var oldTokens = await _db.PasswordResetTokens
+            .Where(t => t.UserId == user.Id && t.UsedAt == null)
+            .ToListAsync(ct);
+
+        foreach (var t in oldTokens)
+            t.UsedAt = DateTime.UtcNow;
+        
+        var rawBytes = RandomNumberGenerator.GetBytes(32);
+        var rawToken = WebEncoders.Base64UrlEncode(rawBytes);
+
+        var tokenHash = Convert.ToBase64String(
+            SHA256.HashData(rawBytes)
+        );
+
+        var resetToken = new PasswordResetToken
+        {
+            UserId = user.Id,
+            TokenHash = tokenHash,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddMinutes(5)
+        };
+
+        await _db.PasswordResetTokens.AddAsync(resetToken, ct);
+        await _db.SaveChangesAsync(ct);
+
+        var frontendLink = _config["Email:FrontendLink"];
+        var resetLink =
+            $"{frontendLink}/reset-password?token={Uri.EscapeDataString(rawToken)}";
+
+        var htmlBody = $@"
+        <h2>Reset your password</h2>
+        <p>You requested a password reset.</p>
+        <p><a href='{resetLink}'>Reset Password</a></p>
+        <p>This link expires in 5 minutes.</p>
+        <p>If you did not request this, ignore this email.</p>";
+
+        await _emailService.SendEmailAsync(
+            user.Email,
+            "Reset your password",
+            htmlBody
+        );
+    }
+
+    public async Task<bool> ResetPasswordWithTokenAsync(
+        string token,
+        string newPassword,
+        CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+            return false;
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
+            return false;
+
+        var rawBytes = WebEncoders.Base64UrlDecode(token);
+
+        var tokenHash = Convert.ToBase64String(
+            SHA256.HashData(rawBytes)
+        );
+
+        var resetToken = await _db.PasswordResetTokens
+            .Include(t => t.User)
+            .ThenInclude(u => u.UserLogins)
+            .FirstOrDefaultAsync(t => t.TokenHash == tokenHash, ct);
+
+        if (resetToken == null)
+            return false;
+
+        if (resetToken.UsedAt != null)
+            return false;
+
+        if (resetToken.ExpiresAt < DateTime.UtcNow)
+            return false;
+
+        var user = resetToken.User;
+
+        var login = user.UserLogins
+            .FirstOrDefault(l => l.Provider == LocalRegistrationProvider);
+
+        if (login == null)
+            return false;
+
+        login.HashedPassword = _appPasswordHasher.HashPassword(user, newPassword);
+
+        resetToken.UsedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(ct);
+
+        return true;
+    }
 }

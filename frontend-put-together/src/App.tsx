@@ -18,6 +18,8 @@ import UserManagement from "./pages/admin/UserManagement";
 import { StudentRoute } from "./components/auth/StudentRoute";
 import { StudentDashboard } from "./pages/student/StudentDashboard";
 import ResendVerifyPage from "./pages/ResendVerifyPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -30,6 +32,8 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/verify-email" element={<EmailVerifyPage />} />
           <Route path="/resend-verify" element={<ResendVerifyPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
           {/* Authenticated */}
           <Route element={<ProtectedRoute />}>
