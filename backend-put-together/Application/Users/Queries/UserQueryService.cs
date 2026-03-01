@@ -37,8 +37,9 @@ public class UserQueryService : IUserQueryService
         var user = await _db.Users
             .Include(u => u.UserLogins)
             .FirstOrDefaultAsync(u =>
-                    u.UserName.ToLower() == identifier ||
-                    u.Email.ToLower() == identifier,
+                    (u.UserName.ToLower() == identifier ||
+                     u.Email.ToLower() == identifier) &&
+                    u.DeletedAt == null,
                 ct);
 
         if (user == null)
@@ -206,7 +207,6 @@ public class UserQueryService : IUserQueryService
     {
         return await _db.Users
             .AsNoTracking()
-            .Where(u => u.DeletedAt == null)
             .Select(u => new UserReadDto(
                 u.Id,
                 u.UserName,
@@ -224,7 +224,7 @@ public class UserQueryService : IUserQueryService
 
         return await _db.Users
             .AsNoTracking()
-            .Where(u => u.DeletedAt == null && u.Role == roleEnum)
+            .Where(u => u.Role == roleEnum)
             .Select(u => new UserReadDto(
                 u.Id,
                 u.UserName,

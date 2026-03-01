@@ -9,8 +9,17 @@ public sealed class AccessEndpoints : ICarterModule
     public void AddRoutes(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/access");
-        
-        // POST /api/access/grant-course?studentId=...&courseId=...
+
+        group.MapGet("/course", async (
+                Guid studentId,
+                IAccessService service,
+                CancellationToken ct) =>
+            {
+                var courses = await service.GetStudentCourseAccessAsync(studentId, ct);
+                return Results.Ok(courses);
+            })
+            .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
+
         group.MapPost("/grant-course", async (
                 Guid studentId,
                 Guid courseId,
@@ -22,7 +31,6 @@ public sealed class AccessEndpoints : ICarterModule
             })
             .RequireAuthorization(new AuthorizeAttribute { Roles = "Admin" });
 
-        // POST /api/access/revoke-course?studentId=...&courseId=...
         group.MapPost("/revoke-course", async (
                 Guid studentId,
                 Guid courseId,
