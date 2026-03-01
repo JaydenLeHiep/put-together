@@ -9,12 +9,12 @@ import RegisterPage from "./pages/RegisterPage";
 import AfterLoginRedirect from "./components/auth/AfterLoginRedirect";
 
 // Admin
-import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
 import AdminPostLessonPage from "./pages/admin/postLesson/AdminPostLessonPage";
-import AdminCoursesPage from "./pages/admin/AdminCoursesPage";
+import AdminCoursesPage from "./pages/admin/courses/AdminCoursesPage";
 import AdminProductCoursesPage from "./pages/admin/productCourses/AdminProductCoursesPage";
-import ManageStructurePage from "./pages/admin/ManageStructurePage";
-import UserManagement from "./pages/admin/UserManagement";
+import ManageStructurePage from "./pages/admin/manageStructure/ManageStructurePage";
+import UserManagement from "./pages/admin/userManagement/UserManagement";
 import { StudentRoute } from "./components/auth/StudentRoute";
 import { StudentDashboard } from "./pages/student/StudentDashboard";
 
