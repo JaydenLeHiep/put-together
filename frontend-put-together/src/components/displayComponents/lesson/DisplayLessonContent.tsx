@@ -1,4 +1,4 @@
-import type { DisplayLessonContentProps } from "./typeDisplayLessonVideo";
+import type { DisplayLessonContentProps } from "./typeDisplayLessonContent";
 
 export const DisplayLessonContent = ({
   title,
