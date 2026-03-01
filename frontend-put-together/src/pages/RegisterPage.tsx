@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import AuthForm from "../components/auth/AuthForm";
 import type { RegisterPayload } from "../components/auth/typeAuth";
@@ -28,6 +28,25 @@ export default function RegisterPage() {
       setLoading(false);
     }
   }
+  useEffect(() => {
+    if (!errorMessage) return;
+
+    const timer = setTimeout(() => {
+      setErrorMessage(null);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [errorMessage]);
+
+  useEffect(() => {
+    if (!successMessage) return;
+
+    const timer = setTimeout(() => {
+      setSuccessMessage(null);
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [successMessage]);
 
   return (
     <div>

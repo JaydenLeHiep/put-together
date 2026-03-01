@@ -223,3 +223,32 @@ export async function resendVerification(email: string): Promise<void> {
 
   if (!res.ok) throw new Error("User verify fehlgeschlagen.");
 }
+
+export async function forgotPassword(email: string): Promise<void> {
+  const res = await apiFetch(`${API}/forgot-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email })
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+
+    throw new Error(data?.message || `Request failed with ${res.status}`);
+  }
+}
+
+export async function resetPassword(token: string, newPassword: string): Promise<void> {
+  const res = await apiFetch(`${API}/reset-password`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token, newPassword })
+  });
+
+  if (!res.ok) throw new Error("User reset password fehlgeschlagen.");
+}
+
