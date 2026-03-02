@@ -10,6 +10,13 @@ const adminNavItems = [
   { label: "Benutzer", to: "/admin/accounts" },
 ];
 
+const teacherNavItems = [
+  { label: "Dashboard", to: "/teacher/dashboard" },
+  { label: "Lektion erstellen", to: "/teacher/post-lesson" },
+  { label: "Lektionen verwalten", to: "/teacher/courses" },
+  { label: "Produkte", to: "/teacher/product-courses" },
+];
+
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
@@ -22,10 +29,9 @@ export default function Navbar() {
   };
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-4 py-2 rounded-lg font-medium transition-all ${
-      isActive
-        ? "bg-lila-600 text-white shadow-lg"
-        : "text-gray-700 hover:bg-lila-50 hover:text-lila-700"
+    `px-4 py-2 rounded-lg font-medium transition-all ${isActive
+      ? "bg-lila-600 text-white shadow-lg"
+      : "text-gray-700 hover:bg-lila-50 hover:text-lila-700"
     }`;
 
   return (
@@ -39,6 +45,8 @@ export default function Navbar() {
                 navigate("/");
               } else if (user?.role === "Admin") {
                 navigate("/admin/dashboard");
+              } else if (user?.role === "Teacher") {
+                navigate("/teacher/dashboard");
               } else {
                 navigate("/course");
               }
@@ -84,6 +92,20 @@ export default function Navbar() {
                   {user?.role === "Admin" && (
                     <>
                       {adminNavItems.map((item) => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          className={linkClass}
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                    </>
+                  )}
+
+                  {user?.role === "Teacher" && (
+                    <>
+                      {teacherNavItems.map((item) => (
                         <NavLink
                           key={item.to}
                           to={item.to}
@@ -181,6 +203,21 @@ export default function Navbar() {
                   {user?.role === "Admin" && (
                     <>
                       {adminNavItems.map((item) => (
+                        <NavLink
+                          key={item.to}
+                          to={item.to}
+                          onClick={() => setMobileMenuOpen(false)}
+                          className="block px-4 py-3 rounded-lg text-gray-700 hover:bg-lila-50"
+                        >
+                          {item.label}
+                        </NavLink>
+                      ))}
+                    </>
+                  )}
+
+                  {user?.role === "Teacher" && (
+                    <>
+                      {teacherNavItems.map((item) => (
                         <NavLink
                           key={item.to}
                           to={item.to}
