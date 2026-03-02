@@ -2,11 +2,16 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
+import { StudentRoute } from "./components/auth/StudentRoute";
+import { TeacherRoute } from "./components/auth/TeacherRoute";
 
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import { EmailVerifyPage } from "./pages/EmailVerifyPage";
+import ResendVerifyPage from "./pages/ResendVerifyPage";
+import { ResetPasswordPage } from "./pages/ResetPasswordPage";
+import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 
 // Admin
 import AdminDashboard from "./pages/admin/dashboard/AdminDashboard";
@@ -15,16 +20,17 @@ import AdminCoursesPage from "./pages/admin/courses/AdminCoursesPage";
 import AdminProductCoursesPage from "./pages/admin/productCourses/AdminProductCoursesPage";
 import ManageStructurePage from "./pages/admin/manageStructure/ManageStructurePage";
 import UserManagement from "./pages/admin/userManagement/UserManagement";
-import { StudentRoute } from "./components/auth/StudentRoute";
+
+// Student
 import { StudentDashboard } from "./pages/student/StudentDashboard";
-import ResendVerifyPage from "./pages/ResendVerifyPage";
-import { ResetPasswordPage } from "./pages/ResetPasswordPage";
-import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
+
+// Teacher
+import TeacherDashboard from "./pages/teacher/dashboard/TeacherDashboard";
+
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Layout */}
         <Route element={<MainLayout />}>
           {/* Public */}
           <Route path="/" element={<HomePage />} />
@@ -34,35 +40,36 @@ export default function App() {
           <Route path="/resend-verify" element={<ResendVerifyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route
-            path="/product-courses"
-            element={<AdminProductCoursesPage />}
-          />
+          <Route path="/product-courses" element={<AdminProductCoursesPage />} />
 
           {/* Authenticated */}
           <Route element={<ProtectedRoute />}>
-            <Route
-              path="/admin"
-              element={<Navigate to="/admin/dashboard" replace />}
-            />
+            {/* Redirect helpers */}
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
+            <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
 
+            {/* Admin */}
             <Route element={<AdminRoute />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route
-                path="/admin/post-lesson"
-                element={<AdminPostLessonPage />}
-              />
+              <Route path="/admin/post-lesson" element={<AdminPostLessonPage />} />
               <Route path="/admin/courses" element={<AdminCoursesPage />} />
-
-              <Route
-                path="/admin/manage-structure"
-                element={<ManageStructurePage />}
-              />
+              <Route path="/admin/product-courses" element={<AdminProductCoursesPage />} />
+              <Route path="/admin/manage-structure" element={<ManageStructurePage />} />
               <Route path="/admin/accounts" element={<UserManagement />} />
             </Route>
 
+            {/* Student */}
             <Route element={<StudentRoute />}>
               <Route path="/student/dashboard" element={<StudentDashboard />} />
+            </Route>
+
+            {/* Teacher */}
+            <Route element={<TeacherRoute />}>
+              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+              <Route path="/teacher/post-lesson" element={<AdminPostLessonPage />} />
+              <Route path="/teacher/courses" element={<AdminCoursesPage />} />
+              <Route path="/teacher/product-courses" element={<AdminProductCoursesPage />} />
             </Route>
           </Route>
         </Route>
