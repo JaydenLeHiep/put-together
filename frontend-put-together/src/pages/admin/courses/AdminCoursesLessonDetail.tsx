@@ -60,6 +60,7 @@ export default function AdminCoursesLessonDetail({
           <DisplayLessonVideo
             videoLibraryId={selectedLesson.videoLibraryId}
             videoGuid={selectedLesson.videoGuid}
+            thumbnailUrl={selectedLesson.thumbnailUrl}
           />
         )}
 

@@ -3,6 +3,7 @@ import type {
   CourseWithLessons,
   CreateCourseRequest,
   UpdateCourseRequest,
+  CategoryWithPaidCourses,
 } from "../types/course";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
@@ -45,6 +46,22 @@ export async function getCourseWithLessons(
 
   if (!res.ok) {
     throw new Error("Course not found");
+  }
+
+  return res.json();
+}
+
+
+// =====================================================
+// GET /api/courses/student-paid-category-course (Student)
+// =====================================================
+export async function getStudentPaidCategoryCourses(): Promise<CategoryWithPaidCourses[]> {
+  const res = await apiFetch(`${API}/student-paid-category-course`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to load paid student courses");
   }
 
   return res.json();

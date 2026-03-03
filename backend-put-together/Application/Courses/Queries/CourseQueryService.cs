@@ -94,6 +94,7 @@ public sealed class CourseQueryService : ICourseQueryService
                         l.VideoGuid != null
                             ? $"https://iframe.mediadelivery.net/embed/{l.VideoLibraryId}/{l.VideoGuid}"
                             : string.Empty,
+                        l.ThumbnailUrl ?? string.Empty,
                         l.CourseId,
                         l.IsPublished,
                         l.UserId,

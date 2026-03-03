@@ -39,7 +39,8 @@ public sealed class LessonService : ILessonService
     {
         string? videoLibraryId = null;
         string? videoGuid = null;
-
+        string? thumbnailUrl = null;
+        
         if (request.Files?[0].ContentType == "video/mp4")
         {
             var ctx = await _resolver.ResolveForCourseAsync(request.CourseId, ct);
@@ -59,8 +60,9 @@ public sealed class LessonService : ILessonService
 
             videoLibraryId = upload.LibraryId;
             videoGuid = upload.VideoGuid;
+            thumbnailUrl = upload.ThumbnailUrl;
         }
-
+        
         var lesson = new Lesson
         {
             Title = request.Title,
@@ -68,6 +70,7 @@ public sealed class LessonService : ILessonService
             CourseId = request.CourseId,
             VideoLibraryId = videoLibraryId,
             VideoGuid = videoGuid,
+            ThumbnailUrl = thumbnailUrl,
             BunnyCollectionId = bunnyCollectionId,
             IsPublished = false,
             UserId = userId,
@@ -144,6 +147,7 @@ public sealed class LessonService : ILessonService
 
             lesson.VideoLibraryId = upload.LibraryId;
             lesson.VideoGuid = upload.VideoGuid;
+            lesson.ThumbnailUrl = upload.ThumbnailUrl;
             lesson.Touch();
 
             await _db.SaveChangesAsync(ct);
