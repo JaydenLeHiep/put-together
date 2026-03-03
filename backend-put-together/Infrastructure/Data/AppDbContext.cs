@@ -138,7 +138,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             b.Property(x => x.VideoLibraryId).HasMaxLength(50); 
             b.Property(x => x.VideoGuid).HasMaxLength(100);    
             b.Property(x => x.BunnyCollectionId).HasMaxLength(100);
-            
+            b.Property(x => x.ThumbnailUrl).HasMaxLength(1000);
             // Course
             b.Property(x => x.CourseId).IsRequired();
             

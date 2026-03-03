@@ -5,11 +5,12 @@ public record FileDocumentDto(
     string FileName
 );
 
-public record LessonStudentReadDto(
+public sealed record LessonStudentReadDto(
     Guid Id,
     string Title,
-    string? Content,
+    string Content,
     string? VideoLibraryId,
     string? VideoGuid,
-    List<FileDocumentDto> FileDocuments
+    string ThumbnailUrl,
+    List<FileDocumentDto> Files
 );

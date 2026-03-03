@@ -28,6 +28,7 @@ public sealed class LessonQueryService : ILessonQueryService
                 x.VideoGuid != null
                     ? $"https://iframe.mediadelivery.net/embed/{x.VideoLibraryId}/{x.VideoGuid}"
                     : string.Empty,
+                x.ThumbnailUrl ?? string.Empty,
                 x.CourseId,
                 x.IsPublished,
                 x.UserId,
@@ -51,6 +52,7 @@ public sealed class LessonQueryService : ILessonQueryService
                 x.VideoGuid != null
                     ? $"https://iframe.mediadelivery.net/embed/{x.VideoLibraryId}/{x.VideoGuid}"
                     : string.Empty,
+                x.ThumbnailUrl ?? string.Empty,
                 x.CourseId,
                 x.IsPublished,
                 x.UserId,
@@ -75,6 +77,7 @@ public sealed class LessonQueryService : ILessonQueryService
                 x.VideoGuid != null
                     ? $"https://iframe.mediadelivery.net/embed/{x.VideoLibraryId}/{x.VideoGuid}"
                     : string.Empty,
+                x.ThumbnailUrl ?? string.Empty,
                 x.CourseId,
                 x.IsPublished, // false
                 x.UserId,
@@ -106,6 +109,7 @@ public sealed class LessonQueryService : ILessonQueryService
                 x.VideoGuid != null
                     ? $"https://iframe.mediadelivery.net/embed/{x.VideoLibraryId}/{x.VideoGuid}"
                     : string.Empty,
+                x.ThumbnailUrl ?? string.Empty,
                 x.CourseId,
                 x.IsPublished,
                 x.UserId,
@@ -133,6 +137,7 @@ public sealed class LessonQueryService : ILessonQueryService
                 x.VideoGuid != null
                     ? $"https://iframe.mediadelivery.net/embed/{x.VideoLibraryId}/{x.VideoGuid}"
                     : string.Empty,
+                x.ThumbnailUrl ?? string.Empty,
                 x.CourseId,
                 x.IsPublished,
                 x.UserId,
@@ -158,6 +163,7 @@ public sealed class LessonQueryService : ILessonQueryService
                 l.Content,
                 l.VideoLibraryId,
                 l.VideoGuid,
+                l.ThumbnailUrl ?? string.Empty,
                 l.StoredFiles
                     .Where(f => f.DeletedAt == null)
                     .Select(f => new FileDocumentDto(

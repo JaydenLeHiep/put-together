@@ -30,13 +30,11 @@ public sealed class BunnyVideoProvider : IVideoProvider
 
         var libraryId = request.LibraryId;
         var streamKey = request.StreamApiKey;
-
         var fileName = request.FileName;
 
         // ============================
         // STEP 1: Create video
         // ============================
-
         using var createReq = new HttpRequestMessage(
             HttpMethod.Post,
             $"{_options.StreamBaseUrl}/library/{libraryId}/videos"
@@ -55,24 +53,20 @@ public sealed class BunnyVideoProvider : IVideoProvider
         if (!createRes.IsSuccessStatusCode)
         {
             var body = await createRes.Content.ReadAsStringAsync(ct);
-
             throw new InvalidOperationException(
                 $"Bunny create video failed. Status={(int)createRes.StatusCode} Body={body}");
         }
 
         var createJson = await createRes.Content.ReadAsStringAsync(ct);
+        using var createDoc = JsonDocument.Parse(createJson);
+        var createRoot = createDoc.RootElement;
 
-        var videoGuid = JsonDocument
-            .Parse(createJson)
-            .RootElement
-            .GetProperty("guid")
-            .GetString()
+        var videoGuid = createRoot.GetProperty("guid").GetString()
             ?? throw new InvalidOperationException("Bunny did not return video guid");
 
         // ============================
         // STEP 2: Upload binary
         // ============================
-
         using var uploadReq = new HttpRequestMessage(
             HttpMethod.Put,
             $"{_options.StreamBaseUrl}/library/{libraryId}/videos/{videoGuid}"
@@ -90,23 +84,50 @@ public sealed class BunnyVideoProvider : IVideoProvider
         uploadRes.EnsureSuccessStatusCode();
 
         // ============================
+        // STEP 3: Read play data (correct thumbnailUrl)
+        // ============================
+        string? thumbnailUrl = null;
+
+        using var playReq = new HttpRequestMessage(
+            HttpMethod.Get,
+            $"{_options.StreamBaseUrl}/library/{libraryId}/videos/{videoGuid}/play"
+        );
+
+        playReq.Headers.TryAddWithoutValidation("AccessKey", streamKey);
+
+        using var playRes = await _http.SendAsync(playReq, ct);
+
+        if (playRes.IsSuccessStatusCode)
+        {
+            var playJson = await playRes.Content.ReadAsStringAsync(ct);
+            using var playDoc = JsonDocument.Parse(playJson);
+            var playRoot = playDoc.RootElement;
+
+            if (playRoot.TryGetProperty("thumbnailUrl", out var thumbProp) &&
+                thumbProp.ValueKind == JsonValueKind.String)
+            {
+                thumbnailUrl = thumbProp.GetString();
+            }
+        }
+
+        // ============================
         // RESULT
         // ============================
-
         var playbackUrl =
             $"https://iframe.mediadelivery.net/embed/{libraryId}/{videoGuid}";
 
         return new UploadVideoResult(
             libraryId,
             videoGuid,
-            playbackUrl
+            playbackUrl,
+            thumbnailUrl
         );
     }
 
     public async Task DeleteAsync(
         string videoLibraryId,
-        string videoGuid,
         string streamApiKey,
+        string videoGuid,
         CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(videoLibraryId))
@@ -118,8 +139,7 @@ public sealed class BunnyVideoProvider : IVideoProvider
         if (string.IsNullOrWhiteSpace(streamApiKey))
             throw new ArgumentException(nameof(streamApiKey));
 
-        var url =
-            $"{_options.StreamBaseUrl}/library/{videoLibraryId}/videos/{videoGuid}";
+        var url = $"{_options.StreamBaseUrl}/library/{videoLibraryId}/videos/{videoGuid}";
 
         using var req = new HttpRequestMessage(HttpMethod.Delete, url);
         req.Headers.TryAddWithoutValidation("AccessKey", streamApiKey);
@@ -129,7 +149,6 @@ public sealed class BunnyVideoProvider : IVideoProvider
         if (!res.IsSuccessStatusCode)
         {
             var body = await res.Content.ReadAsStringAsync(ct);
-
             throw new InvalidOperationException(
                 $"Bunny delete failed. Status={(int)res.StatusCode} Body={body}");
         }

@@ -34,5 +34,6 @@ export type DisplayLessonType = {
   content?: string | null;
   videoLibraryId?: string | null;
   videoGuid?: string | null;
+  thumbnailUrl: string;
   fileDocuments?: FileDocument[];
 };

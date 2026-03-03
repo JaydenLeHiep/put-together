@@ -29,6 +29,7 @@ export type LessonInCourse = {
   videoLibraryId: string;
   videoGuid: string;
   videoUrl: string;
+  thumbnailUrl: string;
   courseId: string;
   isPublished: boolean;
   userId: string;
@@ -57,3 +58,15 @@ export type DisplayCourse = {
   title: string,
   expiresAtUtc: string
 }
+
+export type StudentPaidCourse = {
+  courseId: string;
+  title: string;
+  expiresAtUtc: string;
+};
+
+export type CategoryWithPaidCourses = {
+  categoryId: string;
+  categoryName: string;
+  courses: StudentPaidCourse[];
+};
