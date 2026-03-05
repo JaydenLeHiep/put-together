@@ -9,4 +9,5 @@ public interface ICourseQueryService
     Task<CourseReadDto?> GetByIdAsync(Guid id, CancellationToken ct = default);
     public Task<CourseWithLessonsDto?> GetCourseWithLessonsAsync(Guid courseId, CancellationToken ct = default);
     public Task<List<CategoryWithCoursesDto>> GetPaidCoursesByStudentIdAsync(Guid studentId, CancellationToken ct = default);
+    Task<List<PublicCategoryCatalogDto>> GetPublicCourseCatalogAsync(CancellationToken ct = default);
 }

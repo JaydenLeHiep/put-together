@@ -39,6 +39,55 @@ type CategoryListProps = {
   onResetCourseForm: () => void;
 };
 
+const levelOptions = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+const themeColors = [
+  {
+    gradient: "from-blue-500 to-indigo-600",
+    bgLight: "bg-blue-50",
+    text: "text-blue-700",
+    border: "border-blue-200",
+    ring: "focus:ring-blue-100",
+  },
+  {
+    gradient: "from-emerald-400 to-teal-600",
+    bgLight: "bg-emerald-50",
+    text: "text-emerald-700",
+    border: "border-emerald-200",
+    ring: "focus:ring-emerald-100",
+  },
+  {
+    gradient: "from-orange-400 to-rose-500",
+    bgLight: "bg-rose-50",
+    text: "text-rose-700",
+    border: "border-rose-200",
+    ring: "focus:ring-rose-100",
+  },
+  {
+    gradient: "from-purple-500 to-fuchsia-600",
+    bgLight: "bg-purple-50",
+    text: "text-purple-700",
+    border: "border-purple-200",
+    ring: "focus:ring-purple-100",
+  },
+  {
+    gradient: "from-cyan-400 to-blue-500",
+    bgLight: "bg-cyan-50",
+    text: "text-cyan-700",
+    border: "border-cyan-200",
+    ring: "focus:ring-cyan-100",
+  },
+];
+
+const levelBadges: Record<string, string> = {
+  A1: "bg-emerald-100 text-emerald-700 border-emerald-200",
+  A2: "bg-teal-100 text-teal-700 border-teal-200",
+  B1: "bg-blue-100 text-blue-700 border-blue-200",
+  B2: "bg-indigo-100 text-indigo-700 border-indigo-200",
+  C1: "bg-purple-100 text-purple-700 border-purple-200",
+  C2: "bg-rose-100 text-rose-700 border-rose-200",
+};
+
 export default function CategoryList({
   categories,
   courses,
@@ -63,49 +112,71 @@ export default function CategoryList({
   onResetCourseForm,
 }: CategoryListProps) {
   return (
-    <div className="space-y-3">
-      {categories.map((category) => {
+    <div className="space-y-6">
+      {categories.map((category, index) => {
         const categoryCourses = courses.filter((c) => c.categoryId === category.id);
         const isExpanded = expandedCategories.has(category.id);
         const isEditing = editingCategory?.id === category.id;
+        const theme = themeColors[index % themeColors.length];
 
         return (
           <div
             key={category.id}
-            className="border border-gray-200 rounded-lg bg-white shadow-sm"
+            className={`overflow-hidden rounded-3xl border ${
+              isExpanded ? theme.border : "border-slate-200"
+            } bg-white shadow-sm transition-all duration-300 hover:shadow-lg`}
           >
-            <div className="flex items-center justify-between p-4 hover:bg-gray-50 transition">
+            {/* Category Header */}
+            <div
+              className={`flex items-center justify-between gap-4 px-6 py-5 ${
+                isExpanded ? theme.bgLight + " bg-opacity-40" : ""
+              }`}
+            >
               <div
                 onClick={() => !isEditing && onToggleCategory(category.id)}
-                className="flex items-center gap-3 flex-1 cursor-pointer"
+                className="group flex flex-1 cursor-pointer items-center gap-5"
               >
-                <svg
-                  className={`w-5 h-5 text-gray-500 transition-transform ${
-                    isExpanded ? "rotate-90" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <div
+                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${theme.gradient} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 5l7 7-7 7"
-                  />
-                </svg>
+                  <svg
+                    className={`h-6 w-6 transition-transform duration-300 ${
+                      isExpanded ? "rotate-90" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2.5}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
+                </div>
 
-                <div>
-                  <h3 className="font-semibold text-lg text-gray-800">
-                    {onGetCategoryTitle(category)}
-                  </h3>
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-xl font-extrabold text-slate-700 tracking-tight">
+                      {onGetCategoryTitle(category)}
+                    </h3>
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider ${theme.bgLight} ${theme.text}`}
+                    >
+                      {categoryCourses.length} {categoryCourses.length === 1 ? "Kurs" : "Kurse"}
+                    </span>
+                  </div>
+
                   {category.description && (
-                    <p className="text-sm text-gray-500">{category.description}</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-slate-500 line-clamp-2">
+                      {category.description}
+                    </p>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:opacity-100">
                 <button
                   onClick={() =>
                     onSetEditingCategory({
@@ -114,93 +185,129 @@ export default function CategoryList({
                       description: category.description,
                     })
                   }
-                  className="text-blue-600 hover:text-blue-800 px-3 py-1 rounded hover:bg-blue-50"
+                  className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700 active:scale-95"
+                  title="Bearbeiten"
                 >
-                  Bearbeiten
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
                 </button>
+
                 <button
                   onClick={() => onDeleteCategory(category.id)}
-                  className="text-red-600 hover:text-red-800 px-3 py-1 rounded hover:bg-red-50"
+                  className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
+                  title="Löschen"
                 >
-                  Löschen
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
                 </button>
               </div>
             </div>
 
+            {/* Edit Category Form */}
             {isEditing && editingCategory && (
-              <div className="px-4 pb-4 border-t bg-gray-50">
-                <div className="pt-4 space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium mb-1">Name *</label>
-                    <input
-                      value={editingCategory.name}
-                      onChange={(e) =>
-                        onSetEditingCategory({
-                          ...editingCategory,
-                          name: e.target.value,
-                        })
-                      }
-                      className="border border-gray-300 p-2 rounded w-full"
-                    />
-                  </div>
+              <div className="border-t border-slate-100 bg-slate-50 p-6">
+                <div className={`rounded-2xl border-l-4 border-l-blue-500 bg-white p-6 shadow-sm`}>
+                  <h4 className="mb-5 text-lg font-bold text-slate-700 flex items-center gap-2">
+                    <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                    Kategorie bearbeiten
+                  </h4>
 
-                  <div>
-                    <label className="block text-sm font-medium mb-1">
-                      Beschreibung
-                    </label>
-                    <textarea
-                      value={editingCategory.description || ""}
-                      onChange={(e) =>
-                        onSetEditingCategory({
-                          ...editingCategory,
-                          description: e.target.value,
-                        })
-                      }
-                      rows={2}
-                      className="border border-gray-300 p-2 rounded w-full"
-                    />
-                  </div>
+                  <div className="space-y-5">
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                        Name *
+                      </label>
+                      <input
+                        value={editingCategory.name}
+                        onChange={(e) =>
+                          onSetEditingCategory({
+                            ...editingCategory,
+                            name: e.target.value,
+                          })
+                        }
+                        className={`w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 ${theme.ring}`}
+                        placeholder="Kategoriename"
+                      />
+                    </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={onUpdateCategory}
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
-                      Speichern
-                    </button>
-                    <button
-                      onClick={() => onSetEditingCategory(null)}
-                      className="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400"
-                    >
-                      Abbrechen
-                    </button>
+                    <div>
+                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                        Beschreibung
+                      </label>
+                      <textarea
+                        value={editingCategory.description || ""}
+                        onChange={(e) =>
+                          onSetEditingCategory({
+                            ...editingCategory,
+                            description: e.target.value,
+                          })
+                        }
+                        rows={3}
+                        className={`w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 ${theme.ring} resize-none`}
+                        placeholder="Optionale Beschreibung"
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 pt-2">
+                      <button
+                        onClick={onUpdateCategory}
+                        className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
+                      >
+                        Änderungen speichern
+                      </button>
+
+                      <button
+                        onClick={() => onSetEditingCategory(null)}
+                        className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
+            {/* Expanded Category Content */}
             {isExpanded && (
-              <div className="border-t bg-gray-50 p-4">
-                <div className="flex justify-between items-center mb-4">
-                  <h4 className="font-medium text-gray-700">
-                    Kurse in dieser Kategorie
-                  </h4>
+              <div className="border-t border-slate-100 bg-slate-50/50 p-6">
+                <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-lg font-extrabold text-slate-700">
+                      Kursübersicht
+                    </h4>
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                      Verwalten Sie die Lerninhalte dieser Kategorie.
+                    </p>
+                  </div>
+
                   <button
                     onClick={() => onSetShowCourseForm(category.id)}
-                    className="bg-green-600 text-white px-4 py-1.5 text-sm rounded hover:bg-green-700"
+                    className="group flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
                   >
-                    + Neuer Kurs
+                    <svg className="h-5 w-5 transition-transform group-hover:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Neuer Kurs
                   </button>
                 </div>
 
+                {/* Create Course Form */}
                 {showCourseForm === category.id && (
-                  <div className="bg-white border rounded-lg p-4 mb-4 shadow-sm">
-                    <h5 className="font-semibold mb-3">Neuen Kurs erstellen</h5>
+                  <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50 ring-1 ring-slate-400/10">
+                    <h5 className="mb-5 text-lg font-bold text-slate-700 flex items-center gap-2">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" /></svg>
+                      </span>
+                      Neuen Kurs erstellen
+                    </h5>
 
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-5">
+                      <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                         <div>
-                          <label className="block text-sm font-medium mb-1">
+                          <label className="mb-2 block text-sm font-bold text-slate-700">
                             Titel *
                           </label>
                           <input
@@ -211,14 +318,14 @@ export default function CategoryList({
                                 title: e.target.value,
                               })
                             }
-                            placeholder="Kurstitel"
-                            className="border border-gray-300 p-2 rounded w-full text-sm"
+                            placeholder="z.B. Anfängerkurs"
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
                           />
                         </div>
 
                         <div>
-                          <label className="block text-sm font-medium mb-1">
-                            Level *
+                          <label className="mb-2 block text-sm font-bold text-slate-700">
+                            Niveau *
                           </label>
                           <select
                             value={newCourse.level}
@@ -228,20 +335,19 @@ export default function CategoryList({
                                 level: e.target.value,
                               })
                             }
-                            className="border border-gray-300 p-2 rounded w-full text-sm"
+                            className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 bg-white"
                           >
-                            <option value="A1">A1</option>
-                            <option value="A2">A2</option>
-                            <option value="B1">B1</option>
-                            <option value="B2">B2</option>
-                            <option value="C1">C1</option>
-                            <option value="C2">C2</option>
+                            {levelOptions.map((level) => (
+                              <option key={level} value={level}>
+                                {level}
+                              </option>
+                            ))}
                           </select>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-1">
+                        <label className="mb-2 block text-sm font-bold text-slate-700">
                           Beschreibung
                         </label>
                         <textarea
@@ -252,42 +358,48 @@ export default function CategoryList({
                               description: e.target.value,
                             })
                           }
-                          placeholder="Kursbeschreibung"
-                          rows={2}
-                          className="border border-gray-300 p-2 rounded w-full text-sm"
+                          placeholder="Worum geht es in diesem Kurs?"
+                          rows={3}
+                          className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 resize-none"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium mb-1">
+                        <label className="mb-2 block text-sm font-bold text-slate-700">
                           Preis (€)
                         </label>
-                        <input
-                          type="number"
-                          value={newCourse.price || ""}
-                          onChange={(e) =>
-                            onSetNewCourse({
-                              ...newCourse,
-                              price: e.target.value
-                                ? parseFloat(e.target.value)
-                                : null,
-                            })
-                          }
-                          placeholder="Optional"
-                          className="border border-gray-300 p-2 rounded w-full text-sm"
-                        />
+                        <div className="relative">
+                          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                            <span className="text-slate-500 font-medium">€</span>
+                          </div>
+                          <input
+                            type="number"
+                            value={newCourse.price || ""}
+                            onChange={(e) =>
+                              onSetNewCourse({
+                                ...newCourse,
+                                price: e.target.value
+                                  ? parseFloat(e.target.value)
+                                  : null,
+                              })
+                            }
+                            placeholder="0.00"
+                            className="w-full rounded-xl border border-slate-300 pl-10 pr-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                          />
+                        </div>
                       </div>
 
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-3 pt-2">
                         <button
                           onClick={() => onCreateCourse(category.id)}
-                          className="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700"
+                          className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
                         >
-                          Speichern
+                          Kurs anlegen
                         </button>
+
                         <button
                           onClick={onResetCourseForm}
-                          className="bg-gray-300 text-gray-700 px-4 py-2 text-sm rounded hover:bg-gray-400"
+                          className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
                         >
                           Abbrechen
                         </button>
@@ -296,69 +408,94 @@ export default function CategoryList({
                   </div>
                 )}
 
+                {/* Course List */}
                 {categoryCourses.length === 0 ? (
-                  <p className="text-gray-500 text-sm py-4">
-                    Noch keine Kurse in dieser Kategorie
-                  </p>
+                  <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-white px-6 py-12 text-center">
+                    <div className="mb-3 rounded-full bg-slate-50 p-4">
+                      <svg className="h-8 w-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-700">Keine Kurse vorhanden</h3>
+                    <p className="mt-1 text-sm font-medium text-slate-500">
+                      Erstellen Sie den ersten Kurs in dieser Kategorie.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {categoryCourses.map((course) => {
                       const isCourseExpanded = expandedCourses.has(course.id);
                       const isCourseEditing = editingCourse?.id === course.id;
+                      const badgeStyle = levelBadges[course.level] || "bg-slate-100 text-slate-700 border-slate-200";
 
                       return (
-                        <div key={course.id} className="bg-white border rounded-lg">
-                          <div className="flex items-center justify-between p-3 hover:bg-gray-50">
+                        <div
+                          key={course.id}
+                          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
+                        >
+                          {/* Course Header */}
+                          <div className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-50/50">
                             <div
                               onClick={() =>
                                 !isCourseEditing && onToggleCourse(course.id)
                               }
-                              className="flex items-center gap-2 flex-1 cursor-pointer"
+                              className="group flex flex-1 cursor-pointer items-center gap-4"
                             >
-                              <svg
-                                className={`w-4 h-4 text-gray-400 transition-transform ${
-                                  isCourseExpanded ? "rotate-90" : ""
-                                }`}
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M9 5l7 7-7 7"
-                                />
-                              </svg>
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200 group-hover:text-slate-600">
+                                <svg
+                                  className={`h-5 w-5 transition-transform duration-300 ${
+                                    isCourseExpanded ? "rotate-90 text-slate-700" : ""
+                                  }`}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2.5}
+                                    d="M9 5l7 7-7 7"
+                                  />
+                                </svg>
+                              </div>
 
-                              <div>
-                                <div className="font-medium text-gray-800">
-                                  <span className="text-lila-600 font-semibold">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-3">
+                                  <span className={`rounded-lg border px-2.5 py-1 text-xs font-extrabold shadow-sm ${badgeStyle}`}>
                                     {course.level}
-                                  </span>{" "}
-                                  – {course.title}
+                                  </span>
+
+                                  <h5 className="truncate text-base font-extrabold text-slate-700">
+                                    {course.title}
+                                  </h5>
                                 </div>
 
-                                <div className="text-xs text-gray-500">
-                                  {course.lessonCount}{" "}
-                                  {course.lessonCount === 1
-                                    ? "Lektion"
-                                    : "Lektionen"}
-                                  {course.price && ` • €${course.price}`}
+                                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs font-medium text-slate-500">
+                                  <span className="flex items-center gap-1.5">
+                                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                    {course.lessonCount} {course.lessonCount === 1 ? "Lektion" : "Lektionen"}
+                                  </span>
+
+                                  {course.price !== null && (
+                                    <span className="flex items-center gap-1.5">
+                                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                      €{course.price.toFixed(2)}
+                                    </span>
+                                  )}
+
                                   <span
-                                    className={`ml-2 px-2 py-0.5 rounded text-xs ${
+                                    className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold ${
                                       course.isPublished
-                                        ? "bg-green-100 text-green-700"
-                                        : "bg-gray-100 text-gray-600"
+                                        ? "bg-emerald-100 text-emerald-700"
+                                        : "bg-amber-100 text-amber-700"
                                     }`}
                                   >
+                                    <span className={`h-1.5 w-1.5 rounded-full ${course.isPublished ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                                     {course.isPublished ? "Veröffentlicht" : "Entwurf"}
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            <div className="flex gap-2">
+                            <div className="flex items-center gap-2">
                               <button
                                 onClick={() =>
                                   onSetEditingCourse({
@@ -369,128 +506,166 @@ export default function CategoryList({
                                     price: course.price,
                                   })
                                 }
-                                className="text-blue-600 hover:text-blue-800 px-2 py-1 text-sm rounded hover:bg-blue-50"
+                                className="rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700 active:scale-95"
+                                title="Bearbeiten"
                               >
-                                Bearbeiten
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
                               </button>
+
                               <button
                                 onClick={() => onDeleteCourse(course.id)}
-                                className="text-red-600 hover:text-red-800 px-2 py-1 text-sm rounded hover:bg-red-50"
+                                className="rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 active:scale-95"
+                                title="Löschen"
                               >
-                                Löschen
+                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
                               </button>
                             </div>
                           </div>
 
+                          {/* Edit Course Form */}
                           {isCourseEditing && editingCourse && (
-                            <div className="px-3 pb-3 border-t bg-gray-50">
-                              <div className="pt-3 space-y-3">
-                                <div className="grid grid-cols-2 gap-3">
+                            <div className="border-t border-slate-100 bg-slate-50 p-5">
+                              <div className="rounded-2xl bg-white p-6 shadow-sm">
+                                <h5 className="mb-5 text-base font-bold text-slate-700">
+                                  Kurs bearbeiten
+                                </h5>
+
+                                <div className="space-y-5">
+                                  <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                                    <div>
+                                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                                        Titel *
+                                      </label>
+                                      <input
+                                        value={editingCourse.title}
+                                        onChange={(e) =>
+                                          onSetEditingCourse({
+                                            ...editingCourse,
+                                            title: e.target.value,
+                                          })
+                                        }
+                                        className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                                      />
+                                    </div>
+
+                                    <div>
+                                      <label className="mb-2 block text-sm font-bold text-slate-700">
+                                        Level *
+                                      </label>
+                                      <select
+                                        value={editingCourse.level}
+                                        onChange={(e) =>
+                                          onSetEditingCourse({
+                                            ...editingCourse,
+                                            level: e.target.value,
+                                          })
+                                        }
+                                        className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 bg-white"
+                                      >
+                                        {levelOptions.map((level) => (
+                                          <option key={level} value={level}>
+                                            {level}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                  </div>
+
                                   <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                      Titel *
+                                    <label className="mb-2 block text-sm font-bold text-slate-700">
+                                      Beschreibung
                                     </label>
-                                    <input
-                                      value={editingCourse.title}
+                                    <textarea
+                                      value={editingCourse.description}
                                       onChange={(e) =>
                                         onSetEditingCourse({
                                           ...editingCourse,
-                                          title: e.target.value,
+                                          description: e.target.value,
                                         })
                                       }
-                                      className="border border-gray-300 p-2 rounded w-full text-sm"
+                                      rows={3}
+                                      className="w-full rounded-xl border border-slate-300 px-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100 resize-none"
                                     />
                                   </div>
 
                                   <div>
-                                    <label className="block text-sm font-medium mb-1">
-                                      Level *
+                                    <label className="mb-2 block text-sm font-bold text-slate-700">
+                                      Preis (€)
                                     </label>
-                                    <select
-                                      value={editingCourse.level}
-                                      onChange={(e) =>
-                                        onSetEditingCourse({
-                                          ...editingCourse,
-                                          level: e.target.value,
-                                        })
-                                      }
-                                      className="border border-gray-300 p-2 rounded w-full text-sm"
-                                    >
-                                      <option value="A1">A1</option>
-                                      <option value="A2">A2</option>
-                                      <option value="B1">B1</option>
-                                      <option value="B2">B2</option>
-                                      <option value="C1">C1</option>
-                                      <option value="C2">C2</option>
-                                    </select>
+                                    <div className="relative">
+                                      <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-4">
+                                        <span className="text-slate-500 font-medium">€</span>
+                                      </div>
+                                      <input
+                                        type="number"
+                                        value={editingCourse.price || ""}
+                                        onChange={(e) =>
+                                          onSetEditingCourse({
+                                            ...editingCourse,
+                                            price: e.target.value
+                                              ? parseFloat(e.target.value)
+                                              : null,
+                                          })
+                                        }
+                                        className="w-full rounded-xl border border-slate-300 pl-10 pr-4 py-3.5 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                                      />
+                                    </div>
                                   </div>
-                                </div>
 
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">
-                                    Beschreibung
-                                  </label>
-                                  <textarea
-                                    value={editingCourse.description}
-                                    onChange={(e) =>
-                                      onSetEditingCourse({
-                                        ...editingCourse,
-                                        description: e.target.value,
-                                      })
-                                    }
-                                    rows={2}
-                                    className="border border-gray-300 p-2 rounded w-full text-sm"
-                                  />
-                                </div>
+                                  <div className="flex flex-wrap gap-3 pt-2">
+                                    <button
+                                      onClick={onUpdateCourse}
+                                      className="rounded-xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-md transition-all hover:bg-blue-700 hover:shadow-lg active:scale-95"
+                                    >
+                                      Speichern
+                                    </button>
 
-                                <div>
-                                  <label className="block text-sm font-medium mb-1">
-                                    Preis (€)
-                                  </label>
-                                  <input
-                                    type="number"
-                                    value={editingCourse.price || ""}
-                                    onChange={(e) =>
-                                      onSetEditingCourse({
-                                        ...editingCourse,
-                                        price: e.target.value
-                                          ? parseFloat(e.target.value)
-                                          : null,
-                                      })
-                                    }
-                                    className="border border-gray-300 p-2 rounded w-full text-sm"
-                                  />
-                                </div>
-
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={onUpdateCourse}
-                                    className="bg-green-600 text-white px-4 py-2 text-sm rounded hover:bg-green-700"
-                                  >
-                                    Speichern
-                                  </button>
-                                  <button
-                                    onClick={() => onSetEditingCourse(null)}
-                                    className="bg-gray-300 text-gray-700 px-4 py-2 text-sm rounded hover:bg-gray-400"
-                                  >
-                                    Abbrechen
-                                  </button>
+                                    <button
+                                      onClick={() => onSetEditingCourse(null)}
+                                      className="rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                                    >
+                                      Abbrechen
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
                           )}
 
+                          {/* Expanded Course Details */}
                           {isCourseExpanded && !isCourseEditing && (
-                            <div className="px-3 pb-3 border-t bg-gray-50">
-                              <div className="pt-3 text-sm text-gray-600">
-                                <p className="mb-2">
-                                  <strong>Beschreibung:</strong>{" "}
-                                  {course.description || "Keine Beschreibung"}
-                                </p>
-                                <p>
-                                  <strong>Erstellt am:</strong>{" "}
-                                  {new Date(course.createdAt).toLocaleDateString("de-DE")}
-                                </p>
+                            <div className="border-t border-slate-100 bg-white px-5 py-5">
+                              <div className="rounded-2xl bg-slate-50/50 p-5 border border-slate-100">
+                                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                                  <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                                      Kursbeschreibung
+                                    </p>
+                                    <p className="mt-2 text-sm leading-relaxed text-slate-700">
+                                      {course.description || <span className="italic text-slate-400">Keine Beschreibung hinterlegt</span>}
+                                    </p>
+                                  </div>
+
+                                  <div>
+                                    <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                                      Metadaten
+                                    </p>
+                                    <div className="mt-2 space-y-2">
+                                      <div className="flex justify-between text-sm">
+                                        <span className="font-medium text-slate-500">Erstellt am:</span>
+                                        <span className="font-bold text-slate-700">{new Date(course.createdAt).toLocaleDateString("de-DE")}</span>
+                                      </div>
+                                      <div className="flex justify-between text-sm">
+                                        <span className="font-medium text-slate-500">Status:</span>
+                                        <span className="font-bold text-slate-700">{course.isPublished ? "Sichtbar" : "Verborgen"}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
                           )}

@@ -65,6 +65,12 @@ export default function HomePage() {
                   >
                     Konto erstellen
                   </Link>
+                  <Link
+                    to="/alle-kurse"
+                    className="inline-flex items-center justify-center rounded-xl border-2 border-lila-600 bg-lila-50 px-6 py-3.5 text-lila-700 font-semibold shadow-lg hover:bg-lila-100 transition-colors"
+>
+                    Alle Kurse
+                  </Link>
                 </>
               )}
             </div>
@@ -179,9 +185,8 @@ function HeroImageCarousel() {
           key={src}
           src={src}
           alt={`Deutsch Sprachschule ${index + 1}`}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
-            activeIndex === index ? "opacity-100" : "opacity-0"
-          }`}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${activeIndex === index ? "opacity-100" : "opacity-0"
+            }`}
         />
       ))}
 
@@ -211,11 +216,10 @@ function HeroImageCarousel() {
             key={index}
             type="button"
             onClick={() => goToSlide(index)}
-            className={`h-2.5 rounded-full transition-all ${
-              activeIndex === index
+            className={`h-2.5 rounded-full transition-all ${activeIndex === index
                 ? "w-8 bg-white"
                 : "w-2.5 bg-white/60 hover:bg-white/80"
-            }`}
+              }`}
             aria-label={`Gehe zu Bild ${index + 1}`}
           />
         ))}

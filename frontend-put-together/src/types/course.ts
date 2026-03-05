@@ -70,3 +70,28 @@ export type CategoryWithPaidCourses = {
   categoryName: string;
   courses: StudentPaidCourse[];
 };
+
+export type PublicLessonPreview = {
+  id: string;
+  title: string;
+  content: string;
+  thumbnailUrl: string;
+};
+
+export type PublicCourseCard = {
+  id: string;
+  title: string;
+  description: string;
+  level: string;
+  price: number | null;
+  publishedLessonCount: number;
+  courseThumbnailUrl: string | null;
+  lessons: PublicLessonPreview[];
+};
+
+export type PublicCategoryCatalog = {
+  categoryId: string;
+  categoryName: string;
+  categoryDescription: string | null;
+  courses: PublicCourseCard[];
+};

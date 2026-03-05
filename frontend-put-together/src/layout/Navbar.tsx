@@ -95,7 +95,7 @@ export default function Navbar() {
           <div className="hidden md:flex items-center space-x-2">
             {!isAuthenticated && (
               <>
-                <NavLink to="/" className={linkClass}>
+                <NavLink to="/alle-kurse" className={linkClass}>
                   Alle Kurse
                 </NavLink>
                 <NavLink to="/login" className={linkClass}>
