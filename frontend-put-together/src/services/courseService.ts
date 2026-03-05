@@ -4,6 +4,7 @@ import type {
   CreateCourseRequest,
   UpdateCourseRequest,
   CategoryWithPaidCourses,
+  PublicCategoryCatalog
 } from "../types/course";
 import { getApiBaseUrl } from "../config/runtimeConfig";
 import { apiFetch } from "../hooks/useApi";
@@ -11,7 +12,7 @@ import { apiFetch } from "../hooks/useApi";
 const API = `${getApiBaseUrl()}/api/courses`;
 
 // =====================================================
-// GET /api/courses (Admin / Teacher)
+// GET /api/courses
 // =====================================================
 export async function getAllCourses(): Promise<Course[]> {
   const res = await apiFetch(API, { method: "GET" });
@@ -51,9 +52,8 @@ export async function getCourseWithLessons(
   return res.json();
 }
 
-
 // =====================================================
-// GET /api/courses/student-paid-category-course (Student)
+// GET /api/courses/student-paid-category-course
 // =====================================================
 export async function getStudentPaidCategoryCourses(): Promise<CategoryWithPaidCourses[]> {
   const res = await apiFetch(`${API}/student-paid-category-course`, {
@@ -68,7 +68,7 @@ export async function getStudentPaidCategoryCourses(): Promise<CategoryWithPaidC
 }
 
 // =====================================================
-// POST /api/courses (Admin only)
+// POST /api/courses
 // =====================================================
 export async function createCourse(
   request: CreateCourseRequest
@@ -88,7 +88,7 @@ export async function createCourse(
 }
 
 // =====================================================
-// PUT /api/courses/{id} (Admin only)
+// PUT /api/courses/{id}
 // =====================================================
 export async function updateCourse(
   id: string,
@@ -101,12 +101,13 @@ export async function updateCourse(
   });
 
   if (!res.ok) {
-    throw new Error("Failed to update course");
+    const text = await res.text();
+    throw new Error(text || "Failed to update course");
   }
 }
 
 // =====================================================
-// DELETE /api/courses/{id} (Admin only)
+// DELETE /api/courses/{id}
 // =====================================================
 export async function deleteCourse(id: string): Promise<void> {
   const res = await apiFetch(`${API}/${id}`, {
@@ -114,7 +115,8 @@ export async function deleteCourse(id: string): Promise<void> {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to delete course");
+    const text = await res.text();
+    throw new Error(text || "Failed to delete course");
   }
 }
 
@@ -127,12 +129,13 @@ export async function publishCourse(id: string): Promise<void> {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to publish course");
+    const text = await res.text();
+    throw new Error(text || "Failed to publish course");
   }
 }
 
 // =====================================================
-// POST /api/courses/{id}/unpublish (if exists)
+// POST /api/courses/{id}/unpublish
 // =====================================================
 export async function unpublishCourse(id: string): Promise<void> {
   const res = await apiFetch(`${API}/${id}/unpublish`, {
@@ -140,6 +143,19 @@ export async function unpublishCourse(id: string): Promise<void> {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to unpublish course");
+    const text = await res.text();
+    throw new Error(text || "Failed to unpublish course");
   }
+}
+
+export async function getPublicCourseCatalog(): Promise<PublicCategoryCatalog[]> {
+  const res = await apiFetch(`${API}/public-catalog`, {
+    method: "GET",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to load public course catalog");
+  }
+
+  return res.json();
 }

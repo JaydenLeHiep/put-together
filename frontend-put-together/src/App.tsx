@@ -26,6 +26,8 @@ import { StudentDashboard } from "./pages/student/StudentDashboard";
 // Teacher
 import TeacherDashboard from "./pages/teacher/dashboard/TeacherDashboard";
 
+import PublicCoursesPage from "./pages/publicCourses/PublicCoursesPage";
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -39,7 +41,8 @@ export default function App() {
           <Route path="/resend-verify" element={<ResendVerifyPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-
+          <Route path="/alle-kurse" element={<PublicCoursesPage />} />
+          
           {/* Authenticated */}
           <Route element={<ProtectedRoute />}>
             {/* Redirect helpers */}

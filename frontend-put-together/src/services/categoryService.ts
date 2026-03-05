@@ -1,6 +1,5 @@
 import type {
   Category,
-  CategoryWithCourses,
   CreateCategoryRequest,
   UpdateCategoryRequest,
 } from "../types/category";
@@ -23,40 +22,7 @@ export async function getAllCategories(): Promise<Category[]> {
 }
 
 // =====================================================
-// GET /api/categories/{id}
-// =====================================================
-export async function getCategoryById(
-  id: string
-): Promise<Category> {
-  const res = await apiFetch(`${API}/${id}`, { method: "GET" });
-
-  if (!res.ok) {
-    throw new Error("Category not found");
-  }
-
-  return res.json();
-}
-
-// =====================================================
-// GET /api/categories/{id}/courses (OPTIONAL)
-// Only add this if backend exposes it
-// =====================================================
-export async function getCategoryWithCourses(
-  id: string
-): Promise<CategoryWithCourses> {
-  const res = await apiFetch(`${API}/${id}/courses`, {
-    method: "GET",
-  });
-
-  if (!res.ok) {
-    throw new Error("Category not found");
-  }
-
-  return res.json();
-}
-
-// =====================================================
-// POST /api/categories (Admin)
+// POST /api/categories
 // =====================================================
 export async function createCategory(
   request: CreateCategoryRequest
@@ -76,7 +42,7 @@ export async function createCategory(
 }
 
 // =====================================================
-// PUT /api/categories/{id} (Admin)
+// PUT /api/categories/{id}
 // =====================================================
 export async function updateCategory(
   id: string,
@@ -89,12 +55,13 @@ export async function updateCategory(
   });
 
   if (!res.ok) {
-    throw new Error("Failed to update category");
+    const text = await res.text();
+    throw new Error(text || "Failed to update category");
   }
 }
 
 // =====================================================
-// DELETE /api/categories/{id} (Admin)
+// DELETE /api/categories/{id}
 // =====================================================
 export async function deleteCategory(id: string): Promise<void> {
   const res = await apiFetch(`${API}/${id}`, {
@@ -102,8 +69,7 @@ export async function deleteCategory(id: string): Promise<void> {
   });
 
   if (!res.ok) {
-    throw new Error("Failed to delete category");
+    const text = await res.text();
+    throw new Error(text || "Failed to delete category");
   }
 }
-
-
