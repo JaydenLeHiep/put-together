@@ -15,6 +15,11 @@ const teacherNavItems = [
   { label: "Lektionen verwalten", to: "/teacher/courses" },
 ];
 
+const studentNavItems = [
+  { label: "Meine Kurse", to: "/student/my-courses" },
+  { label: "Kurse kaufen", to: "/alle-kurse" },
+];
+
 export default function Navbar() {
   const { isAuthenticated, user, logout } = useAuth();
   const navigate = useNavigate();
@@ -34,7 +39,9 @@ export default function Navbar() {
       ? adminNavItems
       : user?.role === "Teacher"
         ? teacherNavItems
-        : [];
+        : user?.role === "Student"
+          ? studentNavItems
+          : [];
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `px-4 py-2 rounded-lg font-medium transition-all ${isActive
@@ -109,7 +116,7 @@ export default function Navbar() {
 
             {isAuthenticated && (
               <>
-                {(user?.role === "Admin" || user?.role === "Teacher") && (
+                {(user?.role === "Admin" || user?.role === "Teacher" || user?.role === "Student") && (
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setDesktopDropdownOpen((prev) => !prev)}

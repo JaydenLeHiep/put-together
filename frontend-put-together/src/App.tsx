@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./layout/MainLayout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { AdminRoute } from "./components/auth/AdminRoute";
@@ -21,7 +21,8 @@ import ManageStructurePage from "./pages/admin/manageStructure/ManageStructurePa
 import UserManagement from "./pages/admin/userManagement/UserManagement";
 
 // Student
-import { StudentDashboard } from "./pages/student/StudentDashboard";
+import StudentDashboard from "./pages/student/dashboard/StudentDashboard";
+import { StudentMyCoursesPage } from "./pages/student/StudentMyCoursesPage";
 
 // Teacher
 import TeacherDashboard from "./pages/teacher/dashboard/TeacherDashboard";
@@ -30,49 +31,49 @@ import PublicCoursesPage from "./pages/publicCourses/PublicCoursesPage";
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<MainLayout />}>
-          {/* Public */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/verify-email" element={<EmailVerifyPage />} />
-          <Route path="/resend-verify" element={<ResendVerifyPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/alle-kurse" element={<PublicCoursesPage />} />
-          
-          {/* Authenticated */}
-          <Route element={<ProtectedRoute />}>
-            {/* Redirect helpers */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
-            <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
+    <Routes>
+      <Route element={<MainLayout />}>
+        {/* Public */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<EmailVerifyPage />} />
+        <Route path="/resend-verify" element={<ResendVerifyPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/alle-kurse" element={<PublicCoursesPage />} />
 
-            {/* Admin */}
-            <Route element={<AdminRoute />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/post-lesson" element={<AdminPostLessonPage />} />
-              <Route path="/admin/courses" element={<AdminCoursesPage />} />
-              <Route path="/admin/manage-structure" element={<ManageStructurePage />} />
-              <Route path="/admin/accounts" element={<UserManagement />} />
-            </Route>
+        {/* Authenticated */}
+        <Route element={<ProtectedRoute />}>
+          {/* Redirect helpers */}
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/teacher" element={<Navigate to="/teacher/dashboard" replace />} />
+          <Route path="/student" element={<Navigate to="/student/dashboard" replace />} />
 
-            {/* Student */}
-            <Route element={<StudentRoute />}>
-              <Route path="/student/dashboard" element={<StudentDashboard />} />
-            </Route>
+          {/* Admin */}
+          <Route element={<AdminRoute />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/post-lesson" element={<AdminPostLessonPage />} />
+            <Route path="/admin/courses" element={<AdminCoursesPage />} />
+            <Route path="/admin/manage-structure" element={<ManageStructurePage />} />
+            <Route path="/admin/accounts" element={<UserManagement />} />
+          </Route>
 
-            {/* Teacher */}
-            <Route element={<TeacherRoute />}>
-              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-              <Route path="/teacher/post-lesson" element={<AdminPostLessonPage />} />
-              <Route path="/teacher/courses" element={<AdminCoursesPage />} />
-            </Route>
+          {/* Student */}
+          <Route element={<StudentRoute />}>
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
+            <Route path="/student/my-courses" element={<StudentMyCoursesPage />} />
+            <Route path="/student/buy-courses" element={<PublicCoursesPage />} />
+          </Route>
+
+          {/* Teacher */}
+          <Route element={<TeacherRoute />}>
+            <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+            <Route path="/teacher/post-lesson" element={<AdminPostLessonPage />} />
+            <Route path="/teacher/courses" element={<AdminCoursesPage />} />
           </Route>
         </Route>
-      </Routes>
-    </BrowserRouter>
+      </Route>
+    </Routes>
   );
 }

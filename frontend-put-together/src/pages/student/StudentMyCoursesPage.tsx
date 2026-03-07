@@ -5,14 +5,16 @@ import { DisplayLesson } from "../../components/displayComponents/lesson/Display
 
 import type { CategoryWithCourses } from "../../components/displayComponents/category/typeDisplayCategory";
 import type { DisplayLessonType } from "../../types/lesson";
-import { type CategoryWithPaidCourses } from "../../types/course";
+import type { CategoryWithPaidCourses } from "../../types/course";
 import { getStudentPaidCategoryCourses } from "../../services/courseService";
 
-export function StudentDashboard() {
+export function StudentMyCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedLesson, setSelectedLesson] =
     useState<DisplayLessonType | null>(null);
-  const [categoriesWithCourses, setCategoriesWithCourses] = useState<CategoryWithCourses[]>([]);
+  const [categoriesWithCourses, setCategoriesWithCourses] = useState<
+    CategoryWithCourses[]
+  >([]);
 
   const [openCategoryId, setOpenCategoryId] = useState<string | null>(null);
   const [openCourseId, setOpenCourseId] = useState<string | null>(null);
@@ -24,7 +26,6 @@ export function StudentDashboard() {
     async function load() {
       try {
         const data = await getStudentPaidCategoryCourses();
-
         if (cancelled) return;
 
         const mapped = mapPaidCategoriesToDisplayCategories(data);
@@ -51,16 +52,14 @@ export function StudentDashboard() {
 
   const filteredCategories = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-
     if (!q) return categoriesWithCourses;
 
     return categoriesWithCourses
       .map((category) => ({
         ...category,
-        courses: category.courses.filter((course) => {
-          const title = (course.title ?? "").toLowerCase();
-          return title.includes(q);
-        }),
+        courses: category.courses.filter((course) =>
+          (course.title ?? "").toLowerCase().includes(q)
+        ),
       }))
       .filter((category) => category.courses.length > 0);
   }, [categoriesWithCourses, searchQuery]);
@@ -74,18 +73,17 @@ export function StudentDashboard() {
     setSelectedLesson(lesson);
   }
 
-  if (loading) {
-    return <LoadingSpinner />;
-  }
+  if (loading) return <LoadingSpinner />;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      {/* Sidebar */}
       <aside className="lg:col-span-4 space-y-4">
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           <div className="bg-gradient-to-r from-lila-600 to-lila-700 p-6">
-            <h2 className="text-xl font-bold text-white mb-2">Kursinhalte</h2>
+            <h2 className="text-xl font-bold text-white mb-2">Meine Kurse</h2>
             <p className="text-lila-100 text-sm">
-              {totalCourses} {totalCourses === 1 ? "Kurs" : "Kurse"} verfügbar
+              {totalCourses} {totalCourses === 1 ? "Kurs" : "Kurse"} freigeschaltet
             </p>
           </div>
 
@@ -93,7 +91,7 @@ export function StudentDashboard() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Kurse durchsuchen..."
+                placeholder="Meine Kurse durchsuchen..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:border-lila-500 focus:outline-none transition-colors text-gray-800"
@@ -133,6 +131,7 @@ export function StudentDashboard() {
           </div>
         </div>
 
+        {/* Info Card */}
         <div className="bg-gradient-to-br from-lila-600 to-lila-700 rounded-2xl p-6 text-white shadow-lg">
           <h3 className="font-semibold mb-2">Ihr Lernbereich</h3>
           <div className="flex items-end gap-2 mb-3">
@@ -145,6 +144,7 @@ export function StudentDashboard() {
         </div>
       </aside>
 
+      {/* Main */}
       <section className="lg:col-span-8 space-y-6">
         <DisplayLesson selectedLesson={selectedLesson} />
       </section>
@@ -161,7 +161,7 @@ function mapPaidCategoriesToDisplayCategories(
       categoryName: category.categoryName,
       courses: category.courses.map((course) => ({
         courseId: course.courseId,
-        title: course.title,
+        title: course.title, // IMPORTANT: use course.title (matches your backend JSON)
         expiresAtUtc: course.expiresAtUtc,
       })),
     }))
