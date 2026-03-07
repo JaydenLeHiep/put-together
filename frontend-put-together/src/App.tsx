@@ -21,7 +21,8 @@ import ManageStructurePage from "./pages/admin/manageStructure/ManageStructurePa
 import UserManagement from "./pages/admin/userManagement/UserManagement";
 
 // Student
-import { StudentDashboard } from "./pages/student/StudentDashboard";
+import StudentDashboard from "./pages/student/dashboard/StudentDashboard";
+import { StudentMyCoursesPage } from "./pages/student/StudentMyCoursesPage";
 
 // Teacher
 import TeacherDashboard from "./pages/teacher/dashboard/TeacherDashboard";
@@ -42,7 +43,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/forgot-password" element={<ForgotPasswordPage />} />
           <Route path="/alle-kurse" element={<PublicCoursesPage />} />
-          
+
           {/* Authenticated */}
           <Route element={<ProtectedRoute />}>
             {/* Redirect helpers */}
@@ -59,9 +60,10 @@ export default function App() {
               <Route path="/admin/accounts" element={<UserManagement />} />
             </Route>
 
-            {/* Student */}
             <Route element={<StudentRoute />}>
               <Route path="/student/dashboard" element={<StudentDashboard />} />
+              <Route path="/student/my-courses" element={<StudentMyCoursesPage />} />
+              <Route path="/student/buy-courses" element={<PublicCoursesPage />} />
             </Route>
 
             {/* Teacher */}
