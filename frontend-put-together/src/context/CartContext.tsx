@@ -1,71 +1,110 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import type { PublicCourseCard } from "../types/course";
+
+// ─────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────
 
 export type CartItem = {
   courseId: string;
   title: string;
   price: number | null;
-  thumbnailUrl?: string | null;
+  level: string;
+  courseThumbnailUrl: string | null;
 };
 
-type CartContextValue = {
+type CartContextType = {
   items: CartItem[];
-  count: number;
-  add: (item: CartItem) => void;
-  remove: (courseId: string) => void;
-  clear: () => void;
-  has: (courseId: string) => boolean;
+  /** Returns true if the course is already in cart */
+  isInCart: (courseId: string) => boolean;
+  /**
+   * If authenticated → adds to cart.
+   * If NOT authenticated → redirects to /login.
+   */
+  addToCart: (course: PublicCourseCard) => void;
+  removeFromCart: (courseId: string) => void;
+  clearCart: () => void;
+  totalCount: number;
 };
 
-const CartContext = createContext<CartContextValue | null>(null);
+// ─────────────────────────────────────────────
+// Context
+// ─────────────────────────────────────────────
 
-const STORAGE_KEY = "lila_cart_v1";
+const CartContext = createContext<CartContextType | null>(null);
 
-export function CartProvider({ children }: { children: React.ReactNode }) {
+export function CartProvider({ children }: { children: ReactNode }) {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   const [items, setItems] = useState<CartItem[]>([]);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw) as CartItem[];
-      if (Array.isArray(parsed)) setItems(parsed);
-    } catch {
-      // ignore
-    }
+  const isInCart = useCallback(
+    (courseId: string) => items.some((i) => i.courseId === courseId),
+    [items]
+  );
+
+  const addToCart = useCallback(
+    (course: PublicCourseCard) => {
+      if (!isAuthenticated) {
+        // Redirect unauthenticated users to login
+        navigate("/login", { state: { from: "/alle-kurse" } });
+        return;
+      }
+
+      setItems((prev) => {
+        if (prev.some((i) => i.courseId === course.id)) return prev;
+        return [
+          ...prev,
+          {
+            courseId: course.id,
+            title: course.title,
+            price: course.price,
+            level: course.level,
+            courseThumbnailUrl: course.courseThumbnailUrl,
+          },
+        ];
+      });
+    },
+    [isAuthenticated, navigate]
+  );
+
+  const removeFromCart = useCallback((courseId: string) => {
+    setItems((prev) => prev.filter((i) => i.courseId !== courseId));
   }, []);
 
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-    } catch {
-      // ignore
-    }
-  }, [items]);
+  const clearCart = useCallback(() => setItems([]), []);
 
-  const value = useMemo<CartContextValue>(() => {
-    const has = (courseId: string) => items.some((x) => x.courseId === courseId);
-
-    const add = (item: CartItem) => {
-      setItems((prev) => {
-        if (prev.some((x) => x.courseId === item.courseId)) return prev;
-        return [...prev, item];
-      });
-    };
-
-    const remove = (courseId: string) => {
-      setItems((prev) => prev.filter((x) => x.courseId !== courseId));
-    };
-
-    const clear = () => setItems([]);
-
-    return { items, count: items.length, add, remove, clear, has };
-  }, [items]);
-
-  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+  return (
+    <CartContext.Provider
+      value={{
+        items,
+        isInCart,
+        addToCart,
+        removeFromCart,
+        clearCart,
+        totalCount: items.length,
+      }}
+    >
+      {children}
+    </CartContext.Provider>
+  );
 }
 
-export function useCart() {
+// ─────────────────────────────────────────────
+// Hook
+// ─────────────────────────────────────────────
+
+export function useCart(): CartContextType {
   const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used inside CartProvider");
+  if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
   return ctx;
 }

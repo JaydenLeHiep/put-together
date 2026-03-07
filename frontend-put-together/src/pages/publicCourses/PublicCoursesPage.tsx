@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import PublicCourseModal from "./PublicCourseModal";
+import CartDrawer from "../../pages/student/Cartdrawer";
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../hooks/useAuth";
 import {
   type PublicCategoryCatalog,
   type PublicCourseCard,
@@ -32,12 +36,33 @@ function ArrowIcon() {
   );
 }
 
+function CartIcon({ filled = false }: { filled?: boolean }) {
+  return (
+    <svg className="h-4 w-4" fill={filled ? "currentColor" : "none"} stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
 export default function PublicCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState<PublicCategoryCatalog[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<PublicCourseCard | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const { addToCart, isInCart, totalCount } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     let cancelled = false;
@@ -89,7 +114,6 @@ export default function PublicCoursesPage() {
 
           {/* ── Hero ── */}
           <div className="relative overflow-hidden rounded-[2rem] bg-lila-700 px-8 py-12 text-white md:px-12">
-            {/* dot pattern */}
             <div
               className="pointer-events-none absolute inset-0 opacity-[0.07]"
               style={{
@@ -97,24 +121,40 @@ export default function PublicCoursesPage() {
                 backgroundSize: "28px 28px",
               }}
             />
-            {/* light blobs */}
             <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-lila-400 opacity-30 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-12 left-1/4 h-52 w-52 rounded-full bg-purple-300 opacity-20 blur-3xl" />
             <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-lila-800/40 to-transparent" />
 
-            <div className="relative max-w-2xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80">
-                <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
-                Lila Deutsch Sprach Zentrum
-              </span>
-              <h1 className="mt-5 text-4xl font-black leading-[1.1] tracking-tight md:text-5xl">
-                Entdecken Sie unsere<br />
-                <span className="text-white/80">Deutschkurse</span>
-              </h1>
-              <p className="mt-4 max-w-lg text-sm leading-7 text-white/65">
-                Finden Sie passende Kurse nach Kategorie, Niveau und Inhalt.
-                Wählen Sie einen Kurs aus, um einen Überblick über die veröffentlichten Lektionen zu erhalten.
-              </p>
+            <div className="relative flex items-start justify-between gap-6">
+              <div className="max-w-2xl">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-widest text-white/80">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white/70" />
+                  Lila Deutsch Sprach Zentrum
+                </span>
+                <h1 className="mt-5 text-4xl font-black leading-[1.1] tracking-tight md:text-5xl">
+                  Entdecken Sie unsere<br />
+                  <span className="text-white/80">Deutschkurse</span>
+                </h1>
+                <p className="mt-4 max-w-lg text-sm leading-7 text-white/65">
+                  Finden Sie passende Kurse nach Kategorie, Niveau und Inhalt.
+                  Wählen Sie einen Kurs aus, um einen Überblick über die veröffentlichten Lektionen zu erhalten.
+                </p>
+              </div>
+
+              {/* Cart button in hero — only when authenticated */}
+              {isAuthenticated && (
+                <button
+                  onClick={() => setCartOpen(true)}
+                  className="relative shrink-0 flex h-11 w-11 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/20"
+                >
+                  <CartIcon />
+                  {totalCount > 0 && (
+                    <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-black text-lila-700 shadow">
+                      {totalCount}
+                    </span>
+                  )}
+                </button>
+              )}
             </div>
           </div>
 
@@ -184,15 +224,19 @@ export default function PublicCoursesPage() {
           <div className="mt-7 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
             {visibleCourses.map((course, i) => {
               const lc = levelColors[course.level] ?? { dot: "bg-gray-400", text: "text-gray-700", bg: "bg-gray-100" };
+              const inCart = isInCart(course.id);
+
               return (
-                <button
+                <div
                   key={course.id}
-                  onClick={() => setSelectedCourse(course)}
-                  className="group overflow-hidden rounded-2xl border border-lila-100 bg-white text-left shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-lila-200 hover:shadow-xl hover:shadow-lila-100/60"
+                  className="group overflow-hidden rounded-2xl border border-lila-100 bg-white shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-lila-200 hover:shadow-xl hover:shadow-lila-100/60"
                   style={{ animationDelay: `${i * 50}ms` }}
                 >
-                  {/* Thumbnail */}
-                  <div className="relative aspect-video overflow-hidden bg-lila-50">
+                  {/* Thumbnail — click opens modal */}
+                  <button
+                    onClick={() => setSelectedCourse(course)}
+                    className="relative block aspect-video w-full overflow-hidden bg-lila-50 text-left"
+                  >
                     {course.courseThumbnailUrl ? (
                       <img
                         src={course.courseThumbnailUrl}
@@ -214,7 +258,7 @@ export default function PublicCoursesPage() {
                       <span className={`h-1.5 w-1.5 rounded-full ${lc.dot}`} />
                       <span className={`text-xs font-bold ${lc.text}`}>{course.level}</span>
                     </div>
-                  </div>
+                  </button>
 
                   {/* Content */}
                   <div className="p-5">
@@ -230,20 +274,52 @@ export default function PublicCoursesPage() {
                       )}
                     </div>
 
-                    <h3 className="mt-3 text-base font-black leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-lila-700">
-                      {course.title}
-                    </h3>
+                    {/* Title — click opens modal */}
+                    <button
+                      onClick={() => setSelectedCourse(course)}
+                      className="mt-3 block w-full text-left"
+                    >
+                      <h3 className="text-base font-black leading-tight tracking-tight text-gray-900 transition-colors group-hover:text-lila-700">
+                        {course.title}
+                      </h3>
+                    </button>
 
                     <p className="mt-2 line-clamp-2 text-sm leading-6 text-gray-500">
                       {course.description || "Keine Beschreibung verfügbar."}
                     </p>
 
-                    <div className="mt-4 flex items-center gap-1.5 text-sm font-semibold text-lila-600">
-                      Kurs ansehen
-                      <ArrowIcon />
+                    {/* Action row */}
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <button
+                        onClick={() => setSelectedCourse(course)}
+                        className="flex items-center gap-1.5 text-sm font-semibold text-lila-600"
+                      >
+                        Kurs ansehen
+                        <ArrowIcon />
+                      </button>
+
+                      {/* Add to Cart / In Cart */}
+                      <button
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            navigate("/login", { state: { from: "/alle-kurse" } });
+                            return;
+                          }
+                          if (!inCart) addToCart(course);
+                          else setCartOpen(true);
+                        }}
+                        className={`flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 ${
+                          inCart
+                            ? "bg-lila-100 text-lila-700 ring-1 ring-lila-300"
+                            : "bg-lila-700 text-white shadow-sm shadow-lila-200 hover:bg-lila-800"
+                        }`}
+                      >
+                        {inCart ? <CheckIcon /> : <CartIcon />}
+                        {inCart ? "Im Warenkorb" : "In den Warenkorb"}
+                      </button>
                     </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>
@@ -267,6 +343,12 @@ export default function PublicCoursesPage() {
         course={selectedCourse}
         isOpen={!!selectedCourse}
         onClose={() => setSelectedCourse(null)}
+        onCartOpen={() => setCartOpen(true)}
+      />
+
+      <CartDrawer
+        isOpen={cartOpen}
+        onClose={() => setCartOpen(false)}
       />
     </>
   );

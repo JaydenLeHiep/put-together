@@ -1,10 +1,15 @@
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import type { PublicCourseCard } from "../../types/course";
+import { useCart } from "../../context/CartContext";
+import { useAuth } from "../../hooks/useAuth";
 
 type PublicCourseModalProps = {
   course: PublicCourseCard | null;
   isOpen: boolean;
   onClose: () => void;
+  /** Called to open the CartDrawer after a course is added */
+  onCartOpen?: () => void;
 };
 
 const levelColors: Record<string, { dot: string; text: string; bg: string; border: string }> = {
@@ -32,7 +37,40 @@ function PlayIcon() {
   );
 }
 
-export default function PublicCourseModal({ course, isOpen, onClose }: PublicCourseModalProps) {
+function CartIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+    </svg>
+  );
+}
+
+function LockIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+    </svg>
+  );
+}
+
+export default function PublicCourseModal({
+  course,
+  isOpen,
+  onClose,
+  onCartOpen,
+}: PublicCourseModalProps) {
+  const { addToCart, isInCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
   useEffect(() => {
     if (!isOpen) return;
     const handle = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -44,6 +82,23 @@ export default function PublicCourseModal({ course, isOpen, onClose }: PublicCou
 
   const lc = levelColors[course.level] ?? {
     dot: "bg-lila-400", text: "text-lila-700", bg: "bg-lila-50", border: "border-lila-200",
+  };
+
+  const inCart = isInCart(course.id);
+
+  const handleCartClick = () => {
+    if (!isAuthenticated) {
+      onClose();
+      navigate("/login", { state: { from: "/alle-kurse" } });
+      return;
+    }
+    if (inCart) {
+      onClose();
+      onCartOpen?.();
+    } else {
+      addToCart(course);
+      onCartOpen?.();
+    }
   };
 
   return (
@@ -61,7 +116,6 @@ export default function PublicCourseModal({ course, isOpen, onClose }: PublicCou
       >
         {/* ── Header ── */}
         <div className="relative flex-shrink-0 overflow-hidden bg-lila-700 px-8 pt-8 pb-7 text-white">
-          {/* dot pattern */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.07]"
             style={{
@@ -69,7 +123,6 @@ export default function PublicCourseModal({ course, isOpen, onClose }: PublicCou
               backgroundSize: "24px 24px",
             }}
           />
-          {/* blobs */}
           <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-lila-400 opacity-30 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-lila-800/40 to-transparent" />
 
@@ -101,6 +154,35 @@ export default function PublicCourseModal({ course, isOpen, onClose }: PublicCou
               <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
                 {course.description || "Keine Beschreibung verfügbar."}
               </p>
+
+              {/* ── Add to Cart button ── */}
+              <div className="mt-5">
+                {!isAuthenticated ? (
+                  <button
+                    onClick={handleCartClick}
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-white/20"
+                  >
+                    <LockIcon />
+                    Anmelden &amp; kaufen
+                  </button>
+                ) : inCart ? (
+                  <button
+                    onClick={handleCartClick}
+                    className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-lila-700 shadow-lg transition hover:bg-lila-50"
+                  >
+                    <CheckIcon />
+                    Im Warenkorb · Zur Kasse
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleCartClick}
+                    className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-2.5 text-sm font-bold text-lila-700 shadow-lg transition hover:bg-lila-50"
+                  >
+                    <CartIcon />
+                    In den Warenkorb
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Close button */}
