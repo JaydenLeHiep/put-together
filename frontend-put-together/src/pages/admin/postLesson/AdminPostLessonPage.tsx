@@ -147,6 +147,7 @@ export default function AdminPage() {
       await createLesson(form);
       setUploadProgress(100);
       setSuccessMessage("Lektion erfolgreich erstellt!");
+      window.scrollTo({ top: 0, behavior: "smooth" });
 
       setTimeout(() => {
         setTitle("");
@@ -156,7 +157,7 @@ export default function AdminPage() {
         setSuccessMessage("");
         setFileDocuments([]);
         setUploadProgress(0);
-      }, 3000);
+      }, 7000);
     } catch (err) {
       console.error(err);
       alert("Upload fehlgeschlagen");
