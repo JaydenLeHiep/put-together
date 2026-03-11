@@ -118,19 +118,18 @@ export default function CategoryList({
         const isExpanded = expandedCategories.has(category.id);
         const isEditing = editingCategory?.id === category.id;
         const theme = themeColors[index % themeColors.length];
+        const categoryHasCourses = categoryCourses.length > 0;
 
         return (
           <div
             key={category.id}
-            className={`overflow-hidden rounded-3xl border ${
-              isExpanded ? theme.border : "border-slate-200"
-            } bg-white shadow-sm transition-all duration-300 hover:shadow-lg`}
+            className={`overflow-visible rounded-3xl border ${isExpanded ? theme.border : "border-slate-200"
+              } bg-white shadow-sm transition-all duration-300 hover:shadow-lg`}
           >
             {/* Category Header */}
             <div
-              className={`flex items-center justify-between gap-4 px-6 py-5 ${
-                isExpanded ? theme.bgLight + " bg-opacity-40" : ""
-              }`}
+              className={`flex items-center justify-between gap-4 px-6 py-5 ${isExpanded ? theme.bgLight + " bg-opacity-40" : ""
+                }`}
             >
               <div
                 onClick={() => !isEditing && onToggleCategory(category.id)}
@@ -140,9 +139,8 @@ export default function CategoryList({
                   className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${theme.gradient} text-white shadow-md transition-transform duration-300 group-hover:scale-105`}
                 >
                   <svg
-                    className={`h-6 w-6 transition-transform duration-300 ${
-                      isExpanded ? "rotate-90" : ""
-                    }`}
+                    className={`h-6 w-6 transition-transform duration-300 ${isExpanded ? "rotate-90" : ""
+                      }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -193,15 +191,32 @@ export default function CategoryList({
                   </svg>
                 </button>
 
-                <button
-                  onClick={() => onDeleteCategory(category.id)}
-                  className="rounded-xl border border-slate-200 bg-white p-2.5 text-slate-600 shadow-sm transition-all hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
-                  title="Löschen"
-                >
-                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
+                <div className="relative group">
+                  <button
+                    onClick={() => onDeleteCategory(category.id)}
+                    disabled={categoryHasCourses}
+                    className={`rounded-xl border bg-white p-2.5 shadow-sm transition-all active:scale-95 ${categoryHasCourses
+                      ? "cursor-not-allowed border-slate-200 text-slate-300"
+                      : "border-slate-200 text-slate-600 hover:border-red-300 hover:bg-red-50 hover:text-red-700"
+                      }`}
+                    title={categoryHasCourses ? "" : "Löschen"}
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+
+                  {categoryHasCourses && (
+                    <div className="pointer-events-none absolute right-full top-1/2 z-50 mr-3 w-64 -translate-y-1/2 whitespace-normal break-words rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                      Diese Kategorie kann nicht gelöscht werden, solange noch Kurse darin enthalten sind.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -425,11 +440,12 @@ export default function CategoryList({
                       const isCourseExpanded = expandedCourses.has(course.id);
                       const isCourseEditing = editingCourse?.id === course.id;
                       const badgeStyle = levelBadges[course.level] || "bg-slate-100 text-slate-700 border-slate-200";
+                      const courseHasLessons = course.lessonCount > 0;
 
                       return (
                         <div
                           key={course.id}
-                          className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
+                          className="overflow-visible rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:border-slate-300 hover:shadow-md"
                         >
                           {/* Course Header */}
                           <div className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-50/50">
@@ -441,9 +457,8 @@ export default function CategoryList({
                             >
                               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-400 transition-colors group-hover:bg-slate-200 group-hover:text-slate-600">
                                 <svg
-                                  className={`h-5 w-5 transition-transform duration-300 ${
-                                    isCourseExpanded ? "rotate-90 text-slate-700" : ""
-                                  }`}
+                                  className={`h-5 w-5 transition-transform duration-300 ${isCourseExpanded ? "rotate-90 text-slate-700" : ""
+                                    }`}
                                   fill="none"
                                   stroke="currentColor"
                                   viewBox="0 0 24 24"
@@ -482,11 +497,10 @@ export default function CategoryList({
                                   )}
 
                                   <span
-                                    className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold ${
-                                      course.isPublished
-                                        ? "bg-emerald-100 text-emerald-700"
-                                        : "bg-amber-100 text-amber-700"
-                                    }`}
+                                    className={`flex items-center gap-1.5 rounded-full px-2.5 py-0.5 font-bold ${course.isPublished
+                                      ? "bg-emerald-100 text-emerald-700"
+                                      : "bg-amber-100 text-amber-700"
+                                      }`}
                                   >
                                     <span className={`h-1.5 w-1.5 rounded-full ${course.isPublished ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                                     {course.isPublished ? "Veröffentlicht" : "Entwurf"}
@@ -514,15 +528,32 @@ export default function CategoryList({
                                 </svg>
                               </button>
 
-                              <button
-                                onClick={() => onDeleteCourse(course.id)}
-                                className="rounded-xl p-2.5 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600 active:scale-95"
-                                title="Löschen"
-                              >
-                                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
+                              <div className="relative group">
+                                <button
+                                  onClick={() => onDeleteCourse(course.id)}
+                                  disabled={courseHasLessons}
+                                  className={`rounded-xl p-2.5 transition-colors active:scale-95 ${courseHasLessons
+                                    ? "cursor-not-allowed text-slate-300"
+                                    : "text-slate-400 hover:bg-red-50 hover:text-red-600"
+                                    }`}
+                                  title={courseHasLessons ? "" : "Löschen"}
+                                >
+                                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                    />
+                                  </svg>
+                                </button>
+
+                                {courseHasLessons && (
+                                  <div className="pointer-events-none absolute right-full top-1/2 z-50 mr-3 w-64 -translate-y-1/2 whitespace-normal break-words rounded-lg bg-slate-800 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
+                                    Dieser Kurs kann nicht gelöscht werden, solange noch Lektionen darin enthalten sind.
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
 

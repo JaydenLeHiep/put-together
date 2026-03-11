@@ -106,6 +106,13 @@ export function useManageStructurePage() {
   }
 
   async function handleDeleteCategory(id: string) {
+    const categoryHasCourses = courses.some((course) => course.categoryId === id);
+
+    if (categoryHasCourses) {
+      alert("Diese Kategorie kann nicht gelöscht werden, weil noch Kurse darin enthalten sind.");
+      return;
+    }
+
     if (!confirm("Möchten Sie diese Kategorie wirklich löschen?")) return;
 
     await deleteCategory(id);
@@ -148,6 +155,15 @@ export function useManageStructurePage() {
   }
 
   async function handleDeleteCourse(id: string) {
+    const course = courses.find((c) => c.id === id);
+
+    if (!course) return;
+
+    if (course.lessonCount > 0) {
+      alert("Dieser Kurs kann nicht gelöscht werden, weil noch Lektionen darin enthalten sind.");
+      return;
+    }
+
     if (!confirm("Möchten Sie diesen Kurs wirklich löschen?")) return;
 
     await deleteCourse(id);
@@ -178,9 +194,8 @@ export function useManageStructurePage() {
   }
 
   function getCategoryTitle(category: Category) {
-    return `${category.name} (${category.courseCount} ${
-      category.courseCount === 1 ? "Kurs" : "Kurse"
-    })`;
+    return `${category.name} (${category.courseCount} ${category.courseCount === 1 ? "Kurs" : "Kurse"
+      })`;
   }
 
   function resetCategoryForm() {
