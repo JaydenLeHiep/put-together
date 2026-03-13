@@ -66,6 +66,8 @@ export default function AdminPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (f) setFile(f);
+
+    e.target.value = "";
   };
 
   // -----------------------
