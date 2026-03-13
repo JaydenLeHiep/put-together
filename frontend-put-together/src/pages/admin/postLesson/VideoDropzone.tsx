@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 
 type VideoDropzoneProps = {
   file: File | null;
@@ -27,11 +27,28 @@ export default function VideoDropzone({
   onFileChange,
   onRemove,
 }: VideoDropzoneProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const containerClass = useMemo(() => {
     if (dragActive) return "border-lila-500 bg-lila-50";
     if (file) return "border-green-400 bg-green-50";
     return "border-gray-300 hover:border-lila-400";
   }, [dragActive, file]);
+
+  function handleClick() {
+    if (!file && !loading) {
+      inputRef.current?.click();
+    }
+  }
+
+  function handleRemove(e: React.MouseEvent) {
+    e.stopPropagation();
+    onRemove();
+
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }
 
   return (
     <div>
@@ -40,19 +57,26 @@ export default function VideoDropzone({
       </label>
 
       <div
-        className={`relative border-2 border-dashed rounded-xl p-8 transition-all ${containerClass}`}
+        className={`relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer ${containerClass}`}
+        onClick={handleClick}
         onDragEnter={onDrag}
         onDragLeave={onDrag}
         onDragOver={onDrag}
         onDrop={onDrop}
       >
         <input
+          ref={inputRef}
           type="file"
           accept="video/*"
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={onFileChange}
+          className="hidden"
+          onChange={(e) => {
+            onFileChange(e);
+
+            if (inputRef.current) {
+              inputRef.current.value = "";
+            }
+          }}
           disabled={loading}
-          id="video-upload"
         />
 
         {!file ? (
@@ -70,9 +94,11 @@ export default function VideoDropzone({
                 d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
               />
             </svg>
+
             <p className="text-lg font-medium text-gray-700 mb-2">
               Video hierher ziehen oder klicken
             </p>
+
             <p className="text-sm text-gray-500">MP4, MOV, AVI bis zu 2GB</p>
           </div>
         ) : (
@@ -93,23 +119,33 @@ export default function VideoDropzone({
                   />
                 </svg>
               </div>
+
               <div>
                 <p className="font-medium text-gray-800">{file.name}</p>
-                <p className="text-sm text-gray-500">{formatFileSize(file.size)}</p>
+                <p className="text-sm text-gray-500">
+                  {formatFileSize(file.size)}
+                </p>
               </div>
             </div>
 
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onRemove();
-              }}
+              onClick={handleRemove}
               disabled={loading}
               className="text-red-500 hover:text-red-700 transition-colors p-2"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
