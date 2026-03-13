@@ -2,7 +2,9 @@ using backend_put_together.Application.Lessons.DTOs;
 using backend_put_together.Application.Storage.Services;
 using backend_put_together.Application.Video;
 using backend_put_together.Domain.Lessons;
+using backend_put_together.Domain.Storage;
 using backend_put_together.Infrastructure.Data;
+using backend_put_together.Infrastructure.S3StoredFileService;
 using backend_put_together.Infrastructure.Video;
 using Microsoft.EntityFrameworkCore;
 
@@ -100,78 +102,45 @@ public sealed class LessonService : ILessonService
     // UPDATE
     // =====================================================
     public async Task UpdateAsync(
-        Guid id,
-        UpdateLessonRequest request,
-        Guid actorId,
-        CancellationToken ct = default)
-    {
-        var lesson = await _db.Lessons
-            .FirstOrDefaultAsync(x => x.Id == id && x.DeletedAt == null, ct);
-
-        if (lesson is null)
-            throw new KeyNotFoundException();
-
-        if (lesson.UserId != actorId)
-            throw new InvalidOperationException();
-
-        if (request.Title is not null)
-            lesson.Title = request.Title;
-
-        if (request.Content is not null)
-            lesson.Content = request.Content;
-
-        lesson.Touch();
-
-        // ================= VIDEO REPLACEMENT =================
-        if (request.File is not null && request.File.Length > 0)
-        {
-            await using var tx = await _db.Database.BeginTransactionAsync(ct);
-
-            var ctx = await _resolver.ResolveForLessonAsync(id, ct);
-
-            await using var stream = request.File.OpenReadStream();
-
-            var upload = await _video.UploadAsync(
-                new VideoUploadRequest
-                {
-                    LibraryId = ctx.LibraryId,
-                    StreamApiKey = ctx.StreamApiKey,
-                    FileName = request.File.FileName,
-                    Stream = stream,
-                    CollectionId = ctx.CollectionId
-                },
-                ct);
-
-            var oldLibraryId = lesson.VideoLibraryId;
-            var oldGuid = lesson.VideoGuid;
-
-            lesson.VideoLibraryId = upload.LibraryId;
-            lesson.VideoGuid = upload.VideoGuid;
-            lesson.ThumbnailUrl = upload.ThumbnailUrl;
-            lesson.Touch();
-
-            await _db.SaveChangesAsync(ct);
-            await tx.CommitAsync(ct);
-
-            // best effort cleanup
-            if (!string.IsNullOrWhiteSpace(oldLibraryId)
-                && !string.IsNullOrWhiteSpace(oldGuid))
-            {
-                try
-                {
-                    await _video.DeleteAsync(oldLibraryId, ctx.StreamApiKey, oldGuid, ct);
-                }
-                catch (Exception ex)
-                {
-                    Console.Error.WriteLine($"[WARN] Delete old video failed: {ex.Message}");
-                }
-            }
-
-            return;
-        }
-
-        await _db.SaveChangesAsync(ct);
-    }
+             Guid lessonId,
+             UpdateLessonRequest request,
+             CancellationToken ct = default)
+         {
+             var lesson = await _db.Lessons
+                 .FirstOrDefaultAsync(x => x.Id == lessonId && x.DeletedAt == null, ct);
+     
+             if (lesson is null)
+                 throw new KeyNotFoundException();
+     
+             if (request.Title is not null)
+                 lesson.Title = request.Title;
+     
+             if (request.Content is not null)
+                 lesson.Content = request.Content;
+     
+             lesson.UpdatedAt = DateTime.UtcNow;
+             
+             if (request.DeleteFileIds is not null && request.DeleteFileIds.Count > 0)
+             {
+                 foreach (var fileId in request.DeleteFileIds)
+                 {
+                     await _storedFileService.DeleteFileAsync(
+                         lessonId,
+                         fileId,
+                         ct);
+                 }
+             }
+             
+             if (request.Files is not null && request.Files.Count > 0)
+             {
+                 await _storedFileService.CreateFileStorageAsync(
+                     request.Files.ToList(),
+                     lessonId,
+                     ct);
+             }
+     
+             await _db.SaveChangesAsync(ct);
+         }
 
     // =====================================================
     // DELETE

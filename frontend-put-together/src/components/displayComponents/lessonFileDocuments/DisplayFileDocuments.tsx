@@ -1,9 +1,10 @@
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import type { DisplayFileDocumentProps } from "./typeDisplayFileDocuments";
 
 export const DisplayFileDocuments = ({
   fileDocuments,
   onClickSelectedFileIdToDowndload,
+  onDeleteFile,
 }: DisplayFileDocumentProps) => {
   return (
     <ul className="mt-6 space-y-3">
@@ -43,9 +44,23 @@ export const DisplayFileDocuments = ({
             </p>
           </div>
 
-          <span className="text-sm text-gray-400 group-hover:text-purple-600 transition">
-            Download
-          </span>
+          {onDeleteFile && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDeleteFile(file.id);
+              }}
+              className="
+                  flex items-center justify-center
+                  h-8 w-8 rounded-md
+                  text-red-500 hover:text-red-700
+                  hover:bg-red-50
+                  transition
+                "
+            >
+              <Trash2 size={16} />
+            </button>
+          )}
         </li>
       ))}
     </ul>

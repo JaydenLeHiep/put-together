@@ -8,9 +8,10 @@ import "../../../styles/editor.css";
 import { UploadFileDocuments } from "../../../components/inputFormComponents/UploadFileDocuments";
 import SuccessAlert from "../../../components/feedback/SuccessAlert";
 import PostLessonHeader from "./PostLessonHeader";
-import VideoDropzone from "./VideoDropzone"
+import VideoDropzone from "./VideoDropzone";
 import UploadProgressBar from "./UploadProgressBar";
 import PostLessonTips from "./PostLessonTips";
+import { InputText } from "../../../components/inputFormComponents/InputText";
 
 export default function AdminPage() {
   const MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD = 10;
@@ -76,7 +77,8 @@ export default function AdminPage() {
 
   function addPdfFiles(files: File[]) {
     const pdfs = files.filter(
-      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf")
+      (f) =>
+        f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
     );
 
     if (pdfs.length === 0) {
@@ -85,8 +87,12 @@ export default function AdminPage() {
     }
 
     setFileDocuments((prev) => {
-      const existing = new Set(prev.map((f) => `${f.name}_${f.size}_${f.lastModified}`));
-      const deduped = pdfs.filter((f) => !existing.has(`${f.name}_${f.size}_${f.lastModified}`));
+      const existing = new Set(
+        prev.map((f) => `${f.name}_${f.size}_${f.lastModified}`),
+      );
+      const deduped = pdfs.filter(
+        (f) => !existing.has(`${f.name}_${f.size}_${f.lastModified}`),
+      );
 
       const remaining = MAX_NUMBER_FILE_DOCUMENT_TO_UPLOAD - prev.length;
       if (remaining <= 0) {
@@ -96,7 +102,9 @@ export default function AdminPage() {
 
       const next = [...prev, ...deduped.slice(0, remaining)];
       if (deduped.length > remaining) {
-        alert(`Nur ${remaining} weitere PDF-Datei(en) konnten hinzugefügt werden (Limit erreicht).`);
+        alert(
+          `Nur ${remaining} weitere PDF-Datei(en) konnten hinzugefügt werden (Limit erreicht).`,
+        );
       }
       return next;
     });
@@ -200,14 +208,11 @@ export default function AdminPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Titel der Lektion *
             </label>
-            <input
-              type="text"
-              className="w-full border-2 border-gray-200 rounded-xl p-4 focus:border-lila-500 focus:outline-none transition-colors text-gray-800 placeholder-gray-400"
-              placeholder="z.B. A2 – Perfekt mit sein"
+            <InputText
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onSetInput={setTitle}
               disabled={loading}
-            />
+            ></InputText>
           </div>
 
           {/* Content */}
@@ -215,8 +220,14 @@ export default function AdminPage() {
             <label className="block text-sm font-semibold text-gray-700 mb-2">
               Beschreibung & Lernziele
             </label>
-            <CkEditorField value={content} onChange={setContent} disabled={loading} />
-            <p className="text-sm text-gray-500 mt-2">{content.length} Zeichen</p>
+            <CkEditorField
+              value={content}
+              onChange={setContent}
+              disabled={loading}
+            />
+            <p className="text-sm text-gray-500 mt-2">
+              {content.length} Zeichen
+            </p>
           </div>
 
           {/* Video Upload */}
@@ -257,8 +268,19 @@ export default function AdminPage() {
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <svg
+                    className="animate-spin h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -269,8 +291,18 @@ export default function AdminPage() {
                 </>
               ) : (
                 <>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg
+                    className="w-5 h-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
                   </svg>
                   <span>Lektion erstellen</span>
                 </>

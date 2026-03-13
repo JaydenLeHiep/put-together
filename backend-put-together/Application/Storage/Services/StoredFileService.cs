@@ -79,4 +79,34 @@ public class StoredFileService : IStoredFileService
         return _s3StoredFileService.GenerateDownloadUrl(
             file.S3Key);
     }
+
+    public async Task DeleteFileAsync(Guid lessonId, Guid fileId, CancellationToken ct = default)
+    {
+        var file = await _db.S3StoredFiles
+            .FirstOrDefaultAsync(f =>
+                    f.Id == fileId &&
+                    f.LessonId == lessonId,
+                ct);
+
+        if (file is null)
+            throw new KeyNotFoundException("File not found");
+
+        var request = new S3DeleteFileRequest(
+            lessonId,
+            file.Id,
+            file.FileName);
+
+        try
+        {
+            await _s3StoredFileService.DeleteFileAsync(request);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed deleting file {FileId} from S3", fileId);
+            throw;
+        }
+
+        _db.S3StoredFiles.Remove(file);
+        await _db.SaveChangesAsync(ct);
+    }
 }

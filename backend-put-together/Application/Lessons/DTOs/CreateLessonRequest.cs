@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Http;
-
 namespace backend_put_together.Application.Lessons.DTOs;
 
 public class CreateLessonRequest
