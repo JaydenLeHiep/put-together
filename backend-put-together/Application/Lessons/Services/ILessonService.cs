@@ -10,7 +10,7 @@ public interface ILessonService
         string bunnyCollectionId,
         CancellationToken ct = default);
 
-    Task UpdateAsync(Guid id, UpdateLessonRequest request, Guid actorId, CancellationToken ct);
+    Task UpdateAsync(Guid lessonId, UpdateLessonRequest request, CancellationToken ct);
     Task DeleteAsync(Guid id,  Guid actorId, CancellationToken ct);
     Task RestoreAsync(Guid id, CancellationToken ct);
     Task PublishAsync(Guid lessonId, Guid actorId, CancellationToken ct = default);

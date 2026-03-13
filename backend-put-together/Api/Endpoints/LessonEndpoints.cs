@@ -112,8 +112,8 @@ public sealed class LessonEndpoints : ICarterModule
         // PUT /api/lessons/{id}
         // Teacher | Admin: update lesson
         // =========================================================
-        group.MapPut("{id:guid}", async (
-            Guid id,
+        group.MapPut("{lessonId:guid}", async (
+            Guid lessonId,
             [FromForm] UpdateLessonRequest req,
             ILessonService service,
             HttpContext httpContext,
@@ -125,7 +125,7 @@ public sealed class LessonEndpoints : ICarterModule
 
             try
             {
-                await service.UpdateAsync(id, req, actorId, ct);
+                await service.UpdateAsync(lessonId, req, ct);
                 return Results.NoContent();
             }
             catch (KeyNotFoundException)

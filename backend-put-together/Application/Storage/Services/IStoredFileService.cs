@@ -10,4 +10,9 @@ public interface IStoredFileService
         Guid lessonId,
         Guid fileId,
         CancellationToken ct = default);
+    
+    Task DeleteFileAsync(
+        Guid lessonId,
+        Guid fileId,
+        CancellationToken ct = default);
 }
