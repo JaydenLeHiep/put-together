@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import PublicCourseModal from "./PublicCourseModal";
 import CartDrawer from "../../pages/student/Cartdrawer";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 import { useAuth } from "../../hooks/useAuth";
 import {
   type PublicCategoryCatalog,

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import type { PublicCourseCard } from "../../types/course";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 import { useAuth } from "../../hooks/useAuth";
 
 type PublicCourseModalProps = {
