@@ -1,6 +1,6 @@
 using backend_put_together.Application.Category.DTOs;
-using backend_put_together.Application.Category.Services;
 using backend_put_together.Application.Category.Queries;
+using backend_put_together.Application.Category.Services;
 using Carter;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,8 +15,11 @@ public sealed class CategoryEndpoints : ICarterModule
             .MapGroup("/api/categories")
             .WithTags("Categories");
 
+        // =====================================================
         // GET /api/categories
-        group.MapGet("/", async (
+        // Public: get all categories
+        // =====================================================
+        group.MapGet("", async (
             ICategoryQueryService query,
             CancellationToken ct) =>
         {
@@ -24,19 +27,23 @@ public sealed class CategoryEndpoints : ICarterModule
             return Results.Ok(result);
         });
 
-        // POST /api/categories  (Admin)
-        group.MapPost("/", [Authorize(Roles = "Admin")] async (
+        // =====================================================
+        // POST /api/categories
+        // Admin only: create category
+        // =====================================================
+        group.MapPost("", [Authorize(Roles = "Admin")] async (
             [FromBody] CreateCategoryRequestDto req,
             ICategoryService service,
             CancellationToken ct) =>
         {
             var id = await service.CreateAsync(req, ct);
-
-            // 201 Created + Location header
             return Results.Created($"/api/categories/{id}", new { id });
         });
 
-        // PUT /api/categories/{id} (Admin)
+        // =====================================================
+        // PUT /api/categories/{id}
+        // Admin only: update category
+        // =====================================================
         group.MapPut("/{id:guid}", [Authorize(Roles = "Admin")] async (
             [FromRoute] Guid id,
             [FromBody] UpdateCategoryRequestDto req,
@@ -48,7 +55,8 @@ public sealed class CategoryEndpoints : ICarterModule
                 await service.UpdateAsync(id, req, ct);
                 return Results.NoContent();
             }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            catch (InvalidOperationException ex) when (
+                ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
             {
                 return Results.NotFound();
             }
@@ -58,7 +66,10 @@ public sealed class CategoryEndpoints : ICarterModule
             }
         });
 
-        // DELETE /api/categories/{id} (Admin)
+        // =====================================================
+        // DELETE /api/categories/{id}
+        // Admin only: delete category
+        // =====================================================
         group.MapDelete("/{id:guid}", [Authorize(Roles = "Admin")] async (
             [FromRoute] Guid id,
             ICategoryService service,
@@ -69,7 +80,8 @@ public sealed class CategoryEndpoints : ICarterModule
                 await service.DeleteAsync(id, ct);
                 return Results.NoContent();
             }
-            catch (InvalidOperationException ex) when (ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            catch (InvalidOperationException ex) when (
+                ex.Message.Contains("not found", StringComparison.OrdinalIgnoreCase))
             {
                 return Results.NotFound();
             }

@@ -285,6 +285,11 @@ namespace backend_put_together.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("published_at");
 
+                    b.Property<string>("ThumbnailUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("thumbnail_url");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(250)

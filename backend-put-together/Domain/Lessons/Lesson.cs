@@ -14,6 +14,7 @@ public class Lesson
     public string? VideoLibraryId { get; set; } 
     public string? VideoGuid { get; set; }
     public string? BunnyCollectionId { get; set; }
+    public string? ThumbnailUrl { get; set; }
     
     // Course relationship
     public Guid CourseId { get; set; }

@@ -94,6 +94,7 @@ public sealed class CourseQueryService : ICourseQueryService
                         l.VideoGuid != null
                             ? $"https://iframe.mediadelivery.net/embed/{l.VideoLibraryId}/{l.VideoGuid}"
                             : string.Empty,
+                        l.ThumbnailUrl ?? string.Empty,
                         l.CourseId,
                         l.IsPublished,
                         l.UserId,
@@ -113,21 +114,21 @@ public sealed class CourseQueryService : ICourseQueryService
     {
         var flatData =
             await (from sca in _db.StudentCourseAccess.AsNoTracking()
-                   join c in _db.Courses.AsNoTracking()
-                       on sca.CourseId equals c.Id
-                   join cat in _db.Categories.AsNoTracking()
-                       on c.CategoryId equals cat.Id
-                   where sca.StudentId == studentId
-                         && sca.RevokedAtUtc == null
-                         && sca.ExpiresAtUtc > DateTime.UtcNow
-                   select new
-                   {
-                       CategoryId = cat.Id,
-                       CategoryName = cat.Name,
-                       CourseId = c.Id,
-                       CourseTitle = c.Title,
-                       sca.ExpiresAtUtc
-                   })
+                    join c in _db.Courses.AsNoTracking()
+                        on sca.CourseId equals c.Id
+                    join cat in _db.Categories.AsNoTracking()
+                        on c.CategoryId equals cat.Id
+                    where sca.StudentId == studentId
+                          && sca.RevokedAtUtc == null
+                          && sca.ExpiresAtUtc > DateTime.UtcNow
+                    select new
+                    {
+                        CategoryId = cat.Id,
+                        CategoryName = cat.Name,
+                        CourseId = c.Id,
+                        CourseTitle = c.Title,
+                        sca.ExpiresAtUtc
+                    })
                 .ToListAsync(ct);
 
         var result = flatData
@@ -148,5 +149,67 @@ public sealed class CourseQueryService : ICourseQueryService
             .ToList();
 
         return result;
+    }
+
+    public async Task<List<PublicCategoryCatalogDto>> GetPublicCourseCatalogAsync(
+        CancellationToken ct = default)
+    {
+        var categories = await _db.Categories
+            .AsNoTracking()
+            .OrderBy(c => c.Name)
+            .Select(category => new PublicCategoryCatalogDto(
+                category.Id,
+                category.Name,
+                category.Description,
+                category.Courses
+                    .Where(course =>
+                        course.DeletedAt == null &&
+                        course.Lessons.Any(lesson =>
+                            lesson.DeletedAt == null &&
+                            lesson.IsPublished &&
+                            lesson.PublishedAt != null))
+                    .OrderBy(course => course.Level)
+                    .ThenBy(course => course.Title)
+                    .Select(course => new PublicCourseCardDto(
+                        course.Id,
+                        course.Title,
+                        course.Description,
+                        course.Level,
+                        course.Price,
+                        course.Lessons.Count(lesson =>
+                            lesson.DeletedAt == null &&
+                            lesson.IsPublished &&
+                            lesson.PublishedAt != null),
+                        course.Lessons
+                            .Where(lesson =>
+                                lesson.DeletedAt == null &&
+                                lesson.IsPublished &&
+                                lesson.PublishedAt != null &&
+                                lesson.ThumbnailUrl != null &&
+                                lesson.ThumbnailUrl != "")
+                            .OrderBy(lesson => lesson.CreatedAt)
+                            .Select(lesson => lesson.ThumbnailUrl)
+                            .FirstOrDefault(),
+                        course.Lessons
+                            .Where(lesson =>
+                                lesson.DeletedAt == null &&
+                                lesson.IsPublished &&
+                                lesson.PublishedAt != null)
+                            .OrderBy(lesson => lesson.CreatedAt)
+                            .Select(lesson => new PublicLessonPreviewDto(
+                                lesson.Id,
+                                lesson.Title,
+                                lesson.Content,
+                                lesson.ThumbnailUrl ?? string.Empty
+                            ))
+                            .ToList()
+                    ))
+                    .ToList()
+            ))
+            .ToListAsync(ct);
+
+        return categories
+            .Where(category => category.Courses.Count > 0)
+            .ToList();
     }
 }

@@ -159,6 +159,7 @@ export default function AuthForm({
                   <div className="text-sm">
                     <a
                       href="/forgot-password"
+                      tabIndex={-1}
                       className="font-semibold text-indigo-400 hover:text-indigo-300"
                     >
                       Forgot password?
