@@ -1,45 +1,20 @@
-import {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-  type ReactNode,
-} from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import type { PublicCourseCard } from "../types/course";
+import { CartContext, type CartContextType, type CartItem } from "./cartContext.type";
 
-export type CartItem = {
-  courseId: string;
-  title: string;
-  price: number | null;
-  level: string;
-  courseThumbnailUrl: string | null;
-};
-
-type CartContextType = {
-  items: CartItem[];
-  isInCart: (courseId: string) => boolean;
-  addToCart: (course: PublicCourseCard) => void;
-  removeFromCart: (courseId: string) => void;
-  clearCart: () => void;
-  totalCount: number;
-};
-
-const CartContext = createContext<CartContextType | null>(null);
-
-export function CartProvider({ children }: { children: ReactNode }) {
+export default function CartProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [rawItems, setRawItems] = useState<CartItem[]>([]);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setItems([]);
-    }
-  }, [isAuthenticated]);
+  // If not authenticated, behave like cart is empty (no effect needed)
+  const items = useMemo(
+    () => (isAuthenticated ? rawItems : []),
+    [isAuthenticated, rawItems]
+  );
 
   const isInCart = useCallback(
     (courseId: string) => items.some((i) => i.courseId === courseId),
@@ -53,8 +28,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      setItems((prev) => {
+      setRawItems((prev) => {
         if (prev.some((i) => i.courseId === course.id)) return prev;
+
         return [
           ...prev,
           {
@@ -71,29 +47,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 
   const removeFromCart = useCallback((courseId: string) => {
-    setItems((prev) => prev.filter((i) => i.courseId !== courseId));
+    setRawItems((prev) => prev.filter((i) => i.courseId !== courseId));
   }, []);
 
-  const clearCart = useCallback(() => setItems([]), []);
+  const clearCart = useCallback(() => setRawItems([]), []);
 
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        isInCart,
-        addToCart,
-        removeFromCart,
-        clearCart,
-        totalCount: items.length,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
+  const value: CartContextType = useMemo(
+    () => ({
+      items,
+      isInCart,
+      addToCart,
+      removeFromCart,
+      clearCart,
+      totalCount: items.length,
+    }),
+    [items, isInCart, addToCart, removeFromCart, clearCart]
   );
-}
 
-export function useCart(): CartContextType {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used inside <CartProvider>");
-  return ctx;
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

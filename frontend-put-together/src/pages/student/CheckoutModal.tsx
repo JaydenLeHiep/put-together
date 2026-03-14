@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/useAuth";
-import { useCart } from "../../context/CartContext";
+import { useCart } from "../../context/useCart";
 import { sendPurchaseNotificationEmail } from "../../services/emailService";
 
 // ─────────────────────────────────────────────
@@ -87,23 +87,33 @@ type Step = "instructions" | "sending" | "success" | "error";
 export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutModalProps) {
   const { user } = useAuth();
   const { items, clearCart } = useCart();
+
   const [step, setStep] = useState<Step>("instructions");
   const [errorMsg, setErrorMsg] = useState("");
+
+  const canClose = step !== "sending";
+
+  function handleClose() {
+    if (!canClose) return;
+    setStep("instructions");
+    setErrorMsg("");
+    onClose();
+  }
 
   // Close on Escape
   useEffect(() => {
     if (!isOpen) return;
+
     const handle = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && step !== "sending") onClose();
+      if (e.key === "Escape") {
+        handleClose();
+      }
     };
+
     window.addEventListener("keydown", handle);
     return () => window.removeEventListener("keydown", handle);
-  }, [isOpen, onClose, step]);
-
-  // Reset step when modal opens
-  useEffect(() => {
-    if (isOpen) setStep("instructions");
-  }, [isOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, canClose]);
 
   if (!isOpen || !user) return null;
 
@@ -111,12 +121,15 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
 
   const handleConfirm = async () => {
     setStep("sending");
+    setErrorMsg("");
+
     try {
       await sendPurchaseNotificationEmail({
-        studentName:  user.userName,
+        studentName: user.userName,
         studentEmail: user.email,
-        courses:      items,
+        courses: items,
       });
+
       clearCart();
       setStep("success");
     } catch (err) {
@@ -127,6 +140,7 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
 
   const handleSuccessClose = () => {
     setStep("instructions");
+    setErrorMsg("");
     onSuccess();
     onClose();
   };
@@ -136,11 +150,10 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-lila-950/50 backdrop-blur-md"
-        onClick={step !== "sending" ? onClose : undefined}
+        onClick={canClose ? handleClose : undefined}
       />
 
       <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-[1.75rem] bg-white shadow-2xl shadow-lila-900/20">
-
         {/* ── Header ── */}
         <div className="relative overflow-hidden bg-lila-700 px-7 py-6 text-white">
           <div
@@ -161,9 +174,10 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
                 {step === "success" ? "Bestellung bestätigt!" : "Banküberweisung"}
               </h2>
             </div>
-            {step !== "sending" && (
+
+            {canClose && (
               <button
-                onClick={onClose}
+                onClick={handleClose}
                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white/70 transition hover:bg-white/20 hover:text-white"
               >
                 <CloseIcon />
@@ -174,7 +188,6 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
 
         {/* ── Body ── */}
         <div className="px-7 py-6">
-
           {/* ─ INSTRUCTIONS STEP ─ */}
           {step === "instructions" && (
             <>
@@ -247,7 +260,7 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
 
               <div className="mt-6 flex gap-3">
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
                 >
                   Abbrechen
@@ -316,13 +329,16 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
               </div>
               <div className="mt-2 flex w-full gap-3">
                 <button
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="flex-1 rounded-xl border border-gray-200 bg-white py-2.5 text-sm font-semibold text-gray-600 transition hover:bg-gray-50"
                 >
                   Schließen
                 </button>
                 <button
-                  onClick={() => setStep("instructions")}
+                  onClick={() => {
+                    setErrorMsg("");
+                    setStep("instructions");
+                  }}
                   className="flex-1 rounded-xl bg-lila-700 py-2.5 text-sm font-bold text-white shadow-lg shadow-lila-200 transition hover:bg-lila-800"
                 >
                   Erneut versuchen
@@ -330,7 +346,6 @@ export default function CheckoutModal({ isOpen, onClose, onSuccess }: CheckoutMo
               </div>
             </div>
           )}
-
         </div>
       </div>
     </div>

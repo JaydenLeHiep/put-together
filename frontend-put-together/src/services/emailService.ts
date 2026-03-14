@@ -31,7 +31,7 @@
  */
 
 import emailjs from "@emailjs/browser";
-import type { CartItem } from "../context/CartContext";
+import type { CartItem } from "../context/cartContext.type";
 
 // ── 🔧 Fill these in ──────────────────────────
 const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";

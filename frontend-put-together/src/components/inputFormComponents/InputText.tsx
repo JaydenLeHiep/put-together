@@ -1,4 +1,3 @@
-import React from "react";
 import type { InputTextProps } from "./typeInputText";
 
 export const InputText = ({ value, onSetInput, disabled }: InputTextProps) => {
