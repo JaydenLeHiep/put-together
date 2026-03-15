@@ -12,14 +12,15 @@ export const DisplayLessonVideo = ({
 
   const hoverTimerRef = useRef<number | null>(null);
 
-  const showFullPlayer = showVideo && isPlaying;
   const showHoverPlayer = showVideo && !isPlaying && isHoverPreviewing;
-  const showThumbnail = !showFullPlayer && !showHoverPlayer;
+  const showFullPlayer = showVideo && isPlaying;
 
+  // cleanup timer on unmount only (no setState here)
   useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
         window.clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
       }
     };
   }, []);
@@ -29,18 +30,24 @@ export const DisplayLessonVideo = ({
 
     if (hoverTimerRef.current) {
       window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
 
     setIsHoverPreviewing(true);
 
     hoverTimerRef.current = window.setTimeout(() => {
       setIsHoverPreviewing(false);
+      hoverTimerRef.current = null;
     }, 7000);
   }
 
   function handleMouseLeave() {
+    // ✅ if full player is running, ignore mouse leave
+    if (isPlaying) return;
+
     if (hoverTimerRef.current) {
       window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
 
     setIsHoverPreviewing(false);
@@ -49,6 +56,7 @@ export const DisplayLessonVideo = ({
   function handlePlayClick() {
     if (hoverTimerRef.current) {
       window.clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
     }
 
     setIsHoverPreviewing(false);
@@ -57,57 +65,63 @@ export const DisplayLessonVideo = ({
 
   return (
     <div
-      className="relative bg-black aspect-video group overflow-hidden"
+      className="relative bg-black aspect-video overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
+      {/* Locked overlay */}
       {!showVideo && (
-        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white z-10">
+        <div className="absolute inset-0 z-20 bg-black/60 flex items-center justify-center text-white">
           Anmelden um dieses Video zu schauen
         </div>
       )}
 
-      {showThumbnail && thumbnailUrl && (
-        <img
-          src={thumbnailUrl}
-          alt="Video thumbnail"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+      {/* Thumbnail as base layer when NOT playing */}
+      {!showFullPlayer && (
+        thumbnailUrl ? (
+          <img
+            src={thumbnailUrl}
+            alt="Video thumbnail"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center text-white/80">
+            Kein Thumbnail verfügbar
+          </div>
+        )
+      )}
+
+      {/* Hover preview (7s) */}
+      {showHoverPlayer && (
+        <iframe
+          key={`hover-${videoGuid}`}
+          src={`https://iframe.mediadelivery.net/embed/${videoLibraryId}/${videoGuid}?autoplay=true&muted=true`}
+          className="absolute inset-0 w-full h-full"
+          allow="autoplay; encrypted-media; picture-in-picture"
         />
       )}
 
-      {showThumbnail && !thumbnailUrl && (
-        <div className="absolute inset-0 flex items-center justify-center text-white">
-          Kein Thumbnail verfügbar
-        </div>
-      )}
-
-      {showThumbnail && showVideo && (
+      {/* Click-to-play overlay (only when not playing) */}
+      {showVideo && !showFullPlayer && (
         <button
           type="button"
           onClick={handlePlayClick}
-          className="absolute inset-0 flex items-center justify-center z-10"
+          className="absolute inset-0 z-30 flex items-center justify-center"
+          aria-label="Video abspielen"
         >
-          <div className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center text-white text-2xl group-hover:bg-lila-600 transition-colors duration-300">
+          <div className="w-20 h-20 bg-black/50 rounded-full flex items-center justify-center text-white text-2xl hover:bg-lila-600 transition-colors">
             ▶
           </div>
         </button>
       )}
 
-      {showHoverPlayer && (
-        <iframe
-          key={`hover-${videoGuid}`}
-          src={`https://iframe.mediadelivery.net/embed/${videoLibraryId}/${videoGuid}?autoplay=true&muted=true`}
-          className="w-full h-full"
-          allow="autoplay; encrypted-media"
-        />
-      )}
-
+      {/* Full player */}
       {showFullPlayer && (
         <iframe
           key={`full-${videoGuid}`}
           src={`https://iframe.mediadelivery.net/embed/${videoLibraryId}/${videoGuid}?autoplay=true`}
-          className="w-full h-full"
-          allow="autoplay; encrypted-media"
+          className="absolute inset-0 w-full h-full"
+          allow="autoplay; encrypted-media; picture-in-picture"
           allowFullScreen
         />
       )}

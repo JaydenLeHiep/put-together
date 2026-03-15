@@ -66,8 +66,11 @@ export const DisplayLesson = ({ selectedLesson }: DisplayLessonProps) => {
         {/* VIDEO */}
         {hasVideo && (
           <DisplayLessonVideo
+            key={selectedLesson.id} 
             videoLibraryId={selectedLesson.videoLibraryId!}
             videoGuid={selectedLesson.videoGuid!}
+            thumbnailUrl={selectedLesson.thumbnailUrl ?? null}
+            showVideo={true}
           />
         )}
 
