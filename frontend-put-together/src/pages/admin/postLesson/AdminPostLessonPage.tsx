@@ -6,7 +6,6 @@ import type { Course } from "../../../types/course";
 import "../../../styles/editor.css";
 
 import { UploadFileDocuments } from "../../../components/inputFormComponents/UploadFileDocuments";
-import SuccessAlert from "../../../components/feedback/SuccessAlert";
 import PostLessonHeader from "./PostLessonHeader";
 import VideoDropzone from "./VideoDropzone";
 import UploadProgressBar from "./UploadProgressBar";
@@ -148,6 +147,7 @@ export default function AdminPage() {
 
     setLoading(true);
     setUploadProgress(0);
+    setSuccessMessage("");
 
     const progressInterval = setInterval(() => {
       setUploadProgress((prev) => (prev >= 90 ? 90 : prev + 10));
@@ -155,9 +155,9 @@ export default function AdminPage() {
 
     try {
       await createLesson(form);
+      clearInterval(progressInterval);
       setUploadProgress(100);
       setSuccessMessage("Lektion erfolgreich erstellt!");
-      window.scrollTo({ top: 0, behavior: "smooth" });
 
       setTimeout(() => {
         setTitle("");
@@ -181,9 +181,6 @@ export default function AdminPage() {
   return (
     <div className="max-w-5xl mx-auto">
       <PostLessonHeader />
-
-      <SuccessAlert message={successMessage} />
-
       <div className="bg-white shadow-lg rounded-2xl overflow-hidden">
         <div className="p-8 space-y-6">
           {/* Course Select */}
@@ -258,7 +255,11 @@ export default function AdminPage() {
           />
 
           {/* Upload Progress */}
-          <UploadProgressBar loading={loading} progress={uploadProgress} />
+          <UploadProgressBar
+            loading={loading}
+            progress={uploadProgress}
+            successMessage={successMessage}
+          />
 
           {/* Submit */}
           <div className="flex items-center justify-between pt-4">
