@@ -65,6 +65,7 @@ export default function AdminCoursesLessonDetail({
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         {!!selectedLesson.videoLibraryId && !!selectedLesson.videoGuid && (
           <DisplayLessonVideo
+            key={selectedLesson.id}
             videoLibraryId={selectedLesson.videoLibraryId}
             videoGuid={selectedLesson.videoGuid}
             thumbnailUrl={selectedLesson.thumbnailUrl}

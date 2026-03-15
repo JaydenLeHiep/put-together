@@ -12,21 +12,10 @@ export const DisplayLessonVideo = ({
 
   const hoverTimerRef = useRef<number | null>(null);
 
-  // show hover preview only if not playing
   const showHoverPlayer = showVideo && !isPlaying && isHoverPreviewing;
   const showFullPlayer = showVideo && isPlaying;
 
-  // Reset state when lesson/video changes
-  useEffect(() => {
-    if (hoverTimerRef.current) {
-      window.clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    setIsHoverPreviewing(false);
-    setIsPlaying(false);
-  }, [videoGuid, videoLibraryId]);
-
-  // cleanup timer on unmount
+  // cleanup timer on unmount only (no setState here)
   useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
@@ -45,6 +34,7 @@ export const DisplayLessonVideo = ({
     }
 
     setIsHoverPreviewing(true);
+
     hoverTimerRef.current = window.setTimeout(() => {
       setIsHoverPreviewing(false);
       hoverTimerRef.current = null;
@@ -52,13 +42,14 @@ export const DisplayLessonVideo = ({
   }
 
   function handleMouseLeave() {
-    // when full player is running, ignore mouse leave
+    // ✅ if full player is running, ignore mouse leave
     if (isPlaying) return;
 
     if (hoverTimerRef.current) {
       window.clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
+
     setIsHoverPreviewing(false);
   }
 
@@ -67,6 +58,7 @@ export const DisplayLessonVideo = ({
       window.clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
     }
+
     setIsHoverPreviewing(false);
     setIsPlaying(true);
   }
@@ -84,7 +76,7 @@ export const DisplayLessonVideo = ({
         </div>
       )}
 
-      {/* Always show a base image when not playing (so it’s never black) */}
+      {/* Thumbnail as base layer when NOT playing */}
       {!showFullPlayer && (
         thumbnailUrl ? (
           <img
@@ -99,7 +91,7 @@ export const DisplayLessonVideo = ({
         )
       )}
 
-      {/* Hover preview (7s) – on top of thumbnail */}
+      {/* Hover preview (7s) */}
       {showHoverPlayer && (
         <iframe
           key={`hover-${videoGuid}`}
