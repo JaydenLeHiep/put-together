@@ -28,7 +28,7 @@ jobs:
       - name: Setup Node.js (Frontend)
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
 
       - name: Frontend install dependencies
         run: npm ci
