@@ -30,12 +30,17 @@ import TeacherDashboard from "./pages/teacher/dashboard/TeacherDashboard";
 
 import PublicCoursesPage from "./pages/publicCourses/PublicCoursesPage";
 
+//Website
+import GermanLearningWebsite from "./pages/website/GermanLearning";
+
 export default function App() {
   return (
     <Routes>
+      <Route path="/" element={<GermanLearningWebsite />} />
+
       <Route element={<MainLayout />}>
         {/* Public */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/german-learning" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/verify-email" element={<EmailVerifyPage />} />
