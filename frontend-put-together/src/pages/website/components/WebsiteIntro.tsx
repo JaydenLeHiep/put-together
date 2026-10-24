@@ -1,52 +1,12 @@
-import { useEffect, useRef, useState } from "react";
 import { ACCREDITATIONS } from "./Constants";
-
-function useFadeIn(direction: "left" | "right" = "left", delay = 0) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          obs.disconnect();
-        }
-      },
-      { threshold: 0.12 }
-    );
-
-    obs.observe(el);
-
-    return () => obs.disconnect();
-  }, []);
-
-  const style: React.CSSProperties = {
-    opacity: visible ? 1 : 0,
-    transform: visible
-      ? "translateX(0)"
-      : direction === "left"
-      ? "translateX(-32px)"
-      : "translateX(32px)",
-    transition: `opacity 0.7s ease ${delay}ms, transform 0.7s ease ${delay}ms`,
-  };
-
-  return { ref, style };
-}
+import { Reveal } from "./Hooks";
 
 export default function WebsiteIntro() {
-  const left = useFadeIn("left", 0);
-  const right = useFadeIn("right", 150);
-
   return (
     <section className="bg-[#FCFBF8] py-24 px-8">
       <div className="mx-auto max-w-[1280px] grid lg:grid-cols-2 gap-24 items-start">
-
         {/* Left */}
-        <div ref={left.ref} style={left.style}>
+        <Reveal direction="left">
           <div className="text-[12px] uppercase tracking-[0.22em] text-[#8a8070] font-semibold mb-5">
             Lorem Ipsum
           </div>
@@ -63,10 +23,10 @@ export default function WebsiteIntro() {
           </h2>
 
           <div className="w-14 h-[3px] bg-[#e8c84a]" />
-        </div>
+        </Reveal>
 
         {/* Right */}
-        <div ref={right.ref} style={right.style}>
+        <Reveal direction="right" delay={100}>
           <p className="text-[#5a5248] text-[17px] leading-[1.85] mb-7">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit,
             sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
@@ -93,8 +53,7 @@ export default function WebsiteIntro() {
               </div>
             ))}
           </div>
-        </div>
-
+        </Reveal>
       </div>
     </section>
   );

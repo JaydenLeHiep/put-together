@@ -1,0 +1,147 @@
+/* Scroll reveals: content remains visible until observation is enabled. */
+.lila-website .website-reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.lila-website .website-reveal[data-reveal="pending"] {
+  opacity: 0;
+  transform: translate3d(
+    var(--reveal-x, 0px),
+    var(--reveal-y, 18px),
+    0
+  );
+}
+
+.lila-website .website-reveal[data-reveal="visible"] {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 550ms ease var(--reveal-delay, 0ms),
+    transform 550ms cubic-bezier(0.22, 1, 0.36, 1)
+      var(--reveal-delay, 0ms);
+}
+
+/* Keep keyboard-focused content visible. */
+.lila-website .website-reveal[data-reveal]:focus-within {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+/* Hero: one gentle entrance per page mount. */
+@keyframes lila-hero-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 16px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.lila-website .website-hero-enter {
+  animation:
+    lila-hero-enter 650ms cubic-bezier(0.22, 1, 0.36, 1)
+    var(--hero-delay, 0ms) both;
+}
+
+.lila-website .website-hero-delay-1 {
+  --hero-delay: 80ms;
+}
+
+.lila-website .website-hero-delay-2 {
+  --hero-delay: 160ms;
+}
+
+.lila-website .website-hero-delay-3 {
+  --hero-delay: 240ms;
+}
+
+/* Small button movement, without affecting its existing colors. */
+.lila-website .website-button {
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+/* Card movement stays separate from the Reveal wrapper. */
+.lila-website .website-card {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease;
+}
+
+/* Navigation underline. */
+.lila-website .website-nav-link {
+  position: relative;
+}
+
+.lila-website .website-nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -7px;
+  height: 2px;
+  background: #e8c84a;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 180ms ease;
+}
+
+.lila-website .website-nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* Hover movement only on devices with a precise pointer. */
+@media (hover: hover) and (pointer: fine) {
+  .lila-website .website-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgb(26 39 68 / 12%);
+  }
+
+  .lila-website .website-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgb(26 39 68 / 9%);
+  }
+
+  .lila-website .website-nav-link:hover::after {
+    transform: scaleX(1);
+  }
+}
+
+.lila-website .website-button:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+/* Anchor targets stay below the sticky navigation. */
+.lila-website section[id],
+.lila-website footer[id] {
+  scroll-margin-top: 112px;
+}
+
+/* Accessibility: remove these animations when requested. */
+@media (prefers-reduced-motion: reduce) {
+  .lila-website .website-reveal[data-reveal],
+  .lila-website .website-hero-enter,
+  .lila-website .website-button,
+  .lila-website .website-card {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .lila-website .website-nav-link::after {
+    transition: none !important;
+  }
+}

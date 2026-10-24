@@ -241,4 +241,3 @@ export const ACCREDITATIONS = [
   "Consectetur Elit",
   "Sed Do Eiusmod",
 ];
-``
