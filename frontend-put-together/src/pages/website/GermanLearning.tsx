@@ -6,22 +6,24 @@ import WebsiteLevelSection from "./components/WebsiteLevelSection";
 import WebsiteServiceSection from "./components/WebsiteServiceSection";
 import WebsiteNewsSection from "./components/WebsiteNewsSection";
 import WebsiteFooter from "./components/WebsiteFooter";
+import "./components/website-animations.css";
 
 export default function GermanLearningWebsite() {
   return (
-    <div className="min-h-screen bg-white text-slate-900">
-      <WebsiteNavbar />
+    <div className="lila-website min-h-screen bg-white text-slate-900">
+      <div className="min-h-screen bg-white text-slate-900">
+        <WebsiteNavbar />
+        <main>
+          <WebsiteHero />
+          <WebsiteIntro />
+          <WebsiteProgramCards />
+          <WebsiteLevelSection />
+          <WebsiteServiceSection />
+          <WebsiteNewsSection />
+        </main>
+        <WebsiteFooter />
+      </div>
 
-      <main>
-        <WebsiteHero />
-        <WebsiteIntro />
-        <WebsiteProgramCards />
-        <WebsiteLevelSection />
-        <WebsiteServiceSection />
-        <WebsiteNewsSection />
-      </main>
-
-      <WebsiteFooter />
     </div>
   );
 }
